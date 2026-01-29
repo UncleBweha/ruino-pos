@@ -20,8 +20,8 @@ export function useCart() {
             ? {
                 ...item,
                 quantity: item.quantity + 1,
-                total: (item.quantity + 1) * product.selling_price,
-                profit: (item.quantity + 1) * (product.selling_price - product.buying_price),
+                total: (item.quantity + 1) * item.unitPrice,
+                profit: (item.quantity + 1) * (item.unitPrice - product.buying_price),
               }
             : item
         );
@@ -35,6 +35,7 @@ export function useCart() {
         {
           product,
           quantity: 1,
+          unitPrice: product.selling_price, // Default to selling price
           total: product.selling_price,
           profit: product.selling_price - product.buying_price,
         },
@@ -60,12 +61,39 @@ export function useCart() {
         return {
           ...item,
           quantity: validQuantity,
-          total: validQuantity * item.product.selling_price,
-          profit: validQuantity * (item.product.selling_price - item.product.buying_price),
+          total: validQuantity * item.unitPrice,
+          profit: validQuantity * (item.unitPrice - item.product.buying_price),
         };
       })
     );
   }, [removeItem]);
+
+  // Update the unit price for a specific item
+  // Returns true if successful, false if price is invalid (at or below buying price)
+  const updateUnitPrice = useCallback((productId: string, newPrice: number): boolean => {
+    let isValid = true;
+    
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.product.id !== productId) return item;
+        
+        // Validate: price must be greater than buying price
+        if (newPrice <= item.product.buying_price) {
+          isValid = false;
+          return item; // Don't update if invalid
+        }
+        
+        return {
+          ...item,
+          unitPrice: newPrice,
+          total: item.quantity * newPrice,
+          profit: item.quantity * (newPrice - item.product.buying_price),
+        };
+      })
+    );
+    
+    return isValid;
+  }, []);
 
   const clearCart = useCallback(() => {
     setItems([]);
@@ -93,6 +121,7 @@ export function useCart() {
     addItem,
     removeItem,
     updateQuantity,
+    updateUnitPrice,
     setDiscount,
     setTaxRate,
     setCustomerName,

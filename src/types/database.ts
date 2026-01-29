@@ -111,6 +111,7 @@ export interface ReceiptSettings {
 export interface CartItem {
   product: Product;
   quantity: number;
+  unitPrice: number; // Can be adjusted by cashier (must be > buying_price)
   total: number;
   profit: number;
 }
