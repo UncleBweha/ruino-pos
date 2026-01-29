@@ -48,12 +48,19 @@ export function useCredits() {
   async function markAsPaid(creditId: string, amountPaid?: number): Promise<void> {
     if (!user) throw new Error('User not authenticated');
 
-    const credit = credits.find((c) => c.id === creditId);
-    if (!credit) throw new Error('Credit not found');
+    // Fetch the latest credit data from DB to avoid stale state issues
+    const { data: freshCredit, error: fetchError } = await supabase
+      .from('credits')
+      .select('*')
+      .eq('id', creditId)
+      .maybeSingle();
 
-    const paymentAmount = amountPaid || credit.balance;
-    const newAmountPaid = credit.amount_paid + paymentAmount;
-    const newBalance = credit.total_owed - newAmountPaid;
+    if (fetchError) throw fetchError;
+    if (!freshCredit) throw new Error('Credit not found');
+
+    const paymentAmount = amountPaid || freshCredit.balance;
+    const newAmountPaid = freshCredit.amount_paid + paymentAmount;
+    const newBalance = freshCredit.total_owed - newAmountPaid;
     const isPaid = newBalance <= 0;
 
     const { error: updateError } = await supabase
@@ -67,6 +74,9 @@ export function useCredits() {
       .eq('id', creditId);
 
     if (updateError) throw updateError;
+
+    // Use freshCredit for subsequent operations
+    const credit = freshCredit;
 
     // Update the associated sale status
     if (isPaid) {
