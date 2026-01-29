@@ -12,6 +12,7 @@ export function useDashboard() {
     lowStockCount: 0,
     pendingCredits: 0,
     todayCash: 0,
+    inventoryCost: 0,
   });
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,14 +44,19 @@ export function useDashboard() {
         .from('products')
         .select('*', { count: 'exact', head: true });
 
-      // Fetch low stock products
+      // Fetch low stock products and inventory cost
       const { data: products } = await supabase
         .from('products')
-        .select('quantity, low_stock_alert');
+        .select('quantity, low_stock_alert, buying_price');
 
       const lowStockCount = products?.filter(
         (p) => p.quantity <= p.low_stock_alert
       ).length || 0;
+
+      // Calculate total inventory cost (quantity * buying_price for all products)
+      const inventoryCost = products?.reduce(
+        (sum, p) => sum + (p.quantity * Number(p.buying_price)), 0
+      ) || 0;
 
       // Fetch pending credits
       const { data: credits } = await supabase
@@ -102,6 +108,7 @@ export function useDashboard() {
         lowStockCount,
         pendingCredits,
         todayCash,
+        inventoryCost,
       });
 
       setTopProducts(topProductsData);
