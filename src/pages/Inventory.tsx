@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProducts } from '@/hooks/useProducts';
 import { formatCurrency } from '@/lib/constants';
+import { BulkProductImport } from '@/components/inventory/BulkProductImport';
 import {
   Search,
   Plus,
@@ -10,6 +11,7 @@ import {
   AlertTriangle,
   Loader2,
   X,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +72,7 @@ export default function InventoryPage() {
     addProduct,
     updateProduct,
     addCategory,
+    refresh,
   } = useProducts();
   const { toast } = useToast();
 
@@ -80,6 +83,7 @@ export default function InventoryPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showCategoryInput, setShowCategoryInput] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   const filteredProducts = searchQuery
     ? products.filter(
@@ -167,10 +171,16 @@ export default function InventoryPage() {
               {products.length} products • {lowStockProducts.length} low stock
             </p>
           </div>
-          <Button onClick={openAddForm}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Product
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowBulkImport(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Bulk Import
+            </Button>
+            <Button onClick={openAddForm}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Product
+            </Button>
+          </div>
         </div>
 
         {/* Low Stock Alert */}
@@ -456,6 +466,14 @@ export default function InventoryPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Import Dialog */}
+      <BulkProductImport
+        open={showBulkImport}
+        onOpenChange={setShowBulkImport}
+        categories={categories}
+        onSuccess={refresh}
+      />
     </AppLayout>
   );
 }
