@@ -103,16 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (error) return { error: error as Error };
 
-    // Add role for the new user
-    if (data.user) {
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: data.user.id, role: userRole });
-
-      if (roleError) {
-        console.error('Error setting role:', roleError);
-      }
-    }
+    // Role is now automatically assigned by database trigger based on email
+    // No need to manually insert into user_roles
 
     return { error: null };
   }
