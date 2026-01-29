@@ -3,7 +3,6 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { useProducts } from '@/hooks/useProducts';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/constants';
-import { BulkProductImport } from '@/components/inventory/BulkProductImport';
 import {
   Search,
   Plus,
@@ -13,6 +12,8 @@ import {
   Loader2,
   X,
   Upload,
+  FileText,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,9 +41,23 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/types/database';
 import { cn } from '@/lib/utils';
+
+interface ParsedProduct {
+  sku: string;
+  name: string;
+  quantity: number;
+  buying_price: number;
+  selling_price: number;
+  low_stock_alert: number;
+  category_id: string | null;
+}
 
 interface ProductFormData {
   sku: string;
@@ -85,7 +100,115 @@ export default function InventoryPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showCategoryInput, setShowCategoryInput] = useState(false);
-  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
+  const [csvData, setCsvData] = useState('');
+  const [bulkCategory, setBulkCategory] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
+
+  const exampleCSV = `SKU001,Rice 5kg,100,450,550,10
+SKU002,Sugar 2kg,50,180,220,15
+SKU003,Cooking Oil 1L,75,250,300,20`;
+
+  function parseCSV(text: string): { products: ParsedProduct[]; errors: string[] } {
+    const lines = text.trim().split('\n').filter(line => line.trim());
+    const products: ParsedProduct[] = [];
+    const errors: string[] = [];
+
+    lines.forEach((line, index) => {
+      const parts = line.split(',').map(p => p.trim());
+      
+      if (parts.length < 5) {
+        errors.push(`Line ${index + 1}: Not enough columns (need at least SKU, Name, Qty, Buying, Selling)`);
+        return;
+      }
+
+      const [sku, name, quantityStr, buyingStr, sellingStr, alertStr] = parts;
+
+      if (!sku || !name) {
+        errors.push(`Line ${index + 1}: SKU and Name are required`);
+        return;
+      }
+
+      const quantity = parseInt(quantityStr) || 0;
+      const buying_price = parseFloat(buyingStr) || 0;
+      const selling_price = parseFloat(sellingStr) || 0;
+      const low_stock_alert = parseInt(alertStr) || 10;
+
+      if (buying_price < 0 || selling_price < 0 || quantity < 0) {
+        errors.push(`Line ${index + 1}: Prices and quantity must be positive`);
+        return;
+      }
+
+      products.push({
+        sku,
+        name,
+        quantity,
+        buying_price,
+        selling_price,
+        low_stock_alert,
+        category_id: bulkCategory || null,
+      });
+    });
+
+    return { products, errors };
+  }
+
+  async function handleBulkImport() {
+    if (!csvData.trim()) {
+      toast({
+        title: 'No Data',
+        description: 'Please paste product data to import',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { products: parsedProducts, errors } = parseCSV(csvData);
+    
+    if (errors.length > 0) {
+      setParseErrors(errors);
+      return;
+    }
+
+    if (parsedProducts.length === 0) {
+      toast({
+        title: 'No Valid Products',
+        description: 'No valid products found in the data',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setBulkLoading(true);
+    setParseErrors([]);
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .insert(parsedProducts);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Products Imported',
+        description: `Successfully imported ${parsedProducts.length} products`,
+      });
+
+      setCsvData('');
+      setBulkCategory('');
+      setShowForm(false);
+      refresh();
+    } catch (error) {
+      toast({
+        title: 'Import Failed',
+        description: error instanceof Error ? error.message : 'Failed to import products',
+        variant: 'destructive',
+      });
+    } finally {
+      setBulkLoading(false);
+    }
+  }
 
   const filteredProducts = searchQuery
     ? products.filter(
@@ -98,6 +221,10 @@ export default function InventoryPage() {
   function openAddForm() {
     setEditingProduct(null);
     setFormData(emptyForm);
+    setActiveTab('single');
+    setCsvData('');
+    setBulkCategory('');
+    setParseErrors([]);
     setShowForm(true);
   }
 
@@ -173,20 +300,12 @@ export default function InventoryPage() {
               {products.length} products • {lowStockProducts.length} low stock
             </p>
           </div>
-          <div className="flex gap-2">
-            {isAdmin && (
-              <>
-                <Button variant="outline" onClick={() => setShowBulkImport(true)}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Bulk Import
-                </Button>
-                <Button onClick={openAddForm}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Product
-                </Button>
-              </>
-            )}
-          </div>
+          {isAdmin && (
+            <Button onClick={openAddForm}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Product
+            </Button>
+          )}
         </div>
 
         {/* Low Stock Alert */}
@@ -478,14 +597,6 @@ export default function InventoryPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Bulk Import Dialog */}
-      <BulkProductImport
-        open={showBulkImport}
-        onOpenChange={setShowBulkImport}
-        categories={categories}
-        onSuccess={refresh}
-      />
     </AppLayout>
   );
 }
