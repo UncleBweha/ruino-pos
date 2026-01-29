@@ -29,6 +29,7 @@ const adminNavItems = [
 
 const cashierNavItems = [
   { path: '/pos', label: 'POS', icon: ShoppingCart },
+  { path: '/inventory', label: 'Inventory', icon: Package },
   { path: '/sales', label: 'My Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
 ];
