@@ -245,9 +245,9 @@ export default function InventoryPage() {
                       <TableHead>SKU</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Buying</TableHead>
+                      {isAdmin && <TableHead className="text-right">Buying</TableHead>}
                       <TableHead className="text-right">Selling</TableHead>
-                      <TableHead className="text-right">Profit</TableHead>
+                      {isAdmin && <TableHead className="text-right">Profit</TableHead>}
                       {isAdmin && <TableHead></TableHead>}
                     </TableRow>
                   </TableHeader>
@@ -280,20 +280,24 @@ export default function InventoryPage() {
                               {product.quantity}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right currency">
-                            {formatCurrency(product.buying_price)}
-                          </TableCell>
+                          {isAdmin && (
+                            <TableCell className="text-right currency">
+                              {formatCurrency(product.buying_price)}
+                            </TableCell>
+                          )}
                           <TableCell className="text-right currency font-medium">
                             {formatCurrency(product.selling_price)}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <span className="text-success font-medium">
-                              {formatCurrency(profit)}
-                            </span>
-                            <span className="text-muted-foreground text-xs ml-1">
-                              ({margin.toFixed(0)}%)
-                            </span>
-                          </TableCell>
+                          {isAdmin && (
+                            <TableCell className="text-right">
+                              <span className="text-success font-medium">
+                                {formatCurrency(profit)}
+                              </span>
+                              <span className="text-muted-foreground text-xs ml-1">
+                                ({margin.toFixed(0)}%)
+                              </span>
+                            </TableCell>
+                          )}
                           {isAdmin && (
                             <TableCell>
                               <Button
