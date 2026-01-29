@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useSales } from '@/hooks/useSales';
+import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, SALE_STATUSES } from '@/lib/constants';
+import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
 import {
   Search,
   Receipt,
@@ -11,7 +13,8 @@ import {
   ChevronUp,
   XCircle,
   Loader2,
-  Eye,
+  Printer,
+  Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +44,7 @@ import { cn } from '@/lib/utils';
 
 export default function SalesPage() {
   const { sales, loading, voidSale } = useSales();
+  const { receiptSettings } = useSettings();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
 
@@ -84,6 +88,24 @@ export default function SalesPage() {
     } finally {
       setVoidLoading(false);
     }
+  }
+
+  function handlePrintReceipt(sale: Sale, e: React.MouseEvent) {
+    e.stopPropagation();
+    printReceipt({ sale, settings: receiptSettings });
+    toast({
+      title: 'Print Initiated',
+      description: `Printing receipt ${sale.receipt_number}`,
+    });
+  }
+
+  function handleDownloadReceipt(sale: Sale, e: React.MouseEvent) {
+    e.stopPropagation();
+    downloadReceipt({ sale, settings: receiptSettings });
+    toast({
+      title: 'Download Started',
+      description: `Downloading receipt ${sale.receipt_number}`,
+    });
   }
 
   function getStatusBadge(status: string) {
@@ -283,8 +305,24 @@ export default function SalesPage() {
                           )}
 
                           {/* Actions */}
-                          {isAdmin && sale.status !== 'voided' && (
-                            <div className="flex justify-end gap-2 pt-2 border-t">
+                          <div className="flex justify-end gap-2 pt-2 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => handlePrintReceipt(sale, e)}
+                            >
+                              <Printer className="w-4 h-4 mr-2" />
+                              Print
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => handleDownloadReceipt(sale, e)}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download
+                            </Button>
+                            {isAdmin && sale.status !== 'voided' && (
                               <Button
                                 variant="destructive"
                                 size="sm"
@@ -296,8 +334,8 @@ export default function SalesPage() {
                                 <XCircle className="w-4 h-4 mr-2" />
                                 Void Sale
                               </Button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
