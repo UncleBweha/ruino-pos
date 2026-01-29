@@ -1,116 +1,136 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Store, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Store, Loader2, Shield, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PRECONFIGURED_USERS, DEFAULT_PASSWORD, PreConfiguredUser } from '@/lib/users';
+import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [loading, setLoading] = useState<string | null>(null);
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  async function handleLogin(user: PreConfiguredUser) {
+    setLoading(user.email);
 
     try {
-      const { error } = await signIn(email, password);
-      if (error) {
-        toast({
-          title: 'Login Failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else {
-        navigate('/pos');
+      // Try to sign in first
+      let { error } = await signIn(user.email, DEFAULT_PASSWORD);
+      
+      // If user doesn't exist, create them
+      if (error?.message?.includes('Invalid login credentials')) {
+        const signUpResult = await signUp(user.email, DEFAULT_PASSWORD, user.name, user.role);
+        if (signUpResult.error) {
+          throw signUpResult.error;
+        }
+        // Sign in after signup
+        const signInResult = await signIn(user.email, DEFAULT_PASSWORD);
+        if (signInResult.error) {
+          throw signInResult.error;
+        }
+      } else if (error) {
+        throw error;
       }
+
+      toast({
+        title: `Welcome, ${user.name}!`,
+        description: `Logged in as ${user.role}`,
+      });
+      navigate('/pos');
+    } catch (err: any) {
+      toast({
+        title: 'Login Failed',
+        description: err.message || 'An error occurred',
+        variant: 'destructive',
+      });
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
+  const admins = PRECONFIGURED_USERS.filter(u => u.role === 'admin');
+  const cashiers = PRECONFIGURED_USERS.filter(u => u.role === 'cashier');
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <Card className="w-full max-w-md animate-scale-in">
+      <Card className="w-full max-w-lg animate-scale-in">
         <CardHeader className="text-center pb-2">
-          <div className="w-16 h-16 rounded-2xl bg-primary mx-auto mb-4 flex items-center justify-center">
-            <Store className="w-8 h-8 text-primary-foreground" />
+          <div className="w-20 h-20 rounded-2xl bg-primary mx-auto mb-4 flex items-center justify-center">
+            <Store className="w-10 h-10 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">Ruino General Merchants</CardTitle>
-          <CardDescription>Point of Sale System</CardDescription>
+          <CardDescription>Tap your name to sign in</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12 text-base"
-                required
-                autoComplete="email"
-              />
+        <CardContent className="space-y-6">
+          {/* Admins Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="w-4 h-4" />
+              <span>Administrators</span>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 text-base pr-12"
-                  required
-                  autoComplete="current-password"
-                />
+            <div className="grid grid-cols-3 gap-3">
+              {admins.map((user) => (
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-12 w-12"
-                  onClick={() => setShowPassword(!showPassword)}
+                  key={user.email}
+                  variant="outline"
+                  className={cn(
+                    "h-20 flex-col gap-2 border-2 hover:border-primary hover:bg-primary/5 transition-all",
+                    loading === user.email && "border-primary bg-primary/10"
+                  )}
+                  onClick={() => handleLogin(user)}
+                  disabled={loading !== null}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-muted-foreground" />
+                  {loading === user.email ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    <Eye className="w-5 h-5 text-muted-foreground" />
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                        {user.initials}
+                      </div>
+                      <span className="font-medium">{user.name}</span>
+                    </>
                   )}
                 </Button>
-              </div>
+              ))}
             </div>
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-          </form>
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            First time?{' '}
-            <Link to="/register" className="text-primary font-medium hover:underline">
-              Create an account
-            </Link>
-          </p>
+          </div>
+
+          {/* Cashiers Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Cashiers</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {cashiers.map((user) => (
+                <Button
+                  key={user.email}
+                  variant="outline"
+                  className={cn(
+                    "h-20 flex-col gap-2 border-2 hover:border-accent hover:bg-accent/5 transition-all",
+                    loading === user.email && "border-accent bg-accent/10"
+                  )}
+                  onClick={() => handleLogin(user)}
+                  disabled={loading !== null}
+                >
+                  {loading === user.email ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm">
+                        {user.initials}
+                      </div>
+                      <span className="font-medium">{user.name}</span>
+                    </>
+                  )}
+                </Button>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
