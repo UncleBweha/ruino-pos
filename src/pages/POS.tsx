@@ -5,7 +5,7 @@ import { useCart } from '@/hooks/useCart';
 import { useSales } from '@/hooks/useSales';
 import { useSettings } from '@/hooks/useSettings';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Sale } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
 
 export default function POSPage() {
   const { products, loading: productsLoading, searchProducts } = useProducts();
@@ -368,6 +369,24 @@ export default function POSPage() {
               <p className="text-sm text-muted-foreground">
                 {receiptSettings?.company_name || 'Ruino General Merchants'}
               </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => printReceipt({ sale: lastSale, settings: receiptSettings })}
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => downloadReceipt({ sale: lastSale, settings: receiptSettings })}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
               <Button className="w-full" onClick={() => setShowReceipt(false)}>
                 New Sale
               </Button>
