@@ -83,7 +83,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
+        display: ["Outfit", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       fontSize: {
@@ -138,9 +139,10 @@ export default {
         "scale-in": "scale-in 0.2s ease-out",
       },
       boxShadow: {
-        "soft": "0 2px 8px -2px rgba(0, 0, 0, 0.1)",
-        "medium": "0 4px 16px -4px rgba(0, 0, 0, 0.15)",
-        "strong": "0 8px 24px -6px rgba(0, 0, 0, 0.2)",
+        "soft": "0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)",
+        "medium": "0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04)",
+        "strong": "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.04)",
+        "inner-soft": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.04)",
       },
     },
   },
