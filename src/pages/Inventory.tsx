@@ -11,6 +11,8 @@ import {
   AlertTriangle,
   Loader2,
   X,
+  Check,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +30,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -88,6 +103,7 @@ export default function InventoryPage() {
   const [productMode, setProductMode] = useState<'new' | 'existing'>('new');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [restockQuantity, setRestockQuantity] = useState(0);
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
 
   async function handleRestock() {
     if (!selectedProductId || restockQuantity <= 0) {
@@ -535,21 +551,54 @@ export default function InventoryPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Select Product</Label>
-                <Select
-                  value={selectedProductId}
-                  onValueChange={setSelectedProductId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a product to restock" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name} ({product.sku}) - Current: {product.quantity}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={productSearchOpen} onOpenChange={setProductSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={productSearchOpen}
+                      className="w-full justify-between"
+                    >
+                      {selectedProductId
+                        ? products.find((p) => p.id === selectedProductId)?.name
+                        : "Search for a product..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search by name or SKU..." />
+                      <CommandList>
+                        <CommandEmpty>No product found.</CommandEmpty>
+                        <CommandGroup>
+                          {products.map((product) => (
+                            <CommandItem
+                              key={product.id}
+                              value={`${product.name} ${product.sku}`}
+                              onSelect={() => {
+                                setSelectedProductId(product.id);
+                                setProductSearchOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedProductId === product.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{product.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  SKU: {product.sku} • Stock: {product.quantity}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
