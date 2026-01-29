@@ -43,14 +43,14 @@ export function AppSidebar() {
   const NavContent = () => (
     <>
       {/* Logo */}
-      <div className="p-4 border-b border-sidebar-border">
+      <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
+          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 flex items-center justify-center shadow-lg shadow-sidebar-primary/20">
             <Store className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-sidebar-foreground truncate">Ruino</h1>
-            <p className="text-xs text-sidebar-foreground/60 truncate">General Merchants</p>
+            <h1 className="font-bold text-lg text-sidebar-foreground truncate tracking-tight">RUINO</h1>
+            <p className="text-xs text-sidebar-foreground/50 truncate uppercase tracking-widest">Merchants</p>
           </div>
         </div>
       </div>
@@ -77,21 +77,21 @@ export function AppSidebar() {
       </nav>
 
       {/* User & Logout */}
-      <div className="p-3 border-t border-sidebar-border">
-        <div className="px-4 py-3 mb-2">
-          <p className="font-medium text-sidebar-foreground truncate">
+      <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/30">
+        <div className="px-3 py-2.5 mb-3 rounded-md bg-sidebar-accent/50">
+          <p className="font-semibold text-sidebar-foreground truncate">
             {profile?.full_name || 'User'}
           </p>
-          <p className="text-xs text-sidebar-foreground/60 capitalize">
+          <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider mt-0.5">
             {role || 'Loading...'}
           </p>
         </div>
         <Button
           variant="ghost"
-          className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent font-medium"
           onClick={signOut}
         >
-          <LogOut className="w-5 h-5 mr-3" />
+          <LogOut className="w-4 h-4 mr-3" />
           Sign Out
         </Button>
       </div>
@@ -101,18 +101,20 @@ export function AppSidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar z-50 flex items-center px-4 border-b border-sidebar-border">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar z-50 flex items-center px-4 border-b border-sidebar-border shadow-lg">
         <Button
           variant="ghost"
           size="icon"
-          className="text-sidebar-foreground"
+          className="text-sidebar-foreground hover:bg-sidebar-accent"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
-        <div className="flex items-center gap-2 ml-3">
-          <Store className="w-5 h-5 text-sidebar-primary" />
-          <span className="font-bold text-sidebar-foreground">Ruino POS</span>
+        <div className="flex items-center gap-2.5 ml-3">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 flex items-center justify-center">
+            <Store className="w-4 h-4 text-sidebar-primary-foreground" />
+          </div>
+          <span className="font-bold text-sidebar-foreground tracking-tight">RUINO</span>
         </div>
       </div>
 
