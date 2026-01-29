@@ -9,13 +9,33 @@ export function useCashBox() {
 
   const fetchTransactions = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch transactions
+      const { data: txData, error: txError } = await supabase
         .from('cash_box')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setTransactions(data as CashBox[]);
+      if (txError) throw txError;
+
+      // Get unique cashier IDs
+      const cashierIds = [...new Set(txData.map((t) => t.cashier_id))];
+      
+      // Fetch profiles for those cashiers
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', cashierIds);
+
+      // Map profiles by user_id
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+
+      // Attach cashier info to transactions
+      const transactionsWithCashier = txData.map((tx) => ({
+        ...tx,
+        cashier: profileMap.get(tx.cashier_id) || null,
+      }));
+
+      setTransactions(transactionsWithCashier as CashBox[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch cash box');
     } finally {

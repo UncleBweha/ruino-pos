@@ -133,6 +133,9 @@ export default function CashBoxPage() {
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {format(new Date(tx.created_at), 'HH:mm')}
+                          {tx.cashier?.full_name && (
+                            <span className="ml-2 text-primary">• {tx.cashier.full_name}</span>
+                          )}
                         </p>
                         {tx.description && (
                           <p className="text-sm text-muted-foreground">
