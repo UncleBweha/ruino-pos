@@ -5,8 +5,7 @@ import { useCart } from '@/hooks/useCart';
 import { useSales } from '@/hooks/useSales';
 import { useSettings } from '@/hooks/useSettings';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer } from 'lucide-react';
-import { printThermalReceipt } from '@/lib/printReceipt';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -370,19 +369,9 @@ export default function POSPage() {
               <p className="text-sm text-muted-foreground">
                 {receiptSettings?.company_name || 'Ruino General Merchants'}
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => printThermalReceipt(lastSale, receiptSettings)}
-                >
-                  <Printer className="w-4 h-4" />
-                  Print Receipt
-                </Button>
-                <Button onClick={() => setShowReceipt(false)}>
-                  New Sale
-                </Button>
-              </div>
+              <Button className="w-full" onClick={() => setShowReceipt(false)}>
+                New Sale
+              </Button>
             </div>
           )}
         </DialogContent>
