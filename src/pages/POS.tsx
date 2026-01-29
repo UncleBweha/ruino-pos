@@ -101,13 +101,14 @@ export default function POSPage() {
     }
   }
 
-  function ProductCard({ product }: { product: Product }) {
+  const renderProductCard = (product: Product) => {
     const inCart = items.find((i) => i.product.id === product.id);
     const isOutOfStock = product.quantity <= 0;
     const isLowStock = product.quantity > 0 && product.quantity <= product.low_stock_alert;
 
     return (
       <button
+        key={product.id}
         onClick={() => !isOutOfStock && addItem(product)}
         disabled={isOutOfStock}
         className={cn(
@@ -140,7 +141,7 @@ export default function POSPage() {
         </div>
       </button>
     );
-  }
+  };
 
   return (
     <AppLayout className="flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden">
@@ -169,9 +170,7 @@ export default function POSPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {filteredProducts.map((product) => renderProductCard(product))}
             </div>
           )}
         </div>
