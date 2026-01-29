@@ -11,9 +11,6 @@ import {
   AlertTriangle,
   Loader2,
   X,
-  Upload,
-  FileText,
-  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,23 +38,11 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/types/database';
 import { cn } from '@/lib/utils';
-
-interface ParsedProduct {
-  sku: string;
-  name: string;
-  quantity: number;
-  buying_price: number;
-  selling_price: number;
-  low_stock_alert: number;
-  category_id: string | null;
-}
 
 interface ProductFormData {
   sku: string;
@@ -100,113 +85,41 @@ export default function InventoryPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showCategoryInput, setShowCategoryInput] = useState(false);
-  const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
-  const [csvData, setCsvData] = useState('');
-  const [bulkCategory, setBulkCategory] = useState('');
-  const [bulkLoading, setBulkLoading] = useState(false);
-  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [productMode, setProductMode] = useState<'new' | 'existing'>('new');
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [restockQuantity, setRestockQuantity] = useState(0);
 
-  const exampleCSV = `SKU001,Rice 5kg,100,450,550,10
-SKU002,Sugar 2kg,50,180,220,15
-SKU003,Cooking Oil 1L,75,250,300,20`;
-
-  function parseCSV(text: string): { products: ParsedProduct[]; errors: string[] } {
-    const lines = text.trim().split('\n').filter(line => line.trim());
-    const products: ParsedProduct[] = [];
-    const errors: string[] = [];
-
-    lines.forEach((line, index) => {
-      const parts = line.split(',').map(p => p.trim());
-      
-      if (parts.length < 5) {
-        errors.push(`Line ${index + 1}: Not enough columns (need at least SKU, Name, Qty, Buying, Selling)`);
-        return;
-      }
-
-      const [sku, name, quantityStr, buyingStr, sellingStr, alertStr] = parts;
-
-      if (!sku || !name) {
-        errors.push(`Line ${index + 1}: SKU and Name are required`);
-        return;
-      }
-
-      const quantity = parseInt(quantityStr) || 0;
-      const buying_price = parseFloat(buyingStr) || 0;
-      const selling_price = parseFloat(sellingStr) || 0;
-      const low_stock_alert = parseInt(alertStr) || 10;
-
-      if (buying_price < 0 || selling_price < 0 || quantity < 0) {
-        errors.push(`Line ${index + 1}: Prices and quantity must be positive`);
-        return;
-      }
-
-      products.push({
-        sku,
-        name,
-        quantity,
-        buying_price,
-        selling_price,
-        low_stock_alert,
-        category_id: bulkCategory || null,
-      });
-    });
-
-    return { products, errors };
-  }
-
-  async function handleBulkImport() {
-    if (!csvData.trim()) {
+  async function handleRestock() {
+    if (!selectedProductId || restockQuantity <= 0) {
       toast({
-        title: 'No Data',
-        description: 'Please paste product data to import',
+        title: 'Invalid Input',
+        description: 'Please select a product and enter a valid quantity',
         variant: 'destructive',
       });
       return;
     }
 
-    const { products: parsedProducts, errors } = parseCSV(csvData);
-    
-    if (errors.length > 0) {
-      setParseErrors(errors);
-      return;
-    }
-
-    if (parsedProducts.length === 0) {
-      toast({
-        title: 'No Valid Products',
-        description: 'No valid products found in the data',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setBulkLoading(true);
-    setParseErrors([]);
-
+    setFormLoading(true);
     try {
-      const { error } = await supabase
-        .from('products')
-        .insert(parsedProducts);
+      const product = products.find(p => p.id === selectedProductId);
+      if (!product) throw new Error('Product not found');
 
-      if (error) throw error;
-
+      const newQuantity = product.quantity + restockQuantity;
+      await updateProduct(selectedProductId, { quantity: newQuantity });
+      
       toast({
-        title: 'Products Imported',
-        description: `Successfully imported ${parsedProducts.length} products`,
+        title: 'Stock Updated',
+        description: `Added ${restockQuantity} units to ${product.name}`,
       });
-
-      setCsvData('');
-      setBulkCategory('');
       setShowForm(false);
-      refresh();
     } catch (error) {
       toast({
-        title: 'Import Failed',
-        description: error instanceof Error ? error.message : 'Failed to import products',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update stock',
         variant: 'destructive',
       });
     } finally {
-      setBulkLoading(false);
+      setFormLoading(false);
     }
   }
 
@@ -221,10 +134,9 @@ SKU003,Cooking Oil 1L,75,250,300,20`;
   function openAddForm() {
     setEditingProduct(null);
     setFormData(emptyForm);
-    setActiveTab('single');
-    setCsvData('');
-    setBulkCategory('');
-    setParseErrors([]);
+    setProductMode('new');
+    setSelectedProductId('');
+    setRestockQuantity(0);
     setShowForm(true);
   }
 
@@ -447,154 +359,234 @@ SKU003,Cooking Oil 1L,75,250,300,20`;
               {editingProduct ? 'Edit Product' : 'Add Product'}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>SKU</Label>
-                <Input
-                  value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  placeholder="PRD001"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Quantity</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={formData.quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })
-                  }
-                  required
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Product Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Product name"
-                required
-              />
-            </div>
+          {/* Radio toggle for New vs Existing - only show when adding */}
+          {!editingProduct && (
+            <RadioGroup
+              value={productMode}
+              onValueChange={(v) => setProductMode(v as 'new' | 'existing')}
+              className="flex gap-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="new" id="new-product" />
+                <Label htmlFor="new-product" className="cursor-pointer">New Product</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="existing" id="existing-product" />
+                <Label htmlFor="existing-product" className="cursor-pointer">Existing Product</Label>
+              </div>
+            </RadioGroup>
+          )}
 
-            <div className="space-y-2">
-              <Label>Category</Label>
-              {showCategoryInput ? (
-                <div className="flex gap-2">
+          {/* New Product Form */}
+          {(productMode === 'new' || editingProduct) && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>SKU</Label>
                   <Input
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="New category name"
-                    autoFocus
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    placeholder="PRD001"
+                    required
                   />
-                  <Button type="button" size="icon" onClick={handleAddCategory}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setShowCategoryInput(false)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
                 </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Select
-                    value={formData.category_id}
-                    onValueChange={(v) => setFormData({ ...formData, category_id: v })}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    onClick={() => setShowCategoryInput(true)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
+                <div className="space-y-2">
+                  <Label>Quantity</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.quantity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })
+                    }
+                    required
+                  />
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Buying Price</Label>
+                <Label>Product Name</Label>
                 <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.buying_price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, buying_price: parseFloat(e.target.value) || 0 })
-                  }
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Product name"
                   required
                 />
               </div>
+
               <div className="space-y-2">
-                <Label>Selling Price</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.selling_price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })
-                  }
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Low Stock Alert Level</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.low_stock_alert}
-                onChange={(e) =>
-                  setFormData({ ...formData, low_stock_alert: parseInt(e.target.value) || 0 })
-                }
-                required
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowForm(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1" disabled={formLoading}>
-                {formLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : editingProduct ? (
-                  'Update'
+                <Label>Category</Label>
+                {showCategoryInput ? (
+                  <div className="flex gap-2">
+                    <Input
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="New category name"
+                      autoFocus
+                    />
+                    <Button type="button" size="icon" onClick={handleAddCategory}>
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setShowCategoryInput(false)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 ) : (
-                  'Add Product'
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.category_id}
+                      onValueChange={(v) => setFormData({ ...formData, category_id: v })}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={() => setShowCategoryInput(true)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                 )}
-              </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Buying Price</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.buying_price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, buying_price: parseFloat(e.target.value) || 0 })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Selling Price</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.selling_price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })
+                    }
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Low Stock Alert Level</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={formData.low_stock_alert}
+                  onChange={(e) =>
+                    setFormData({ ...formData, low_stock_alert: parseInt(e.target.value) || 0 })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1" disabled={formLoading}>
+                  {formLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : editingProduct ? (
+                    'Update'
+                  ) : (
+                    'Add Product'
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* Existing Product (Restock) Form */}
+          {productMode === 'existing' && !editingProduct && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Select Product</Label>
+                <Select
+                  value={selectedProductId}
+                  onValueChange={setSelectedProductId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a product to restock" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={product.id}>
+                        {product.name} ({product.sku}) - Current: {product.quantity}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Quantity to Add</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={restockQuantity || ''}
+                  onChange={(e) => setRestockQuantity(parseInt(e.target.value) || 0)}
+                  placeholder="Enter quantity to add"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1"
+                  disabled={formLoading || !selectedProductId || restockQuantity <= 0}
+                  onClick={handleRestock}
+                >
+                  {formLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Add Stock'
+                  )}
+                </Button>
+              </div>
             </div>
-          </form>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>
