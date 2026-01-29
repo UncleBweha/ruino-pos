@@ -63,20 +63,14 @@ export function useSales() {
   }, [fetchSales]);
 
   async function generateReceiptNumber(): Promise<string> {
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    // Use the database function to generate receipt number atomically
+    const { data, error } = await supabase.rpc('generate_receipt_number');
     
-    // Get count of today's sales
-    const startOfDay = new Date(today);
-    startOfDay.setHours(0, 0, 0, 0);
+    if (error) {
+      throw new Error('Failed to generate receipt number: ' + error.message);
+    }
     
-    const { count } = await supabase
-      .from('sales')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', startOfDay.toISOString());
-
-    const seqNum = ((count || 0) + 1).toString().padStart(4, '0');
-    return `RGM${dateStr}${seqNum}`;
+    return data as string;
   }
 
   async function createSale(params: CreateSaleParams): Promise<Sale> {
