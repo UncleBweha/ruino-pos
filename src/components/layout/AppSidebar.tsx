@@ -11,11 +11,11 @@ import {
   LogOut,
   Menu,
   X,
-  Store,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import ruinoLogo from '@/assets/ruino-logo.png';
 
 const adminNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -44,15 +44,13 @@ export function AppSidebar() {
   const NavContent = () => (
     <>
       {/* Logo */}
-      <div className="p-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 flex items-center justify-center shadow-lg shadow-sidebar-primary/20">
-            <Store className="w-5 h-5 text-sidebar-primary-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-lg text-sidebar-foreground truncate tracking-tight">RUINO</h1>
-            <p className="text-xs text-sidebar-foreground/50 truncate uppercase tracking-widest">Merchants</p>
-          </div>
+      <div className="p-4 border-b border-sidebar-border">
+        <div className="flex items-center justify-center">
+          <img 
+            src={ruinoLogo} 
+            alt="Ruino General Merchants" 
+            className="h-16 w-auto object-contain brightness-0 invert"
+          />
         </div>
       </div>
 
@@ -111,11 +109,12 @@ export function AppSidebar() {
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
-        <div className="flex items-center gap-2.5 ml-3">
-          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 flex items-center justify-center">
-            <Store className="w-4 h-4 text-sidebar-primary-foreground" />
-          </div>
-          <span className="font-bold text-sidebar-foreground tracking-tight">RUINO</span>
+        <div className="flex items-center ml-3">
+          <img 
+            src={ruinoLogo} 
+            alt="Ruino General Merchants" 
+            className="h-8 w-auto object-contain brightness-0 invert"
+          />
         </div>
       </div>
 
