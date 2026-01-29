@@ -129,13 +129,13 @@ export function useSales() {
 
     const sale = saleData as Sale;
 
-    // Create sale items
+    // Create sale items - use the custom unitPrice from cart
     const saleItems = items.map((item) => ({
       sale_id: sale.id,
       product_id: item.product.id,
       product_name: item.product.name,
       quantity: item.quantity,
-      unit_price: item.product.selling_price,
+      unit_price: item.unitPrice, // Use custom price instead of product.selling_price
       buying_price: item.product.buying_price,
       total: item.total,
       profit: item.profit,

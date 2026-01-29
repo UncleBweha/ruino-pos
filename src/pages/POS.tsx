@@ -5,7 +5,7 @@ import { useCart } from '@/hooks/useCart';
 import { useSales } from '@/hooks/useSales';
 import { useSettings } from '@/hooks/useSettings';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +30,7 @@ export default function POSPage() {
     addItem,
     removeItem,
     updateQuantity,
+    updateUnitPrice,
     setDiscount,
     setTaxRate,
     setCustomerName,
@@ -44,6 +45,8 @@ export default function POSPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [editPriceValue, setEditPriceValue] = useState('');
 
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : products;
 
@@ -51,6 +54,44 @@ export default function POSPage() {
     cash: Banknote,
     mpesa: Smartphone,
     credit: CreditCard,
+  };
+
+  // Handle starting price edit
+  const handleStartPriceEdit = (productId: string, currentPrice: number) => {
+    setEditingPriceId(productId);
+    setEditPriceValue(currentPrice.toString());
+  };
+
+  // Handle saving price edit
+  const handleSavePriceEdit = (productId: string, buyingPrice: number) => {
+    const newPrice = parseFloat(editPriceValue);
+    if (isNaN(newPrice) || newPrice <= 0) {
+      toast({
+        title: 'Invalid Price',
+        description: 'Please enter a valid price',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPrice <= buyingPrice) {
+      toast({
+        title: 'Price Too Low',
+        description: `Price must be higher than cost (${formatCurrency(buyingPrice)})`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    updateUnitPrice(productId, newPrice);
+    setEditingPriceId(null);
+    setEditPriceValue('');
+  };
+
+  // Handle canceling price edit
+  const handleCancelPriceEdit = () => {
+    setEditingPriceId(null);
+    setEditPriceValue('');
   };
 
   async function handleCheckout() {
@@ -204,44 +245,97 @@ export default function POSPage() {
               <p className="text-sm">Tap products to add</p>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.product.id} className="pos-cart-item">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{item.product.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatCurrency(item.product.selling_price)} × {item.quantity}
-                  </p>
+            items.map((item) => {
+              const isEditing = editingPriceId === item.product.id;
+              const isPriceModified = item.unitPrice !== item.product.selling_price;
+              
+              return (
+                <div key={item.product.id} className="pos-cart-item">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{item.product.name}</p>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      {isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            value={editPriceValue}
+                            onChange={(e) => setEditPriceValue(e.target.value)}
+                            className="h-6 w-20 text-xs"
+                            min={item.product.buying_price + 1}
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSavePriceEdit(item.product.id, item.product.buying_price);
+                              } else if (e.key === 'Escape') {
+                                handleCancelPriceEdit();
+                              }
+                            }}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleSavePriceEdit(item.product.id, item.product.buying_price)}
+                          >
+                            <CheckCircle className="w-3 h-3 text-success" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <span 
+                            className={cn(
+                              'cursor-pointer hover:text-primary',
+                              isPriceModified && 'text-warning font-medium'
+                            )}
+                            onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
+                          >
+                            {formatCurrency(item.unitPrice)}
+                          </span>
+                          <Edit2 
+                            className="w-3 h-3 cursor-pointer hover:text-primary" 
+                            onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
+                          />
+                          <span>× {item.quantity}</span>
+                          {isPriceModified && (
+                            <span className="text-xs text-muted-foreground line-through">
+                              ({formatCurrency(item.product.selling_price)})
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <span className="w-8 text-center font-medium">{item.quantity}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                      disabled={item.quantity >= item.product.quantity}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-pos-danger"
+                      onClick={() => removeItem(item.product.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                  <span className="w-8 text-center font-medium">{item.quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                    disabled={item.quantity >= item.product.quantity}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:bg-pos-danger"
-                    onClick={() => removeItem(item.product.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
