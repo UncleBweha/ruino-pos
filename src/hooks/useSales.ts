@@ -21,26 +21,37 @@ export function useSales() {
     if (!user) return;
 
     try {
-      let query = supabase
+      // Fetch all sales
+      const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('*, sale_items(*)')
         .order('created_at', { ascending: false });
 
-      // Cashiers can only see their own sales
-      if (!isAdmin) {
-        query = query.eq('cashier_id', user.id);
-      }
+      if (salesError) throw salesError;
 
-      const { data, error } = await query;
+      // Fetch cashier profiles for all unique cashier IDs
+      const cashierIds = [...new Set(salesData?.map(s => s.cashier_id) || [])];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', cashierIds);
 
-      if (error) throw error;
-      setSales(data as Sale[]);
+      // Map profiles by user_id for quick lookup
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      // Combine sales with cashier info
+      const salesWithCashier = salesData?.map(sale => ({
+        ...sale,
+        cashier: profilesMap.get(sale.cashier_id) || null
+      })) || [];
+
+      setSales(salesWithCashier as Sale[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch sales');
     } finally {
       setLoading(false);
     }
-  }, [user, isAdmin]);
+  }, [user]);
 
   useEffect(() => {
     fetchSales();
