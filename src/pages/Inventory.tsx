@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProducts } from '@/hooks/useProducts';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/constants';
 import { BulkProductImport } from '@/components/inventory/BulkProductImport';
 import {
@@ -64,6 +65,7 @@ const emptyForm: ProductFormData = {
 };
 
 export default function InventoryPage() {
+  const { isAdmin } = useAuth();
   const {
     products,
     categories,
@@ -172,14 +174,18 @@ export default function InventoryPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowBulkImport(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Bulk Import
-            </Button>
-            <Button onClick={openAddForm}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
-            </Button>
+            {isAdmin && (
+              <>
+                <Button variant="outline" onClick={() => setShowBulkImport(true)}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Import
+                </Button>
+                <Button onClick={openAddForm}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -242,7 +248,7 @@ export default function InventoryPage() {
                       <TableHead className="text-right">Buying</TableHead>
                       <TableHead className="text-right">Selling</TableHead>
                       <TableHead className="text-right">Profit</TableHead>
-                      <TableHead></TableHead>
+                      {isAdmin && <TableHead></TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -288,15 +294,17 @@ export default function InventoryPage() {
                               ({margin.toFixed(0)}%)
                             </span>
                           </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditForm(product)}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
+                          {isAdmin && (
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditForm(product)}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       );
                     })}
