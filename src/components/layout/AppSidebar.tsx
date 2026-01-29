@@ -49,7 +49,7 @@ export function AppSidebar() {
           <img 
             src={ruinoLogo} 
             alt="Ruino General Merchants" 
-            className="h-16 w-auto object-contain brightness-0 invert"
+            className="h-16 w-auto object-contain"
           />
         </div>
       </div>
@@ -113,7 +113,7 @@ export function AppSidebar() {
           <img 
             src={ruinoLogo} 
             alt="Ruino General Merchants" 
-            className="h-8 w-auto object-contain brightness-0 invert"
+            className="h-8 w-auto object-contain"
           />
         </div>
       </div>
