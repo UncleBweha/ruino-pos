@@ -9,6 +9,7 @@ import {
   Loader2,
   User,
   Calendar,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Credit } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { CreditDetailDialog } from '@/components/credits/CreditDetailDialog';
 
 export default function CreditsPage() {
   const {
@@ -38,6 +40,7 @@ export default function CreditsPage() {
   const { toast } = useToast();
 
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
+  const [detailCredit, setDetailCredit] = useState<Credit | null>(null);
   const [actionType, setActionType] = useState<'pay' | 'return' | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -172,15 +175,19 @@ export default function CreditsPage() {
                 {credits.map((credit) => (
                   <div
                     key={credit.id}
-                    className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
+                    className="p-4 rounded-lg border bg-card hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
+                    onClick={() => setDetailCredit(credit)}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-3 flex-1">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <User className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                          <p className="font-semibold">{credit.customer_name}</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{credit.customer_name}</p>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="w-4 h-4" />
                             {format(new Date(credit.created_at), 'MMM dd, yyyy')}
@@ -205,11 +212,14 @@ export default function CreditsPage() {
                     </div>
 
                     {credit.status === 'pending' && (
-                      <div className="flex gap-2 mt-4 pt-4 border-t">
+                      <div className="flex gap-2 mt-4 pt-4 border-t" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="sm"
                           className="flex-1"
-                          onClick={() => openPayDialog(credit)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openPayDialog(credit);
+                          }}
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Record Payment
@@ -217,7 +227,10 @@ export default function CreditsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => openReturnDialog(credit)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openReturnDialog(credit);
+                          }}
                         >
                           <RotateCcw className="w-4 h-4 mr-2" />
                           Items Returned
@@ -299,6 +312,13 @@ export default function CreditsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Credit Detail Dialog */}
+      <CreditDetailDialog
+        credit={detailCredit}
+        open={!!detailCredit}
+        onOpenChange={(open) => !open && setDetailCredit(null)}
+      />
     </AppLayout>
   );
 }
