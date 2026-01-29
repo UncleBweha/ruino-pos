@@ -11,6 +11,7 @@ import {
   Wallet,
   BarChart3,
   RefreshCw,
+  DollarSign,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,13 @@ export default function DashboardPage() {
       icon: Wallet,
       color: 'text-success',
       bgColor: 'bg-pos-success',
+    },
+    {
+      title: 'Inventory Cost',
+      value: formatCurrency(stats.inventoryCost),
+      icon: DollarSign,
+      color: 'text-info',
+      bgColor: 'bg-info/10',
     },
   ];
 

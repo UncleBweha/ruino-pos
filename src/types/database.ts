@@ -125,6 +125,7 @@ export interface DashboardStats {
   lowStockCount: number;
   pendingCredits: number;
   todayCash: number;
+  inventoryCost: number;
 }
 
 export interface TopProduct {
