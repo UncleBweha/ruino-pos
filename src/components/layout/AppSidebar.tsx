@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import ruinuLogo from '@/assets/ruinu-logo.png';
+
 
 const adminNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -43,14 +43,10 @@ export function AppSidebar() {
 
   const NavContent = () => (
     <>
-      {/* Logo */}
+      {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-center">
-          <img 
-            src={ruinuLogo} 
-            alt="Ruinu General Merchants" 
-            className="h-16 w-auto object-contain"
-          />
+          <h1 className="text-lg font-bold text-sidebar-foreground">Ruinu General Merchants</h1>
         </div>
       </div>
 
@@ -109,13 +105,7 @@ export function AppSidebar() {
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
-        <div className="flex items-center ml-3">
-          <img 
-            src={ruinuLogo} 
-            alt="Ruinu General Merchants" 
-            className="h-8 w-auto object-contain"
-          />
-        </div>
+        <span className="ml-3 font-bold text-sidebar-foreground">Ruinu</span>
       </div>
 
       {/* Mobile Overlay */}
