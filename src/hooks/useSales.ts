@@ -127,11 +127,11 @@ export function useSales() {
 
     if (saleError) throw saleError;
 
-    const sale = saleData as Sale;
+    const saleId = saleData.id;
 
     // Create sale items - use the custom unitPrice from cart
     const saleItems = items.map((item) => ({
-      sale_id: sale.id,
+      sale_id: saleId,
       product_id: item.product.id,
       product_name: item.product.name,
       quantity: item.quantity,
@@ -160,7 +160,7 @@ export function useSales() {
     // Handle cash payment - add to cash box
     if (paymentMethod === 'cash') {
       await supabase.from('cash_box').insert({
-        sale_id: sale.id,
+        sale_id: saleId,
         amount: total,
         transaction_type: 'sale',
         cashier_id: user.id,
@@ -170,7 +170,7 @@ export function useSales() {
     // Handle credit sale - create credit record
     if (paymentMethod === 'credit') {
       await supabase.from('credits').insert({
-        sale_id: sale.id,
+        sale_id: saleId,
         customer_name: customerName!,
         total_owed: total,
         amount_paid: 0,
@@ -179,7 +179,16 @@ export function useSales() {
       });
     }
 
-    return sale;
+    // Fetch the complete sale with items to return with correct prices
+    const { data: completeSale, error: fetchError } = await supabase
+      .from('sales')
+      .select('*, sale_items(*)')
+      .eq('id', saleId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    return completeSale as Sale;
   }
 
   async function voidSale(saleId: string): Promise<void> {
