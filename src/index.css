@@ -2,14 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ruino General Merchants POS - Design System
+/* Ruinu General Merchants POS - Design System
    Touch-first, professional retail design
    All colors in HSL format
 */
 
 @layer base {
   :root {
-    /* Ruino Merchants - Bold Terracotta & Ink identity */
+    /* Ruinu Merchants - Bold Terracotta & Ink identity */
     --background: 30 25% 97%;
     --foreground: 20 30% 8%;
 
