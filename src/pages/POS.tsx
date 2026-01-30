@@ -461,7 +461,7 @@ export default function POSPage() {
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
-                {receiptSettings?.company_name || 'Ruino General Merchants'}
+                {receiptSettings?.company_name || 'Ruinu General Merchants'}
               </p>
               <div className="flex gap-2">
                 <Button

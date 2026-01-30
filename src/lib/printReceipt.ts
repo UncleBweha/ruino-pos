@@ -10,7 +10,7 @@ interface PrintReceiptOptions {
 export function generateReceiptHTML(options: PrintReceiptOptions): string {
   const { sale, settings } = options;
 
-  const companyName = settings?.company_name || 'Ruino General Merchants';
+  const companyName = settings?.company_name || 'Ruinu General Merchants';
   const phone = settings?.phone || '';
   const email = settings?.email || '';
   const address = settings?.address || '';

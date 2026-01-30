@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2, LogIn, Eye, EyeOff } from 'lucide-react';
-import ruinoLogo from '@/assets/ruino-logo.png';
+import ruinuLogo from '@/assets/ruinu-logo.png';
 import { useToast } from '@/hooks/use-toast';
 import { PRECONFIGURED_USERS, DEFAULT_PASSWORD, PreConfiguredUser } from '@/lib/users';
 
@@ -123,11 +123,11 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="text-center pb-2 pt-8">
           <img 
-            src={ruinoLogo} 
-            alt="Ruino General Merchants Logo" 
+            src={ruinuLogo} 
+            alt="Ruinu General Merchants Logo" 
             className="w-32 h-32 mx-auto mb-4 object-contain"
           />
-          <h1 className="text-2xl font-bold text-foreground">Ruino General Merchants</h1>
+          <h1 className="text-2xl font-bold text-foreground">Ruinu General Merchants</h1>
           <p className="text-muted-foreground text-sm">Point of Sale System</p>
         </CardHeader>
         

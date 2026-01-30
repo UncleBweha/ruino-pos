@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import ruinoLogo from '@/assets/ruino-logo.png';
+import ruinuLogo from '@/assets/ruinu-logo.png';
 
 const adminNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -47,8 +47,8 @@ export function AppSidebar() {
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-center">
           <img 
-            src={ruinoLogo} 
-            alt="Ruino General Merchants" 
+            src={ruinuLogo} 
+            alt="Ruinu General Merchants" 
             className="h-16 w-auto object-contain"
           />
         </div>
@@ -111,8 +111,8 @@ export function AppSidebar() {
         </Button>
         <div className="flex items-center ml-3">
           <img 
-            src={ruinoLogo} 
-            alt="Ruino General Merchants" 
+            src={ruinuLogo} 
+            alt="Ruinu General Merchants" 
             className="h-8 w-auto object-contain"
           />
         </div>
