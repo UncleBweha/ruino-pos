@@ -237,7 +237,7 @@ export default function POSPage() {
         </div>
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[40vh] lg:max-h-none">
           {items.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -260,7 +260,7 @@ export default function POSPage() {
                             type="number"
                             value={editPriceValue}
                             onChange={(e) => setEditPriceValue(e.target.value)}
-                            className="h-6 w-20 text-xs"
+                            className="h-7 w-24 text-sm"
                             min={item.product.buying_price + 1}
                             autoFocus
                             onKeyDown={(e) => {
@@ -272,29 +272,23 @@ export default function POSPage() {
                             }}
                           />
                           <Button
-                            variant="ghost"
+                            variant="default"
                             size="icon"
-                            className="h-6 w-6"
+                            className="h-7 w-7"
                             onClick={() => handleSavePriceEdit(item.product.id, item.product.buying_price)}
                           >
-                            <CheckCircle className="w-3 h-3 text-success" />
+                            <CheckCircle className="w-4 h-4" />
                           </Button>
                         </div>
                       ) : (
                         <>
                           <span 
                             className={cn(
-                              'cursor-pointer hover:text-primary',
                               isPriceModified && 'text-warning font-medium'
                             )}
-                            onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
                           >
                             {formatCurrency(item.unitPrice)}
                           </span>
-                          <Edit2 
-                            className="w-3 h-3 cursor-pointer hover:text-primary" 
-                            onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
-                          />
                           <span>× {item.quantity}</span>
                           {isPriceModified && (
                             <span className="text-xs text-muted-foreground line-through">
@@ -305,7 +299,18 @@ export default function POSPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {!isEditing && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
+                        title="Edit price"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="icon"
@@ -314,7 +319,7 @@ export default function POSPage() {
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
+                    <span className="w-6 text-center font-medium text-sm">{item.quantity}</span>
                     <Button
                       variant="outline"
                       size="icon"
