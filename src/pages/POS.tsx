@@ -253,64 +253,60 @@ export default function POSPage() {
                 <div key={item.product.id} className="pos-cart-item">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{item.product.name}</p>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      {isEditing ? (
-                        <div className="flex items-center gap-1">
-                          <Input
-                            type="number"
-                            value={editPriceValue}
-                            onChange={(e) => setEditPriceValue(e.target.value)}
-                            className="h-7 w-24 text-sm"
-                            min={item.product.buying_price + 1}
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleSavePriceEdit(item.product.id, item.product.buying_price);
-                              } else if (e.key === 'Escape') {
-                                handleCancelPriceEdit();
-                              }
-                            }}
-                          />
-                          <Button
-                            variant="default"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => handleSavePriceEdit(item.product.id, item.product.buying_price)}
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <span 
-                            className={cn(
-                              isPriceModified && 'text-warning font-medium'
-                            )}
-                          >
-                            {formatCurrency(item.unitPrice)}
-                          </span>
-                          <span>× {item.quantity}</span>
-                          {isPriceModified && (
-                            <span className="text-xs text-muted-foreground line-through">
-                              ({formatCurrency(item.product.selling_price)})
-                            </span>
+                    {isEditing ? (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Input
+                          type="number"
+                          value={editPriceValue}
+                          onChange={(e) => setEditPriceValue(e.target.value)}
+                          className="h-8 w-24 text-sm"
+                          min={item.product.buying_price + 1}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSavePriceEdit(item.product.id, item.product.buying_price);
+                            } else if (e.key === 'Escape') {
+                              handleCancelPriceEdit();
+                            }
+                          }}
+                        />
+                        <Button
+                          variant="default"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleSavePriceEdit(item.product.id, item.product.buying_price)}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <span 
+                          className={cn(
+                            isPriceModified && 'text-warning font-medium'
                           )}
-                        </>
-                      )}
-                    </div>
+                        >
+                          {formatCurrency(item.unitPrice)}
+                        </span>
+                        <span>× {item.quantity}</span>
+                        {isPriceModified && (
+                          <span className="text-xs line-through">
+                            ({formatCurrency(item.product.selling_price)})
+                          </span>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
+                          title="Edit price"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
-                    {!isEditing && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
-                        title="Edit price"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                    )}
                     <Button
                       variant="outline"
                       size="icon"
