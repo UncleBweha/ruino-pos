@@ -237,7 +237,7 @@ export default function POSPage() {
         </div>
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[40vh] lg:max-h-none">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[50vh] lg:max-h-none">
           {items.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -250,16 +250,16 @@ export default function POSPage() {
               const isPriceModified = item.unitPrice !== item.product.selling_price;
               
               return (
-                <div key={item.product.id} className="pos-cart-item">
+                <div key={item.product.id} className="pos-cart-item p-5">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.product.name}</p>
+                    <p className="font-semibold text-base truncate">{item.product.name}</p>
                     {isEditing ? (
-                      <div className="flex items-center gap-1 mt-1">
+                      <div className="flex items-center gap-2 mt-2">
                         <Input
                           type="number"
                           value={editPriceValue}
                           onChange={(e) => setEditPriceValue(e.target.value)}
-                          className="h-8 w-24 text-sm"
+                          className="h-10 w-28 text-base"
                           min={item.product.buying_price + 1}
                           autoFocus
                           onKeyDown={(e) => {
@@ -273,22 +273,23 @@ export default function POSPage() {
                         <Button
                           variant="default"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-10 w-10"
                           onClick={() => handleSavePriceEdit(item.product.id, item.product.buying_price)}
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          <CheckCircle className="w-5 h-5" />
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                         <span 
                           className={cn(
+                            "text-base",
                             isPriceModified && 'text-warning font-medium'
                           )}
                         >
                           {formatCurrency(item.unitPrice)}
                         </span>
-                        <span>× {item.quantity}</span>
+                        <span className="text-base">× {item.quantity}</span>
                         {isPriceModified && (
                           <span className="text-xs line-through">
                             ({formatCurrency(item.product.selling_price)})
@@ -297,41 +298,41 @@ export default function POSPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6"
+                          className="h-8 w-8"
                           onClick={() => handleStartPriceEdit(item.product.id, item.unitPrice)}
                           title="Edit price"
                         >
-                          <Edit2 className="w-3 h-3" />
+                          <Edit2 className="w-4 h-4" />
                         </Button>
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-10 w-10"
                       onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                     >
-                      <Minus className="w-4 h-4" />
+                      <Minus className="w-5 h-5" />
                     </Button>
-                    <span className="w-6 text-center font-medium text-sm">{item.quantity}</span>
+                    <span className="w-8 text-center font-bold text-base">{item.quantity}</span>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-10 w-10"
                       onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                       disabled={item.quantity >= item.product.quantity}
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-5 h-5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:bg-pos-danger"
+                      className="h-10 w-10 text-destructive hover:bg-pos-danger"
                       onClick={() => removeItem(item.product.id)}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </Button>
                   </div>
                 </div>
@@ -341,39 +342,37 @@ export default function POSPage() {
         </div>
 
         {/* Checkout Section */}
-        <div className="p-4 border-t space-y-4 bg-muted/30">
-          {/* Customer Name */}
-          <div>
-            <Label className="text-sm">Customer Name {selectedPayment === 'credit' && <span className="text-destructive">*</span>}</Label>
-            <Input
-              placeholder="Walk-in customer"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              className="h-10 mt-1"
-            />
-          </div>
-
-          {/* Tax & Discount */}
-          <div className="grid grid-cols-2 gap-3">
+        <div className="p-4 border-t space-y-3 bg-muted/30">
+          {/* Customer, Tax & Discount - Compact Row */}
+          <div className="grid grid-cols-3 gap-2">
             <div>
-              <Label className="text-sm">Tax Rate (%)</Label>
+              <Label className="text-xs">Customer {selectedPayment === 'credit' && <span className="text-destructive">*</span>}</Label>
+              <Input
+                placeholder="Walk-in"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="h-9 mt-0.5 text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Tax (%)</Label>
               <Input
                 type="number"
                 min="0"
                 max="100"
                 value={taxRate}
                 onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                className="h-10 mt-1"
+                className="h-9 mt-0.5 text-sm"
               />
             </div>
             <div>
-              <Label className="text-sm">Discount (Kshs)</Label>
+              <Label className="text-xs">Discount</Label>
               <Input
                 type="number"
                 min="0"
                 value={discount}
                 onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                className="h-10 mt-1"
+                className="h-9 mt-0.5 text-sm"
               />
             </div>
           </div>
