@@ -148,24 +148,18 @@ export default function SettingsPage() {
     setAddingUser(true);
 
     try {
-      // Create user via signup
-      const { data, error } = await supabase.auth.signUp({
-        email: newUserForm.email,
-        password: newUserForm.password,
-        options: {
-          data: { full_name: newUserForm.full_name },
+      // Call edge function to create user (preserves admin session)
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: newUserForm.email,
+          password: newUserForm.password,
+          full_name: newUserForm.full_name,
+          role: newUserForm.role,
         },
       });
 
       if (error) throw error;
-
-      if (data.user) {
-        // Add role
-        await supabase.from('user_roles').insert({
-          user_id: data.user.id,
-          role: newUserForm.role,
-        });
-      }
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: 'User Created',
