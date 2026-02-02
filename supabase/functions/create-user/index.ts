@@ -88,18 +88,30 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Small delay to let the trigger complete
-    await new Promise(resolve => setTimeout(resolve, 100))
+    // Wait for the trigger to complete, then update to the requested role
+    await new Promise(resolve => setTimeout(resolve, 300))
 
-    // Delete any role the trigger created, then insert the requested one
-    await supabaseAdmin
+    // Try update first (if trigger created a role), then insert if needed
+    const { data: updateResult, error: updateError } = await supabaseAdmin
       .from('user_roles')
-      .delete()
+      .update({ role })
       .eq('user_id', newUser.user.id)
+      .select()
 
-    await supabaseAdmin
-      .from('user_roles')
-      .insert({ user_id: newUser.user.id, role })
+    // If no rows were updated (trigger didn't run yet), insert the role
+    if (!updateResult || updateResult.length === 0) {
+      const { error: insertError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({ user_id: newUser.user.id, role })
+      
+      // If insert fails due to duplicate (trigger ran), update instead
+      if (insertError?.code === '23505') {
+        await supabaseAdmin
+          .from('user_roles')
+          .update({ role })
+          .eq('user_id', newUser.user.id)
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
