@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,22 +15,74 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2, LogIn, Eye, EyeOff } from 'lucide-react';
-
 import { useToast } from '@/hooks/use-toast';
-import { PRECONFIGURED_USERS, DEFAULT_PASSWORDS, PreConfiguredUser } from '@/lib/users';
+
+interface UserProfile {
+  id: string;
+  user_id: string;
+  full_name: string;
+  email: string;
+  role?: 'admin' | 'cashier';
+}
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(true);
   const [role, setRole] = useState<'admin' | 'cashier'>('cashier');
   const [selectedUser, setSelectedUser] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const admins = PRECONFIGURED_USERS.filter(u => u.role === 'admin');
-  const cashiers = PRECONFIGURED_USERS.filter(u => u.role === 'cashier');
+  // Fetch users from database
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        // Fetch profiles
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, user_id, full_name, email')
+          .order('full_name');
+
+        if (profilesError) throw profilesError;
+
+        // Fetch roles for each user
+        const usersWithRoles: UserProfile[] = await Promise.all(
+          (profiles || []).map(async (profile) => {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', profile.user_id)
+              .maybeSingle();
+
+            return {
+              ...profile,
+              role: roleData?.role as 'admin' | 'cashier' | undefined,
+            };
+          })
+        );
+
+        setUsers(usersWithRoles.filter(u => u.role)); // Only show users with roles
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load users',
+          variant: 'destructive',
+        });
+      } finally {
+        setUsersLoading(false);
+      }
+    }
+
+    fetchUsers();
+  }, [toast]);
+
+  const admins = users.filter(u => u.role === 'admin');
+  const cashiers = users.filter(u => u.role === 'cashier');
   const currentUsers = role === 'admin' ? admins : cashiers;
 
   // Reset selected user when role changes
@@ -50,28 +103,33 @@ export default function LoginPage() {
       return;
     }
 
-    const user = PRECONFIGURED_USERS.find(u => u.email === selectedUser);
+    const user = users.find(u => u.email === selectedUser);
     if (!user) return;
 
     setLoading(true);
 
     try {
-      const defaultPassword = DEFAULT_PASSWORDS[user.role];
-      const passwordToUse = password || defaultPassword;
+      if (!password) {
+        toast({
+          title: 'Password required',
+          description: 'Please enter your password',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
       
-      // Sign in with provided password or default
-      const { error } = await signIn(user.email, passwordToUse);
+      const { error } = await signIn(user.email!, password);
       
       if (error) {
-        // Provide clearer error message for wrong password
         if (error.message?.includes('Invalid login credentials')) {
-          throw new Error(`Wrong password. Default for ${user.role}s is: ${defaultPassword}`);
+          throw new Error('Wrong password. Please try again.');
         }
         throw error;
       }
 
       toast({
-        title: `Welcome, ${user.name}!`,
+        title: `Welcome, ${user.full_name}!`,
         description: `Logged in as ${user.role}`,
       });
       navigate('/pos');
@@ -123,90 +181,103 @@ export default function LoginPage() {
         </CardHeader>
         
         <CardContent className="space-y-6 px-8 pb-8">
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Role Selection */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Role</Label>
-              <RadioGroup
-                value={role}
-                onValueChange={(value) => handleRoleChange(value as 'admin' | 'cashier')}
-                className="flex gap-6"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cashier" id="cashier" />
-                  <Label htmlFor="cashier" className="font-normal cursor-pointer">
-                    Cashier
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin" id="admin" />
-                  <Label htmlFor="admin" className="font-normal cursor-pointer">
-                    Admin
-                  </Label>
-                </div>
-              </RadioGroup>
+          {usersLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-
-            {/* User Selection Dropdown */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                {role === 'admin' ? 'Select Admin' : 'Select Cashier'}
-              </Label>
-              <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger className="h-11 bg-background">
-                  <SelectValue placeholder={`Choose a ${role}...`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {currentUsers.map((user) => (
-                    <SelectItem key={user.email} value={user.email}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No users found.</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Please contact an administrator to set up accounts.
+              </p>
             </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Password</Label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 pr-10 bg-background"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-5">
+              {/* Role Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Role</Label>
+                <RadioGroup
+                  value={role}
+                  onValueChange={(value) => handleRoleChange(value as 'admin' | 'cashier')}
+                  className="flex gap-6"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cashier" id="cashier" />
+                    <Label htmlFor="cashier" className="font-normal cursor-pointer">
+                      Cashier ({cashiers.length})
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="admin" id="admin" />
+                    <Label htmlFor="admin" className="font-normal cursor-pointer">
+                      Admin ({admins.length})
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
-            </div>
 
-            {/* Sign In Button */}
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-medium"
-              disabled={loading || !selectedUser}
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <LogIn className="w-5 h-5 mr-2" />
-                  Sign In
-                </>
-              )}
-            </Button>
-          </form>
+              {/* User Selection Dropdown */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  {role === 'admin' ? 'Select Admin' : 'Select Cashier'}
+                </Label>
+                <Select value={selectedUser} onValueChange={setSelectedUser}>
+                  <SelectTrigger className="h-11 bg-background">
+                    <SelectValue placeholder={currentUsers.length === 0 ? `No ${role}s available` : `Choose a ${role}...`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currentUsers.map((user) => (
+                      <SelectItem key={user.user_id} value={user.email!}>
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Password</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-11 pr-10 bg-background"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Sign In Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-medium"
+                disabled={loading || !selectedUser || currentUsers.length === 0}
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <LogIn className="w-5 h-5 mr-2" />
+                    Sign In
+                  </>
+                )}
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>
