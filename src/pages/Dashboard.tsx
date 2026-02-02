@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UserManagement } from '@/components/dashboard/UserManagement';
 
 export default function DashboardPage() {
   const { stats, topProducts, loading, refresh } = useDashboard();
@@ -129,7 +130,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Content Grid */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Top Products */}
           <Card>
             <CardHeader>
@@ -158,7 +159,7 @@ export default function DashboardPage() {
                           {index + 1}
                         </span>
                         <div>
-                          <p className="font-medium truncate max-w-[150px] lg:max-w-[200px]">
+                          <p className="font-medium truncate max-w-[120px]">
                             {product.product_name}
                           </p>
                           <p className="text-sm text-muted-foreground">
@@ -197,7 +198,7 @@ export default function DashboardPage() {
                       className="flex items-center justify-between p-3 rounded-lg bg-pos-warning"
                     >
                       <div>
-                        <p className="font-medium truncate max-w-[180px]">
+                        <p className="font-medium truncate max-w-[120px]">
                           {product.name}
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -218,6 +219,9 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* User Management */}
+          <UserManagement />
         </div>
       </div>
     </AppLayout>
