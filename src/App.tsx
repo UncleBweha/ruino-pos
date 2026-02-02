@@ -13,6 +13,7 @@ import SalesPage from "./pages/Sales";
 import CreditsPage from "./pages/Credits";
 import CashBoxPage from "./pages/CashBox";
 import SettingsPage from "./pages/Settings";
+import ProfilePage from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/credits" element={<ProtectedRoute><CreditsPage /></ProtectedRoute>} />
             <Route path="/cashbox" element={<ProtectedRoute requireAdmin><CashBoxPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireAdmin><SettingsPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
