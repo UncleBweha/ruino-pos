@@ -24,7 +24,7 @@ export default function LoginPage() {
   const [selectedUser, setSelectedUser] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -57,21 +57,16 @@ export default function LoginPage() {
 
     try {
       const defaultPassword = DEFAULT_PASSWORDS[user.role];
-      // Try to sign in first
-      let { error } = await signIn(user.email, password || defaultPassword);
+      const passwordToUse = password || defaultPassword;
       
-      // If user doesn't exist, create them
-      if (error?.message?.includes('Invalid login credentials')) {
-        const signUpResult = await signUp(user.email, password || defaultPassword, user.name, user.role);
-        if (signUpResult.error) {
-          throw signUpResult.error;
+      // Sign in with provided password or default
+      const { error } = await signIn(user.email, passwordToUse);
+      
+      if (error) {
+        // Provide clearer error message for wrong password
+        if (error.message?.includes('Invalid login credentials')) {
+          throw new Error(`Wrong password. Default for ${user.role}s is: ${defaultPassword}`);
         }
-        // Sign in after signup
-        const signInResult = await signIn(user.email, password || defaultPassword);
-        if (signInResult.error) {
-          throw signInResult.error;
-        }
-      } else if (error) {
         throw error;
       }
 
