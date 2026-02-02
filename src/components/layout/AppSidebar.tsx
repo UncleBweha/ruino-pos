@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   X,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -73,14 +74,21 @@ export function AppSidebar() {
 
       {/* User & Logout */}
       <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/30">
-        <div className="px-3 py-2.5 mb-3 rounded-md bg-sidebar-accent/50">
-          <p className="font-semibold text-sidebar-foreground truncate">
-            {profile?.full_name || 'User'}
-          </p>
-          <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider mt-0.5">
+        <Link
+          to="/profile"
+          onClick={() => setMobileOpen(false)}
+          className="block px-3 py-2.5 mb-3 rounded-md bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-sidebar-foreground/70" />
+            <p className="font-semibold text-sidebar-foreground truncate">
+              {profile?.full_name || 'User'}
+            </p>
+          </div>
+          <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider mt-0.5 ml-6">
             {role || 'Loading...'}
           </p>
-        </div>
+        </Link>
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent font-medium"

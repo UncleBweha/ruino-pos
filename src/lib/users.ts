@@ -14,5 +14,13 @@ export const PRECONFIGURED_USERS: PreConfiguredUser[] = [
   { name: 'Gakwa', email: 'gakwa@ruinu.local', role: 'cashier', initials: 'GK' },
 ];
 
-// Default password for all users (simplified for POS environment)
-export const DEFAULT_PASSWORD = 'ruinu2024';
+// Default passwords by role
+export const DEFAULT_PASSWORDS = {
+  admin: 'admin',
+  cashier: 'cashier',
+} as const;
+
+// Helper to get default password for a user
+export function getDefaultPassword(role: 'admin' | 'cashier'): string {
+  return DEFAULT_PASSWORDS[role];
+}

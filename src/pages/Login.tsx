@@ -16,7 +16,7 @@ import {
 import { Loader2, LogIn, Eye, EyeOff } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
-import { PRECONFIGURED_USERS, DEFAULT_PASSWORD, PreConfiguredUser } from '@/lib/users';
+import { PRECONFIGURED_USERS, DEFAULT_PASSWORDS, PreConfiguredUser } from '@/lib/users';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -56,17 +56,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      const defaultPassword = DEFAULT_PASSWORDS[user.role];
       // Try to sign in first
-      let { error } = await signIn(user.email, password || DEFAULT_PASSWORD);
+      let { error } = await signIn(user.email, password || defaultPassword);
       
       // If user doesn't exist, create them
       if (error?.message?.includes('Invalid login credentials')) {
-        const signUpResult = await signUp(user.email, password || DEFAULT_PASSWORD, user.name, user.role);
+        const signUpResult = await signUp(user.email, password || defaultPassword, user.name, user.role);
         if (signUpResult.error) {
           throw signUpResult.error;
         }
         // Sign in after signup
-        const signInResult = await signIn(user.email, password || DEFAULT_PASSWORD);
+        const signInResult = await signIn(user.email, password || defaultPassword);
         if (signInResult.error) {
           throw signInResult.error;
         }
