@@ -82,9 +82,10 @@ Deno.serve(async (req) => {
     })
 
     if (createError) {
+      console.error('Create user error:', createError)
       return new Response(
         JSON.stringify({ error: createError.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
 
@@ -122,6 +123,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
+    console.error('Unexpected error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return new Response(
       JSON.stringify({ error: errorMessage }),
