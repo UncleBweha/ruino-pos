@@ -159,17 +159,26 @@ export default function POSPage() {
         className={cn(
           'pos-product-card text-left w-full relative',
           isOutOfStock && 'opacity-50 cursor-not-allowed',
-          inCart && 'ring-2 ring-primary'
+          inCart && 'ring-2 ring-primary',
+          isMobile && 'flex items-center gap-3 p-3'
         )}
       >
         {inCart && (
-          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+          <div className={cn(
+            "absolute w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center",
+            isMobile ? "-top-1 -left-1" : "-top-2 -right-2"
+          )}>
             {inCart.quantity}
           </div>
         )}
-        <p className="font-medium truncate">{product.name}</p>
-        <p className="text-xs text-muted-foreground mb-1">{product.sku}</p>
-        <div className="flex items-center justify-between">
+        <div className={cn(isMobile && "flex-1 min-w-0")}>
+          <p className="font-medium truncate">{product.name}</p>
+          <p className="text-xs text-muted-foreground">{product.sku}</p>
+        </div>
+        <div className={cn(
+          "flex items-center justify-between",
+          isMobile && "flex-shrink-0 gap-3"
+        )}>
           <p className="font-bold text-primary currency">
             {formatCurrency(product.selling_price)}
           </p>
