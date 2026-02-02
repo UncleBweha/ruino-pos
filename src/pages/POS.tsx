@@ -204,14 +204,14 @@ export default function POSPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className={cn("flex-1 overflow-y-auto p-4", isMobile && !searchQuery && "hidden")}>
           {productsLoading ? (
             <div className="flex items-center justify-center h-32">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              {searchQuery ? 'No products found' : (isMobile ? 'Search for products above' : 'No products available')}
+              No products found
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
