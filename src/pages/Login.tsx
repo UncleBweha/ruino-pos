@@ -37,35 +37,24 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Fetch users from database
+  // Fetch users from database using security definer function
   useEffect(() => {
     async function fetchUsers() {
       try {
-        // Fetch profiles
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, user_id, full_name, email')
-          .order('full_name');
+        // Use the get_login_users function which bypasses RLS
+        const { data, error } = await supabase.rpc('get_login_users');
 
-        if (profilesError) throw profilesError;
+        if (error) throw error;
 
-        // Fetch roles for each user
-        const usersWithRoles: UserProfile[] = await Promise.all(
-          (profiles || []).map(async (profile) => {
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', profile.user_id)
-              .maybeSingle();
+        const usersWithRoles: UserProfile[] = (data || []).map((u: any) => ({
+          id: u.user_id,
+          user_id: u.user_id,
+          full_name: u.full_name,
+          email: u.email,
+          role: u.role as 'admin' | 'cashier',
+        }));
 
-            return {
-              ...profile,
-              role: roleData?.role as 'admin' | 'cashier' | undefined,
-            };
-          })
-        );
-
-        setUsers(usersWithRoles.filter(u => u.role)); // Only show users with roles
+        setUsers(usersWithRoles);
       } catch (error) {
         console.error('Error fetching users:', error);
         toast({
