@@ -214,7 +214,10 @@ export default function POSPage() {
               No products found
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div className={cn(
+              "gap-3",
+              isMobile ? "flex flex-col" : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            )}>
               {filteredProducts.map((product) => renderProductCard(product))}
             </div>
           )}
