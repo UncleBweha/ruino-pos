@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Product, Sale } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function POSPage() {
   const { products, loading: productsLoading, searchProducts } = useProducts();
@@ -39,6 +40,7 @@ export default function POSPage() {
   const { createSale } = useSales();
   const { receiptSettings } = useSettings();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<'cash' | 'mpesa' | 'credit'>('cash');
@@ -48,7 +50,8 @@ export default function POSPage() {
   const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
   const [editPriceValue, setEditPriceValue] = useState('');
 
-  const filteredProducts = searchQuery ? searchProducts(searchQuery) : products;
+  // On mobile, only show products when searching
+  const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
 
   const paymentIcons = {
     cash: Banknote,
@@ -208,7 +211,7 @@ export default function POSPage() {
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              {searchQuery ? 'No products found' : 'No products available'}
+              {searchQuery ? 'No products found' : (isMobile ? 'Search for products above' : 'No products available')}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
