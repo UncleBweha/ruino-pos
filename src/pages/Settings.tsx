@@ -186,6 +186,34 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleDeleteUser(userId: string) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Call the edge function to delete the user
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'User Deleted',
+        description: 'The user has been removed from the system',
+      });
+
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete user',
+        variant: 'destructive',
+      });
+    }
+  }
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
@@ -354,6 +382,16 @@ export default function SettingsPage() {
                             <span className="text-sm font-medium capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">
                               {u.role || 'No role'}
                             </span>
+                            {u.user_id !== user?.id && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteUser(u.user_id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
