@@ -313,32 +313,32 @@ export default function POSPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10"
+                      className="h-7 w-7"
                       onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                     >
-                      <Minus className="w-5 h-5" />
+                      <Minus className="w-3.5 h-3.5" />
                     </Button>
-                    <span className="w-8 text-center font-bold text-base">{item.quantity}</span>
+                    <span className="w-6 text-center font-bold text-sm">{item.quantity}</span>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10"
+                      className="h-7 w-7"
                       onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                       disabled={item.quantity >= item.product.quantity}
                     >
-                      <Plus className="w-5 h-5" />
+                      <Plus className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-10 w-10 text-destructive hover:bg-pos-danger"
+                      className="h-7 w-7 text-destructive hover:bg-pos-danger"
                       onClick={() => removeItem(item.product.id)}
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
