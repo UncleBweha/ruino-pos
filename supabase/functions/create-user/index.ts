@@ -88,26 +88,18 @@ Deno.serve(async (req) => {
       )
     }
 
-    // The trigger assigns a role based on email domain
-    // Update the role if the requested role differs from what the trigger assigned
-    const { data: existingRole } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', newUser.user.id)
-      .maybeSingle()
+    // Small delay to let the trigger complete
+    await new Promise(resolve => setTimeout(resolve, 100))
 
-    if (existingRole && existingRole.role !== role) {
-      // Update to the requested role
-      await supabaseAdmin
-        .from('user_roles')
-        .update({ role })
-        .eq('user_id', newUser.user.id)
-    } else if (!existingRole) {
-      // Insert role if trigger didn't create one
-      await supabaseAdmin
-        .from('user_roles')
-        .insert({ user_id: newUser.user.id, role })
-    }
+    // Delete any role the trigger created, then insert the requested one
+    await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', newUser.user.id)
+
+    await supabaseAdmin
+      .from('user_roles')
+      .insert({ user_id: newUser.user.id, role })
 
     return new Response(
       JSON.stringify({ 
