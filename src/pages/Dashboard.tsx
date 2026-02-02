@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useProducts } from '@/hooks/useProducts';
@@ -17,10 +19,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserManagement } from '@/components/dashboard/UserManagement';
+import { MonthlySalesDialog } from '@/components/dashboard/MonthlySalesDialog';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { stats, topProducts, loading, refresh } = useDashboard();
   const { lowStockProducts } = useProducts();
+  const [showMonthlySales, setShowMonthlySales] = useState(false);
 
   const statCards = [
     {
@@ -43,6 +49,8 @@ export default function DashboardPage() {
       icon: BarChart3,
       color: 'text-info',
       bgColor: 'bg-info/10',
+      onClick: () => setShowMonthlySales(true),
+      clickable: true,
     },
     {
       title: "Month's Profit",
@@ -57,6 +65,8 @@ export default function DashboardPage() {
       icon: Package,
       color: 'text-muted-foreground',
       bgColor: 'bg-muted',
+      onClick: () => navigate('/inventory'),
+      clickable: true,
     },
     {
       title: 'Low Stock Items',
@@ -64,6 +74,8 @@ export default function DashboardPage() {
       icon: AlertTriangle,
       color: stats.lowStockCount > 0 ? 'text-warning' : 'text-muted-foreground',
       bgColor: stats.lowStockCount > 0 ? 'bg-pos-warning' : 'bg-muted',
+      onClick: () => navigate('/inventory'),
+      clickable: true,
     },
     {
       title: 'Pending Credits',
@@ -71,6 +83,8 @@ export default function DashboardPage() {
       icon: CreditCard,
       color: stats.pendingCredits > 0 ? 'text-destructive' : 'text-muted-foreground',
       bgColor: stats.pendingCredits > 0 ? 'bg-pos-danger' : 'bg-muted',
+      onClick: () => navigate('/credits'),
+      clickable: true,
     },
     {
       title: "Today's Cash",
@@ -85,6 +99,8 @@ export default function DashboardPage() {
       icon: DollarSign,
       color: 'text-info',
       bgColor: 'bg-info/10',
+      onClick: () => navigate('/inventory'),
+      clickable: true,
     },
   ];
 
@@ -106,7 +122,14 @@ export default function DashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((stat, index) => (
-            <Card key={index} className="stat-card">
+            <Card
+              key={index}
+              className={cn(
+                'stat-card transition-all',
+                stat.clickable && 'cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-md'
+              )}
+              onClick={stat.onClick}
+            >
               <CardContent className="p-4">
                 {loading ? (
                   <div className="space-y-2">
@@ -119,6 +142,9 @@ export default function DashboardPage() {
                       <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                         <stat.icon className={`w-4 h-4 ${stat.color}`} />
                       </div>
+                      {stat.clickable && (
+                        <span className="text-xs text-muted-foreground ml-auto">Tap to view</span>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">{stat.title}</p>
                     <p className="text-xl lg:text-2xl font-bold currency">{stat.value}</p>
@@ -224,6 +250,9 @@ export default function DashboardPage() {
           <UserManagement />
         </div>
       </div>
+
+      {/* Monthly Sales Dialog */}
+      <MonthlySalesDialog open={showMonthlySales} onOpenChange={setShowMonthlySales} />
     </AppLayout>
   );
 }
