@@ -88,14 +88,25 @@ Deno.serve(async (req) => {
       )
     }
 
-    // The trigger should create profile and role automatically
-    // But we'll manually set the role to ensure correct assignment
-    const { error: roleError } = await supabaseAdmin
+    // The trigger assigns a role based on email domain
+    // Update the role if the requested role differs from what the trigger assigned
+    const { data: existingRole } = await supabaseAdmin
       .from('user_roles')
-      .upsert({ user_id: newUser.user.id, role }, { onConflict: 'user_id' })
+      .select('role')
+      .eq('user_id', newUser.user.id)
+      .maybeSingle()
 
-    if (roleError) {
-      console.error('Role assignment error:', roleError)
+    if (existingRole && existingRole.role !== role) {
+      // Update to the requested role
+      await supabaseAdmin
+        .from('user_roles')
+        .update({ role })
+        .eq('user_id', newUser.user.id)
+    } else if (!existingRole) {
+      // Insert role if trigger didn't create one
+      await supabaseAdmin
+        .from('user_roles')
+        .insert({ user_id: newUser.user.id, role })
     }
 
     return new Response(
