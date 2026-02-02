@@ -366,9 +366,10 @@ export default function POSPage() {
                 type="number"
                 min="0"
                 max="100"
-                value={taxRate}
+                value={taxRate || ''}
                 onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
                 className="h-9 mt-0.5 text-sm"
+                placeholder="0"
               />
             </div>
             <div>
@@ -376,9 +377,10 @@ export default function POSPage() {
               <Input
                 type="number"
                 min="0"
-                value={discount}
+                value={discount || ''}
                 onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                 className="h-9 mt-0.5 text-sm"
+                placeholder="0"
               />
             </div>
           </div>

@@ -412,10 +412,11 @@ export default function InventoryPage() {
                   <Input
                     type="number"
                     min="0"
-                    value={formData.quantity}
+                    value={formData.quantity || ''}
                     onChange={(e) =>
                       setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })
                     }
+                    placeholder="0"
                     required
                   />
                 </div>
@@ -489,10 +490,11 @@ export default function InventoryPage() {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.buying_price}
+                    value={formData.buying_price || ''}
                     onChange={(e) =>
                       setFormData({ ...formData, buying_price: parseFloat(e.target.value) || 0 })
                     }
+                    placeholder="0.00"
                     required
                   />
                 </div>
@@ -502,10 +504,11 @@ export default function InventoryPage() {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.selling_price}
+                    value={formData.selling_price || ''}
                     onChange={(e) =>
                       setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })
                     }
+                    placeholder="0.00"
                     required
                   />
                 </div>
@@ -516,10 +519,11 @@ export default function InventoryPage() {
                 <Input
                   type="number"
                   min="0"
-                  value={formData.low_stock_alert}
+                  value={formData.low_stock_alert || ''}
                   onChange={(e) =>
                     setFormData({ ...formData, low_stock_alert: parseInt(e.target.value) || 0 })
                   }
+                  placeholder="10"
                   required
                 />
               </div>
