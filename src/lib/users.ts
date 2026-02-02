@@ -14,9 +14,9 @@ export const PRECONFIGURED_USERS: PreConfiguredUser[] = [
   { name: 'Gakwa', email: 'gakwa@ruinu.local', role: 'cashier', initials: 'GK' },
 ];
 
-// Default passwords by role
+// Default passwords by role (minimum 6 characters)
 export const DEFAULT_PASSWORDS = {
-  admin: 'admin',
+  admin: 'admin123',
   cashier: 'cashier',
 } as const;
 
