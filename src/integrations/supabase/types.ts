@@ -365,6 +365,15 @@ export type Database = {
     }
     Functions: {
       generate_receipt_number: { Args: never; Returns: string }
+      get_login_users: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
