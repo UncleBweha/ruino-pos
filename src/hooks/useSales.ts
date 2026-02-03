@@ -147,12 +147,12 @@ export function useSales() {
 
     if (itemsError) throw itemsError;
 
-    // Update product quantities
+    // Update product quantities using secure function
     for (const item of items) {
-      const { error: stockError } = await supabase
-        .from('products')
-        .update({ quantity: item.product.quantity - item.quantity })
-        .eq('id', item.product.id);
+      const { error: stockError } = await supabase.rpc('update_product_stock', {
+        p_product_id: item.product.id,
+        p_quantity_change: -item.quantity, // Negative to deduct
+      });
 
       if (stockError) console.error('Stock update error:', stockError);
     }
@@ -209,21 +209,15 @@ export function useSales() {
 
     if (updateError) throw updateError;
 
-    // Return items to inventory
+    // Return items to inventory using secure function
     if (sale.sale_items) {
       for (const item of sale.sale_items) {
-        const { data: product } = await supabase
-          .from('products')
-          .select('quantity')
-          .eq('id', item.product_id)
-          .single();
+        const { error: stockError } = await supabase.rpc('update_product_stock', {
+          p_product_id: item.product_id,
+          p_quantity_change: item.quantity, // Positive to restore
+        });
 
-        if (product) {
-          await supabase
-            .from('products')
-            .update({ quantity: product.quantity + item.quantity })
-            .eq('id', item.product_id);
-        }
+        if (stockError) console.error('Stock restore error:', stockError);
       }
     }
   }
