@@ -123,21 +123,15 @@ export function useCredits() {
       })
       .eq('id', credit.sale_id);
 
-    // Return items to inventory
+    // Return items to inventory using secure function
     if (credit.sale?.sale_items) {
       for (const item of credit.sale.sale_items) {
-        const { data: product } = await supabase
-          .from('products')
-          .select('quantity')
-          .eq('id', item.product_id)
-          .single();
+        const { error: stockError } = await supabase.rpc('update_product_stock', {
+          p_product_id: item.product_id,
+          p_quantity_change: item.quantity, // Positive to restore
+        });
 
-        if (product) {
-          await supabase
-            .from('products')
-            .update({ quantity: product.quantity + item.quantity })
-            .eq('id', item.product_id);
-        }
+        if (stockError) console.error('Stock restore error:', stockError);
       }
     }
   }

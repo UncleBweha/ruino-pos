@@ -147,12 +147,12 @@ export function useSales() {
 
     if (itemsError) throw itemsError;
 
-    // Update product quantities
+    // Update product quantities using secure function
     for (const item of items) {
-      const { error: stockError } = await supabase
-        .from('products')
-        .update({ quantity: item.product.quantity - item.quantity })
-        .eq('id', item.product.id);
+      const { error: stockError } = await supabase.rpc('update_product_stock', {
+        p_product_id: item.product.id,
+        p_quantity_change: -item.quantity, // Negative to deduct
+      });
 
       if (stockError) console.error('Stock update error:', stockError);
     }
