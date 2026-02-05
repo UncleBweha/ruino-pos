@@ -140,6 +140,33 @@ export default function CreditsPage() {
           </p>
         </div>
 
+        {/* Status Filter Buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('all')}
+            size="sm"
+          >
+            All ({credits.length})
+          </Button>
+          <Button
+            variant={statusFilter === 'pending' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('pending')}
+            size="sm"
+            className={statusFilter === 'pending' ? '' : 'border-warning/50 text-warning hover:bg-warning/10'}
+          >
+            Unpaid ({pendingCredits.length})
+          </Button>
+          <Button
+            variant={statusFilter === 'paid' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('paid')}
+            size="sm"
+            className={statusFilter === 'paid' ? '' : 'border-success/50 text-success hover:bg-success/10'}
+          >
+            Paid ({paidCredits.length})
+          </Button>
+        </div>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -166,7 +193,7 @@ export default function CreditsPage() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Paid This Month</p>
               <p className="text-2xl font-bold text-success">
-                {credits.filter((c) => c.status === 'paid').length}
+                {paidCredits.length}
               </p>
             </CardContent>
           </Card>
