@@ -321,6 +321,29 @@ export default function CreditsPage() {
                   className="mt-1"
                 />
               </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Payment Method</label>
+                <RadioGroup
+                  value={paymentMethod}
+                  onValueChange={(v) => setPaymentMethod(v as 'cash' | 'mpesa')}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cash" id="pay-cash" />
+                    <Label htmlFor="pay-cash" className="flex items-center gap-2 cursor-pointer">
+                      <Banknote className="w-4 h-4" />
+                      Cash
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="mpesa" id="pay-mpesa" />
+                    <Label htmlFor="pay-mpesa" className="flex items-center gap-2 cursor-pointer">
+                      <Smartphone className="w-4 h-4" />
+                      M-Pesa
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
           )}
 
