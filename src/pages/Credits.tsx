@@ -121,6 +121,14 @@ export default function CreditsPage() {
     );
   }
 
+  // Filter credits based on status
+  const paidCredits = credits.filter((c) => c.status === 'paid');
+  const filteredCredits = statusFilter === 'all' 
+    ? credits 
+    : statusFilter === 'pending' 
+      ? pendingCredits 
+      : paidCredits;
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
