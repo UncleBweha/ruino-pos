@@ -279,13 +279,18 @@ export default function InventoryPage() {
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="uncategorized">Uncategorized</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
+              <SelectItem value="all">All Categories ({products.length})</SelectItem>
+              <SelectItem value="uncategorized">
+                Uncategorized ({products.filter(p => !p.category_id).length})
+              </SelectItem>
+              {categories.map((cat) => {
+                const count = products.filter(p => p.category_id === cat.id).length;
+                return (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name} ({count})
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
