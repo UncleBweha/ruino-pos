@@ -216,7 +216,7 @@ export default function CreditsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {credits.map((credit) => (
+                {filteredCredits.map((credit) => (
                   <div
                     key={credit.id}
                     className="p-4 rounded-lg border bg-card hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
