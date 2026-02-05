@@ -140,13 +140,15 @@ export default function InventoryPage() {
     }
   }
 
-  const filteredProducts = searchQuery
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.sku.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : products;
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = !searchQuery || 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || 
+      p.category_id === categoryFilter ||
+      (categoryFilter === 'uncategorized' && !p.category_id);
+    return matchesSearch && matchesCategory;
+  });
 
   function openAddForm() {
     setEditingProduct(null);
