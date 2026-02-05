@@ -45,7 +45,7 @@ export function useCredits() {
     };
   }, [fetchCredits]);
 
-  async function markAsPaid(creditId: string, amountPaid?: number): Promise<void> {
+  async function markAsPaid(creditId: string, amountPaid?: number, paymentMethod: 'cash' | 'mpesa' = 'cash'): Promise<void> {
     if (!user) throw new Error('User not authenticated');
 
     // Fetch the latest credit data from DB to avoid stale state issues
@@ -78,22 +78,27 @@ export function useCredits() {
     // Use freshCredit for subsequent operations
     const credit = freshCredit;
 
-    // Update the associated sale status
+    // Update the associated sale status and payment method when fully paid
     if (isPaid) {
       await supabase
         .from('sales')
-        .update({ status: 'completed' })
+        .update({ 
+          status: 'completed',
+          payment_method: `credit_${paymentMethod}` // e.g., "credit_cash" or "credit_mpesa"
+        })
         .eq('id', credit.sale_id);
     }
 
-    // Add to cash box
-    await supabase.from('cash_box').insert({
-      sale_id: credit.sale_id,
-      amount: paymentAmount,
-      transaction_type: 'credit_payment',
-      description: `Credit payment from ${credit.customer_name}`,
-      cashier_id: user.id,
-    });
+    // Add to cash box only for cash payments
+    if (paymentMethod === 'cash') {
+      await supabase.from('cash_box').insert({
+        sale_id: credit.sale_id,
+        amount: paymentAmount,
+        transaction_type: 'credit_payment',
+        description: `Credit payment from ${credit.customer_name}`,
+        cashier_id: user.id,
+      });
+    }
   }
 
   async function markAsReturned(creditId: string): Promise<void> {

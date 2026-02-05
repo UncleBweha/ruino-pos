@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
-import { formatCurrency, CREDIT_STATUSES } from '@/lib/constants';
+import { formatCurrency, CREDIT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
 import {
   CreditCard,
   CheckCircle,
@@ -10,6 +10,8 @@ import {
   User,
   Calendar,
   ChevronRight,
+  Banknote,
+  Smartphone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,11 +24,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Credit } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { CreditDetailDialog } from '@/components/credits/CreditDetailDialog';
+
+type StatusFilter = 'all' | 'pending' | 'paid';
 
 export default function CreditsPage() {
   const {
@@ -39,16 +45,19 @@ export default function CreditsPage() {
   } = useCredits();
   const { toast } = useToast();
 
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
   const [detailCredit, setDetailCredit] = useState<Credit | null>(null);
   const [actionType, setActionType] = useState<'pay' | 'return' | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mpesa'>('cash');
   const [actionLoading, setActionLoading] = useState(false);
 
   function openPayDialog(credit: Credit) {
     setSelectedCredit(credit);
     setActionType('pay');
     setPaymentAmount(credit.balance.toString());
+    setPaymentMethod('cash');
   }
 
   function openReturnDialog(credit: Credit) {
@@ -72,10 +81,10 @@ export default function CreditsPage() {
         if (isNaN(amount) || amount <= 0) {
           throw new Error('Invalid payment amount');
         }
-        await markAsPaid(selectedCredit.id, amount);
+        await markAsPaid(selectedCredit.id, amount, paymentMethod);
         toast({
           title: 'Payment Recorded',
-          description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name}`,
+          description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name} via ${paymentMethod === 'cash' ? 'Cash' : 'M-Pesa'}`,
         });
       } else if (actionType === 'return') {
         await markAsReturned(selectedCredit.id);
@@ -112,6 +121,14 @@ export default function CreditsPage() {
     );
   }
 
+  // Filter credits based on status
+  const paidCredits = credits.filter((c) => c.status === 'paid');
+  const filteredCredits = statusFilter === 'all' 
+    ? credits 
+    : statusFilter === 'pending' 
+      ? pendingCredits 
+      : paidCredits;
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
@@ -121,6 +138,33 @@ export default function CreditsPage() {
           <p className="text-muted-foreground">
             {pendingCredits.length} pending • {formatCurrency(totalPendingAmount)} total owed
           </p>
+        </div>
+
+        {/* Status Filter Buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('all')}
+            size="sm"
+          >
+            All ({credits.length})
+          </Button>
+          <Button
+            variant={statusFilter === 'pending' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('pending')}
+            size="sm"
+            className={statusFilter === 'pending' ? '' : 'border-warning/50 text-warning hover:bg-warning/10'}
+          >
+            Unpaid ({pendingCredits.length})
+          </Button>
+          <Button
+            variant={statusFilter === 'paid' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('paid')}
+            size="sm"
+            className={statusFilter === 'paid' ? '' : 'border-success/50 text-success hover:bg-success/10'}
+          >
+            Paid ({paidCredits.length})
+          </Button>
         </div>
 
         {/* Summary Cards */}
@@ -149,7 +193,7 @@ export default function CreditsPage() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Paid This Month</p>
               <p className="text-2xl font-bold text-success">
-                {credits.filter((c) => c.status === 'paid').length}
+                {paidCredits.length}
               </p>
             </CardContent>
           </Card>
@@ -172,7 +216,7 @@ export default function CreditsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {credits.map((credit) => (
+                {filteredCredits.map((credit) => (
                   <div
                     key={credit.id}
                     className="p-4 rounded-lg border bg-card hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
@@ -276,6 +320,29 @@ export default function CreditsPage() {
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   className="mt-1"
                 />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Payment Method</label>
+                <RadioGroup
+                  value={paymentMethod}
+                  onValueChange={(v) => setPaymentMethod(v as 'cash' | 'mpesa')}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cash" id="pay-cash" />
+                    <Label htmlFor="pay-cash" className="flex items-center gap-2 cursor-pointer">
+                      <Banknote className="w-4 h-4" />
+                      Cash
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="mpesa" id="pay-mpesa" />
+                    <Label htmlFor="pay-mpesa" className="flex items-center gap-2 cursor-pointer">
+                      <Smartphone className="w-4 h-4" />
+                      M-Pesa
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
             </div>
           )}
