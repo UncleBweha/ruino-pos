@@ -81,10 +81,10 @@ export default function CreditsPage() {
         if (isNaN(amount) || amount <= 0) {
           throw new Error('Invalid payment amount');
         }
-        await markAsPaid(selectedCredit.id, amount);
+        await markAsPaid(selectedCredit.id, amount, paymentMethod);
         toast({
           title: 'Payment Recorded',
-          description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name}`,
+          description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name} via ${paymentMethod === 'cash' ? 'Cash' : 'M-Pesa'}`,
         });
       } else if (actionType === 'return') {
         await markAsReturned(selectedCredit.id);
