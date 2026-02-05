@@ -57,6 +57,7 @@ export default function CreditsPage() {
     setSelectedCredit(credit);
     setActionType('pay');
     setPaymentAmount(credit.balance.toString());
+    setPaymentMethod('cash');
   }
 
   function openReturnDialog(credit: Credit) {
