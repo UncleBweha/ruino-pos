@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
-import { formatCurrency, CREDIT_STATUSES } from '@/lib/constants';
+import { formatCurrency, CREDIT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
 import {
   CreditCard,
   CheckCircle,
@@ -10,6 +10,8 @@ import {
   User,
   Calendar,
   ChevronRight,
+  Banknote,
+  Smartphone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,11 +24,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Credit } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { CreditDetailDialog } from '@/components/credits/CreditDetailDialog';
+
+type StatusFilter = 'all' | 'pending' | 'paid';
 
 export default function CreditsPage() {
   const {
@@ -39,10 +45,12 @@ export default function CreditsPage() {
   } = useCredits();
   const { toast } = useToast();
 
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
   const [detailCredit, setDetailCredit] = useState<Credit | null>(null);
   const [actionType, setActionType] = useState<'pay' | 'return' | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mpesa'>('cash');
   const [actionLoading, setActionLoading] = useState(false);
 
   function openPayDialog(credit: Credit) {
