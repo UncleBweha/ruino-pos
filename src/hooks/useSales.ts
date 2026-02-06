@@ -219,16 +219,16 @@ export function useSales() {
 
     if (updateError) throw updateError;
 
-    // Return items to inventory using secure function
+    // Return items to inventory in parallel
     if (sale.sale_items) {
-      for (const item of sale.sale_items) {
-        const { error: stockError } = await supabase.rpc('update_product_stock', {
-          p_product_id: item.product_id,
-          p_quantity_change: item.quantity, // Positive to restore
-        });
-
-        if (stockError) console.error('Stock restore error:', stockError);
-      }
+      await Promise.all(
+        sale.sale_items.map(item =>
+          supabase.rpc('update_product_stock', {
+            p_product_id: item.product_id,
+            p_quantity_change: item.quantity,
+          })
+        )
+      );
     }
   }
 
