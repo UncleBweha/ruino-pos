@@ -182,7 +182,7 @@ export function useSales() {
           amount_paid: 0,
           balance: total,
           status: 'pending',
-        })
+        }).select().then()
       );
     }
 
