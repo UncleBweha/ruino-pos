@@ -147,37 +147,46 @@ export function useSales() {
 
     if (itemsError) throw itemsError;
 
-    // Update product quantities using secure function
+    // Update stock, cash box, and credits in parallel for speed
+    const parallelOps: Promise<any>[] = [];
+
+    // Stock updates - all in parallel
     for (const item of items) {
-      const { error: stockError } = await supabase.rpc('update_product_stock', {
-        p_product_id: item.product.id,
-        p_quantity_change: -item.quantity, // Negative to deduct
-      });
-
-      if (stockError) console.error('Stock update error:', stockError);
+      parallelOps.push(
+        supabase.rpc('update_product_stock', {
+          p_product_id: item.product.id,
+          p_quantity_change: -item.quantity,
+        })
+      );
     }
 
-    // Handle cash payment - add to cash box
+    // Cash box insert for cash payments
     if (paymentMethod === 'cash') {
-      await supabase.from('cash_box').insert({
-        sale_id: saleId,
-        amount: total,
-        transaction_type: 'sale',
-        cashier_id: user.id,
-      });
+      parallelOps.push(
+        supabase.from('cash_box').insert({
+          sale_id: saleId,
+          amount: total,
+          transaction_type: 'sale',
+          cashier_id: user.id,
+        })
+      );
     }
 
-    // Handle credit sale - create credit record
+    // Credit record for credit sales
     if (paymentMethod === 'credit') {
-      await supabase.from('credits').insert({
-        sale_id: saleId,
-        customer_name: customerName!,
-        total_owed: total,
-        amount_paid: 0,
-        balance: total,
-        status: 'pending',
-      });
+      parallelOps.push(
+        supabase.from('credits').insert({
+          sale_id: saleId,
+          customer_name: customerName!,
+          total_owed: total,
+          amount_paid: 0,
+          balance: total,
+          status: 'pending',
+        })
+      );
     }
+
+    await Promise.all(parallelOps);
 
     // Fetch the complete sale with items to return with correct prices
     const { data: completeSale, error: fetchError } = await supabase
