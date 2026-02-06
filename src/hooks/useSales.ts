@@ -168,7 +168,7 @@ export function useSales() {
           amount: total,
           transaction_type: 'sale',
           cashier_id: user.id,
-        })
+        }).select().then()
       );
     }
 
