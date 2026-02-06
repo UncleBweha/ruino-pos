@@ -156,7 +156,7 @@ export function useSales() {
         supabase.rpc('update_product_stock', {
           p_product_id: item.product.id,
           p_quantity_change: -item.quantity,
-        })
+        }).then()
       );
     }
 
