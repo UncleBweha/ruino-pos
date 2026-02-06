@@ -22,63 +22,58 @@ export function useDashboard() {
       const now = new Date();
       const startOfDay = new Date(now);
       startOfDay.setHours(0, 0, 0, 0);
-      
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      // Fetch today's sales
-      const { data: todaySales } = await supabase
-        .from('sales')
-        .select('total, profit')
-        .gte('created_at', startOfDay.toISOString())
-        .neq('status', 'voided');
-
-      // Fetch month's sales
-      const { data: monthSales } = await supabase
-        .from('sales')
-        .select('total, profit')
-        .gte('created_at', startOfMonth.toISOString())
-        .neq('status', 'voided');
-
-      // Fetch products count
-      const { count: totalProducts } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch low stock products and inventory cost
-      const { data: products } = await supabase
-        .from('products')
-        .select('quantity, low_stock_alert, buying_price');
+      // Run ALL queries in parallel for maximum speed
+      const [
+        { data: todaySales },
+        { data: monthSales },
+        { count: totalProducts },
+        { data: products },
+        { data: credits },
+        { data: cashBox },
+        { data: saleItems },
+      ] = await Promise.all([
+        supabase
+          .from('sales')
+          .select('total, profit')
+          .gte('created_at', startOfDay.toISOString())
+          .neq('status', 'voided'),
+        supabase
+          .from('sales')
+          .select('total, profit')
+          .gte('created_at', startOfMonth.toISOString())
+          .neq('status', 'voided'),
+        supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true }),
+        supabase
+          .from('products')
+          .select('quantity, low_stock_alert, buying_price'),
+        supabase
+          .from('credits')
+          .select('balance')
+          .eq('status', 'pending'),
+        supabase
+          .from('cash_box')
+          .select('amount')
+          .gte('created_at', startOfDay.toISOString()),
+        supabase
+          .from('sale_items')
+          .select('product_name, quantity, total')
+          .gte('created_at', startOfMonth.toISOString()),
+      ]);
 
       const lowStockCount = products?.filter(
         (p) => p.quantity <= p.low_stock_alert
       ).length || 0;
 
-      // Calculate total inventory cost (quantity * buying_price for all products)
       const inventoryCost = products?.reduce(
         (sum, p) => sum + (p.quantity * Number(p.buying_price)), 0
       ) || 0;
 
-      // Fetch pending credits
-      const { data: credits } = await supabase
-        .from('credits')
-        .select('balance')
-        .eq('status', 'pending');
-
       const pendingCredits = credits?.reduce((sum, c) => sum + Number(c.balance), 0) || 0;
-
-      // Fetch today's cash
-      const { data: cashBox } = await supabase
-        .from('cash_box')
-        .select('amount')
-        .gte('created_at', startOfDay.toISOString());
-
       const todayCash = cashBox?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
-
-      // Fetch top products (this month)
-      const { data: saleItems } = await supabase
-        .from('sale_items')
-        .select('product_name, quantity, total')
-        .gte('created_at', startOfMonth.toISOString());
 
       // Aggregate top products
       const productAggregates: Record<string, { quantity: number; revenue: number }> = {};
