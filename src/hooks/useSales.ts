@@ -21,7 +21,7 @@ export function useSales() {
     if (!user) return;
 
     try {
-      // Fetch all sales
+      // Fetch sales and profiles in parallel
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('*, sale_items(*)')
@@ -29,17 +29,18 @@ export function useSales() {
 
       if (salesError) throw salesError;
 
-      // Fetch cashier profiles for all unique cashier IDs
       const cashierIds = [...new Set(salesData?.map(s => s.cashier_id) || [])];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', cashierIds);
+      
+      // Only fetch profiles if there are sales
+      let profilesMap = new Map();
+      if (cashierIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', cashierIds);
+        profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+      }
 
-      // Map profiles by user_id for quick lookup
-      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
-
-      // Combine sales with cashier info
       const salesWithCashier = salesData?.map(sale => ({
         ...sale,
         cashier: profilesMap.get(sale.cashier_id) || null

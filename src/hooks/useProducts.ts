@@ -9,8 +9,10 @@ export function useProducts() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
+    async function fetchAll() {
+      await Promise.all([fetchProducts(), fetchCategories()]);
+    }
+    fetchAll();
 
     // Set up realtime subscription
     const channel = supabase
