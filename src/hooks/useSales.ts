@@ -21,7 +21,7 @@ export function useSales() {
     if (!user) return;
 
     try {
-      // Fetch all sales
+      // Fetch sales and profiles in parallel
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('*, sale_items(*)')
@@ -29,17 +29,18 @@ export function useSales() {
 
       if (salesError) throw salesError;
 
-      // Fetch cashier profiles for all unique cashier IDs
       const cashierIds = [...new Set(salesData?.map(s => s.cashier_id) || [])];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', cashierIds);
+      
+      // Only fetch profiles if there are sales
+      let profilesMap = new Map();
+      if (cashierIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', cashierIds);
+        profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+      }
 
-      // Map profiles by user_id for quick lookup
-      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
-
-      // Combine sales with cashier info
       const salesWithCashier = salesData?.map(sale => ({
         ...sale,
         cashier: profilesMap.get(sale.cashier_id) || null
@@ -147,37 +148,46 @@ export function useSales() {
 
     if (itemsError) throw itemsError;
 
-    // Update product quantities using secure function
+    // Update stock, cash box, and credits in parallel for speed
+    const parallelOps: PromiseLike<any>[] = [];
+
+    // Stock updates - all in parallel
     for (const item of items) {
-      const { error: stockError } = await supabase.rpc('update_product_stock', {
-        p_product_id: item.product.id,
-        p_quantity_change: -item.quantity, // Negative to deduct
-      });
-
-      if (stockError) console.error('Stock update error:', stockError);
+      parallelOps.push(
+        supabase.rpc('update_product_stock', {
+          p_product_id: item.product.id,
+          p_quantity_change: -item.quantity,
+        }).then()
+      );
     }
 
-    // Handle cash payment - add to cash box
+    // Cash box insert for cash payments
     if (paymentMethod === 'cash') {
-      await supabase.from('cash_box').insert({
-        sale_id: saleId,
-        amount: total,
-        transaction_type: 'sale',
-        cashier_id: user.id,
-      });
+      parallelOps.push(
+        supabase.from('cash_box').insert({
+          sale_id: saleId,
+          amount: total,
+          transaction_type: 'sale',
+          cashier_id: user.id,
+        }).select().then()
+      );
     }
 
-    // Handle credit sale - create credit record
+    // Credit record for credit sales
     if (paymentMethod === 'credit') {
-      await supabase.from('credits').insert({
-        sale_id: saleId,
-        customer_name: customerName!,
-        total_owed: total,
-        amount_paid: 0,
-        balance: total,
-        status: 'pending',
-      });
+      parallelOps.push(
+        supabase.from('credits').insert({
+          sale_id: saleId,
+          customer_name: customerName!,
+          total_owed: total,
+          amount_paid: 0,
+          balance: total,
+          status: 'pending',
+        }).select().then()
+      );
     }
+
+    await Promise.all(parallelOps);
 
     // Fetch the complete sale with items to return with correct prices
     const { data: completeSale, error: fetchError } = await supabase
@@ -209,16 +219,16 @@ export function useSales() {
 
     if (updateError) throw updateError;
 
-    // Return items to inventory using secure function
+    // Return items to inventory in parallel
     if (sale.sale_items) {
-      for (const item of sale.sale_items) {
-        const { error: stockError } = await supabase.rpc('update_product_stock', {
-          p_product_id: item.product_id,
-          p_quantity_change: item.quantity, // Positive to restore
-        });
-
-        if (stockError) console.error('Stock restore error:', stockError);
-      }
+      await Promise.all(
+        sale.sale_items.map(item =>
+          supabase.rpc('update_product_stock', {
+            p_product_id: item.product_id,
+            p_quantity_change: item.quantity,
+          })
+        )
+      );
     }
   }
 
