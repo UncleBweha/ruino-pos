@@ -148,7 +148,7 @@ export function useSales() {
     if (itemsError) throw itemsError;
 
     // Update stock, cash box, and credits in parallel for speed
-    const parallelOps: Promise<any>[] = [];
+    const parallelOps: PromiseLike<any>[] = [];
 
     // Stock updates - all in parallel
     for (const item of items) {
