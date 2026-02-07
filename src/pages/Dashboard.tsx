@@ -1,117 +1,37 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useProducts } from '@/hooks/useProducts';
-import { formatCurrency } from '@/lib/constants';
-import {
-  TrendingUp,
-  TrendingDown,
-  Package,
-  AlertTriangle,
-  CreditCard,
-  Wallet,
-  BarChart3,
-  RefreshCw,
-  DollarSign,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { SalesOverviewCards } from '@/components/dashboard/SalesOverviewCards';
+import { SalesChart } from '@/components/dashboard/SalesChart';
+import { PaymentMethodChart } from '@/components/dashboard/PaymentMethodChart';
+import { TopProductsCard } from '@/components/dashboard/TopProductsCard';
+import { LowStockCard } from '@/components/dashboard/LowStockCard';
+import { SalesSummaryCard } from '@/components/dashboard/SalesSummaryCard';
 import { UserManagement } from '@/components/dashboard/UserManagement';
 import { MonthlySalesDialog } from '@/components/dashboard/MonthlySalesDialog';
-import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
-  const navigate = useNavigate();
-  const { stats, topProducts, loading, refresh } = useDashboard();
+  const { profile } = useAuth();
+  const { stats, topProducts, monthlySalesData, salesByPayment, loading, refresh } = useDashboard();
   const { lowStockProducts } = useProducts();
   const [showMonthlySales, setShowMonthlySales] = useState(false);
 
-  const statCards = [
-    {
-      title: "Today's Sales",
-      value: formatCurrency(stats.todaySales),
-      icon: TrendingUp,
-      color: 'text-success',
-      bgColor: 'bg-pos-success',
-    },
-    {
-      title: "Today's Profit",
-      value: formatCurrency(stats.todayProfit),
-      icon: TrendingUp,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      title: "Month's Sales",
-      value: formatCurrency(stats.monthSales),
-      icon: BarChart3,
-      color: 'text-info',
-      bgColor: 'bg-info/10',
-      onClick: () => setShowMonthlySales(true),
-      clickable: true,
-    },
-    {
-      title: "Month's Profit",
-      value: formatCurrency(stats.monthProfit),
-      icon: TrendingUp,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      title: 'Total Products',
-      value: stats.totalProducts.toString(),
-      icon: Package,
-      color: 'text-muted-foreground',
-      bgColor: 'bg-muted',
-      onClick: () => navigate('/inventory'),
-      clickable: true,
-    },
-    {
-      title: 'Low Stock Items',
-      value: stats.lowStockCount.toString(),
-      icon: AlertTriangle,
-      color: stats.lowStockCount > 0 ? 'text-warning' : 'text-muted-foreground',
-      bgColor: stats.lowStockCount > 0 ? 'bg-pos-warning' : 'bg-muted',
-      onClick: () => navigate('/inventory'),
-      clickable: true,
-    },
-    {
-      title: 'Pending Credits',
-      value: formatCurrency(stats.pendingCredits),
-      icon: CreditCard,
-      color: stats.pendingCredits > 0 ? 'text-destructive' : 'text-muted-foreground',
-      bgColor: stats.pendingCredits > 0 ? 'bg-pos-danger' : 'bg-muted',
-      onClick: () => navigate('/credits'),
-      clickable: true,
-    },
-    {
-      title: "Today's Cash",
-      value: formatCurrency(stats.todayCash),
-      icon: Wallet,
-      color: 'text-success',
-      bgColor: 'bg-pos-success',
-    },
-    {
-      title: 'Inventory Cost',
-      value: formatCurrency(stats.inventoryCost),
-      icon: DollarSign,
-      color: 'text-info',
-      bgColor: 'bg-info/10',
-      onClick: () => navigate('/inventory'),
-      clickable: true,
-    },
-  ];
+  const firstName = profile?.full_name?.split(' ')[0] || 'Admin';
 
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
-        {/* Header */}
+        {/* Welcome Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Real-time business analytics</p>
+            <h1 className="text-2xl lg:text-3xl font-bold">
+              Welcome, {firstName} 👋
+            </h1>
+            <p className="text-muted-foreground">Here's what's happening in your store.</p>
           </div>
           <Button variant="outline" size="sm" onClick={refresh}>
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -119,139 +39,32 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statCards.map((stat, index) => (
-            <Card
-              key={index}
-              className={cn(
-                'stat-card transition-all',
-                stat.clickable && 'cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-md'
-              )}
-              onClick={stat.onClick}
-            >
-              <CardContent className="p-4">
-                {loading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-8 w-28" />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                        <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                      </div>
-                      {stat.clickable && (
-                        <span className="text-xs text-muted-foreground ml-auto">Tap to view</span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-xl lg:text-2xl font-bold currency">{stat.value}</p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+        {/* Stat Cards */}
+        <SalesOverviewCards
+          stats={stats}
+          loading={loading}
+          onMonthSalesClick={() => setShowMonthlySales(true)}
+        />
+
+        {/* Charts Row: Line Chart + Sales Summary */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          <SalesChart data={monthlySalesData} loading={loading} />
+          <SalesSummaryCard stats={stats} loading={loading} />
         </div>
 
-        {/* Content Grid */}
+        {/* Bottom Row: Pie Chart + Top Products + Low Stock */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <PaymentMethodChart data={salesByPayment} loading={loading} />
+          <TopProductsCard products={topProducts} loading={loading} />
+          <LowStockCard products={lowStockProducts} />
+        </div>
+
+        {/* User Management */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Top Products */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Top Selling Products</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              ) : topProducts.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No sales data yet
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {topProducts.slice(0, 5).map((product, index) => (
-                    <div
-                      key={product.product_name}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex items-center justify-center">
-                          {index + 1}
-                        </span>
-                        <div>
-                          <p className="font-medium truncate max-w-[120px]">
-                            {product.product_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {product.total_quantity} units sold
-                          </p>
-                        </div>
-                      </div>
-                      <p className="font-semibold currency">
-                        {formatCurrency(product.total_revenue)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Low Stock Alert */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-warning" />
-                Low Stock Alert
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {lowStockProducts.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  All products are well stocked
-                </p>
-              ) : (
-                <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                  {lowStockProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-pos-warning"
-                    >
-                      <div>
-                        <p className="font-medium truncate max-w-[120px]">
-                          {product.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          SKU: {product.sku}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-warning">
-                          {product.quantity} left
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Alert: {product.low_stock_alert}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* User Management */}
           <UserManagement />
         </div>
       </div>
 
-      {/* Monthly Sales Dialog */}
       <MonthlySalesDialog open={showMonthlySales} onOpenChange={setShowMonthlySales} />
     </AppLayout>
   );
