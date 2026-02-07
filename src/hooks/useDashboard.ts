@@ -2,6 +2,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { DashboardStats, TopProduct } from '@/types/database';
 
+export interface MonthlySalesData {
+  month: string;
+  sales: number;
+  profit: number;
+}
+
+export interface SalesByPaymentMethod {
+  method: string;
+  count: number;
+  total: number;
+}
+
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
@@ -15,6 +27,8 @@ export function useDashboard() {
     inventoryCost: 0,
   });
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [monthlySalesData, setMonthlySalesData] = useState<MonthlySalesData[]>([]);
+  const [salesByPayment, setSalesByPayment] = useState<SalesByPaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = useCallback(async () => {
@@ -23,6 +37,8 @@ export function useDashboard() {
       const startOfDay = new Date(now);
       startOfDay.setHours(0, 0, 0, 0);
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      // Last 6 months for chart
+      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
       // Run ALL queries in parallel for maximum speed
       const [
@@ -33,6 +49,7 @@ export function useDashboard() {
         { data: credits },
         { data: cashBox },
         { data: saleItems },
+        { data: chartSales },
       ] = await Promise.all([
         supabase
           .from('sales')
@@ -62,6 +79,11 @@ export function useDashboard() {
           .from('sale_items')
           .select('product_name, quantity, total')
           .gte('created_at', startOfMonth.toISOString()),
+        supabase
+          .from('sales')
+          .select('total, profit, payment_method, created_at')
+          .gte('created_at', sixMonthsAgo.toISOString())
+          .neq('status', 'voided'),
       ]);
 
       const lowStockCount = products?.filter(
@@ -94,6 +116,51 @@ export function useDashboard() {
         .sort((a, b) => b.total_revenue - a.total_revenue)
         .slice(0, 10);
 
+      // Aggregate monthly sales data for charts
+      const monthlyAgg: Record<string, { sales: number; profit: number }> = {};
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      // Initialize last 6 months
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        monthlyAgg[key] = { sales: 0, profit: 0 };
+      }
+
+      chartSales?.forEach((s) => {
+        const d = new Date(s.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        if (monthlyAgg[key]) {
+          monthlyAgg[key].sales += Number(s.total);
+          monthlyAgg[key].profit += Number(s.profit);
+        }
+      });
+
+      const monthlyData: MonthlySalesData[] = Object.entries(monthlyAgg).map(([key, data]) => {
+        const [year, month] = key.split('-').map(Number);
+        return {
+          month: monthNames[month],
+          sales: data.sales,
+          profit: data.profit,
+        };
+      });
+
+      // Aggregate sales by payment method
+      const paymentAgg: Record<string, { count: number; total: number }> = {};
+      chartSales?.forEach((s) => {
+        if (!paymentAgg[s.payment_method]) {
+          paymentAgg[s.payment_method] = { count: 0, total: 0 };
+        }
+        paymentAgg[s.payment_method].count += 1;
+        paymentAgg[s.payment_method].total += Number(s.total);
+      });
+
+      const paymentData: SalesByPaymentMethod[] = Object.entries(paymentAgg).map(([method, data]) => ({
+        method: method.charAt(0).toUpperCase() + method.slice(1),
+        count: data.count,
+        total: data.total,
+      }));
+
       setStats({
         todaySales: todaySales?.reduce((sum, s) => sum + Number(s.total), 0) || 0,
         todayProfit: todaySales?.reduce((sum, s) => sum + Number(s.profit), 0) || 0,
@@ -107,6 +174,8 @@ export function useDashboard() {
       });
 
       setTopProducts(topProductsData);
+      setMonthlySalesData(monthlyData);
+      setSalesByPayment(paymentData);
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -149,6 +218,8 @@ export function useDashboard() {
   return {
     stats,
     topProducts,
+    monthlySalesData,
+    salesByPayment,
     loading,
     refresh: fetchDashboardData,
   };
