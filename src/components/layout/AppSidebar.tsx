@@ -26,6 +26,7 @@ const adminNavItems = [
   { path: '/sales', label: 'Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
   { path: '/cashbox', label: 'Cash Box', icon: Wallet },
+  { path: '/reports', label: 'Reports', icon: FileBarChart },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -34,6 +35,7 @@ const cashierNavItems = [
   { path: '/inventory', label: 'Inventory', icon: Package },
   { path: '/sales', label: 'My Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
+  { path: '/reports', label: 'Reports', icon: FileBarChart },
 ];
 
 export function AppSidebar() {
