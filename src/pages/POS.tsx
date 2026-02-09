@@ -283,7 +283,7 @@ export default function POSPage() {
       </div>
 
       {/* Cart Section */}
-      <div className="lg:w-96 xl:w-[420px] border-t lg:border-t-0 lg:border-l bg-card flex flex-col">
+      <div className="lg:w-96 xl:w-[420px] glass-divider border-t lg:border-t-0 lg:border-l glass-section flex flex-col">
         {/* Cart Header */}
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
