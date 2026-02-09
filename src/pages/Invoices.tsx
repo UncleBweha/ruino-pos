@@ -5,6 +5,7 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'crypto';
 import { formatCurrency } from '@/lib/constants';
 import { format } from 'date-fns';
 import {
