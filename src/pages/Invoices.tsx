@@ -499,13 +499,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Notes</Label>
-                <Button type="button" variant="ghost" size="sm" onClick={handleAiNotes} disabled={aiLoading} className="h-7 text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {aiLoading ? 'Generating...' : 'AI Generate'}
-                </Button>
-              </div>
+              <Label>Notes</Label>
               <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
             </div>
 
