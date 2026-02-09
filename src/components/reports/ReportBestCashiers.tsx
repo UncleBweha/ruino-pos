@@ -39,7 +39,7 @@ export function ReportBestCashiers({ cashiers, loading }: Props) {
             {cashiers.map((cashier, index) => (
               <div
                 key={cashier.cashier_id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border"
+                className="glass-item flex items-center gap-3 p-3"
               >
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
                   {index < 3 ? (
