@@ -45,7 +45,7 @@ export default function InvoicesPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
+  
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
