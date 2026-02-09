@@ -294,7 +294,7 @@ export default function SuppliersPage() {
                               const status = getPaymentStatus(product);
                               const StatusIcon = status.icon;
                               return (
-                                <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 text-sm">
+                                <div key={product.id} className="glass-item flex items-center justify-between p-3 text-sm">
                                   <div className="flex-1 min-w-0">
                                     <p className="font-medium">{product.product_name}</p>
                                     <div className="flex gap-3 text-xs text-muted-foreground mt-1">

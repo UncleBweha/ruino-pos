@@ -306,7 +306,7 @@ export default function CustomersPage() {
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                           {customerSales.map((sale) => (
-                            <div key={sale.id} className="flex items-center justify-between p-2 rounded bg-muted/30 text-sm">
+                            <div key={sale.id} className="glass-item flex items-center justify-between p-2 text-sm">
                               <div>
                                 <p className="font-medium">#{sale.receipt_number}</p>
                                 <p className="text-xs text-muted-foreground">

@@ -219,7 +219,7 @@ export default function CreditsPage() {
                 {filteredCredits.map((credit) => (
                   <div
                     key={credit.id}
-                    className="p-4 rounded-lg border bg-card hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
+                    className="glass-item hover:shadow-md hover:border-primary/30 cursor-pointer group"
                     onClick={() => setDetailCredit(credit)}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

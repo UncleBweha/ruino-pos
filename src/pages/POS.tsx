@@ -603,7 +603,7 @@ export default function POSPage() {
           </DialogHeader>
           {lastSale && (
             <div className="text-center space-y-4">
-              <div className="bg-muted p-4 rounded-lg font-mono">
+              <div className="glass-item p-4 font-mono">
                 <p className="font-bold text-lg">{lastSale.receipt_number}</p>
                 <p className="text-2xl font-bold text-primary mt-2">
                   {formatCurrency(lastSale.total)}

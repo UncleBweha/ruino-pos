@@ -107,7 +107,7 @@ export default function CashBoxPage() {
                 {displayTransactions.map((tx) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                    className="glass-item flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <div
