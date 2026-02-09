@@ -225,7 +225,7 @@ export function MonthlySalesDialog({ open, onOpenChange }: MonthlySalesDialogPro
             filteredSales.map((sale) => (
               <div
                 key={sale.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                className="glass-item flex items-center justify-between p-3"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

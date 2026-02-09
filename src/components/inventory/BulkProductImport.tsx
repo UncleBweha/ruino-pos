@@ -179,7 +179,7 @@ SKU003,Cooking Oil 1L,75,250,300,20`;
 
         <div className="space-y-4">
           {/* Format info */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+          <div className="glass-item rounded-lg p-4 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">
               <FileText className="w-4 h-4" />
               CSV Format
