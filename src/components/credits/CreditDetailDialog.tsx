@@ -98,7 +98,7 @@ export function CreditDetailDialog({ credit, open, onOpenChange }: CreditDetailD
 
         {/* Payment Summary */}
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="p-3 rounded-lg bg-muted/50">
+          <div className="glass-item p-3 text-center">
             <p className="text-xs text-muted-foreground">Total Owed</p>
             <p className="font-bold currency">{formatCurrency(credit.total_owed)}</p>
           </div>
@@ -172,7 +172,7 @@ export function CreditDetailDialog({ credit, open, onOpenChange }: CreditDetailD
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  className="glass-item flex items-center justify-between p-3"
                 >
                   <div>
                     <p className="font-medium">{item.product_name}</p>

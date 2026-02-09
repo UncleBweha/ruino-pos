@@ -257,6 +257,36 @@
     @apply bento-card;
   }
 
+  /* Glass list item — for rows inside cards */
+  .glass-item {
+    @apply rounded-xl p-4 transition-all duration-200;
+    background: hsl(var(--glass-bg));
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  .glass-item:hover {
+    background: hsl(0 0% 100% / 0.55);
+    border-color: hsl(0 0% 100% / 0.75);
+  }
+
+  .dark .glass-item:hover {
+    background: hsl(0 0% 16% / 0.55);
+    border-color: hsl(0 0% 30% / 0.5);
+  }
+
+  /* Glass section — for sub-panels inside pages (like POS cart/checkout) */
+  .glass-section {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  /* Glass divider — replaces hard border-b/border-t */
+  .glass-divider {
+    border-color: hsl(var(--glass-border));
+  }
+
   .pos-card:hover {
     box-shadow: 0 8px 32px -8px hsl(var(--foreground) / 0.1),
                 0 0 0 1px hsl(var(--glass-border));

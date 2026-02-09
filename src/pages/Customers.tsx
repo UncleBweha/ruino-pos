@@ -287,7 +287,7 @@ export default function CustomersPage() {
 
                   {/* Credit Check Result */}
                   {creditCheck && expandedId === customer.id && (
-                    <div className="mt-3 p-3 rounded-lg bg-muted/50 text-sm">
+                    <div className="glass-item mt-3 p-3 text-sm">
                       <p className="font-medium mb-1">Credit Eligibility</p>
                       <p>Eligible: <Badge variant={creditCheck.eligible ? 'default' : 'destructive'}>{creditCheck.eligible ? 'Yes' : 'No'}</Badge></p>
                       {creditCheck.limit && <p>Suggested limit: {formatCurrency(creditCheck.limit)}</p>}
@@ -306,7 +306,7 @@ export default function CustomersPage() {
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                           {customerSales.map((sale) => (
-                            <div key={sale.id} className="flex items-center justify-between p-2 rounded bg-muted/30 text-sm">
+                            <div key={sale.id} className="glass-item flex items-center justify-between p-2 text-sm">
                               <div>
                                 <p className="font-medium">#{sale.receipt_number}</p>
                                 <p className="text-xs text-muted-foreground">

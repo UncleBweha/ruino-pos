@@ -39,7 +39,7 @@ export function TopProductsCard({ products, loading }: TopProductsCardProps) {
           {products.slice(0, 6).map((product, index) => (
             <div
               key={product.product_name}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/50 transition-colors"
+              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-background/60 transition-colors"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="w-6 h-6 rounded-lg bg-foreground text-background text-xs font-bold flex items-center justify-center flex-shrink-0">

@@ -368,7 +368,7 @@ export default function SettingsPage() {
                       {users.map((u) => (
                         <div
                           key={u.id}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                          className="glass-item flex items-center justify-between"
                         >
                           <div>
                             <p className="font-medium">{u.full_name}</p>

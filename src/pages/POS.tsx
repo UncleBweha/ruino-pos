@@ -250,7 +250,7 @@ export default function POSPage() {
     <AppLayout className="flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden">
       {/* Products Section */}
       <div className="flex-1 flex flex-col min-h-0 lg:overflow-hidden">
-        <div className="p-4 border-b bg-card">
+        <div className="p-4 glass-divider border-b glass-section">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -283,9 +283,9 @@ export default function POSPage() {
       </div>
 
       {/* Cart Section */}
-      <div className="lg:w-96 xl:w-[420px] border-t lg:border-t-0 lg:border-l bg-card flex flex-col">
+      <div className="lg:w-96 xl:w-[420px] glass-divider border-t lg:border-t-0 lg:border-l glass-section flex flex-col">
         {/* Cart Header */}
-        <div className="p-4 border-b flex items-center justify-between">
+        <div className="p-4 glass-divider border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-primary" />
             <h2 className="font-bold">Cart</h2>
@@ -301,7 +301,7 @@ export default function POSPage() {
         </div>
 
         {/* Sell on Behalf Toggle */}
-        <div className="px-4 py-3 border-b bg-muted/20">
+        <div className="px-4 py-3 glass-divider border-b bg-background/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <UserCheck className="w-4 h-4 text-muted-foreground" />
@@ -371,7 +371,7 @@ export default function POSPage() {
               const isPriceModified = item.unitPrice !== item.product.selling_price;
               
               return (
-                <div key={item.product.id} className="pos-cart-item p-5">
+                <div key={item.product.id} className="glass-item flex items-center gap-4 border-l-4 border-l-transparent hover:border-l-accent">
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-base truncate">{item.product.name}</p>
                     {isEditing ? (
@@ -463,7 +463,7 @@ export default function POSPage() {
         </div>
 
         {/* Checkout Section */}
-        <div className="p-4 border-t space-y-3 bg-muted/30">
+        <div className="p-4 glass-divider border-t space-y-3 bg-background/40">
           {/* Customer, Tax & Discount - Compact Row */}
           <div className="grid grid-cols-3 gap-2">
             <div>
@@ -603,7 +603,7 @@ export default function POSPage() {
           </DialogHeader>
           {lastSale && (
             <div className="text-center space-y-4">
-              <div className="bg-muted p-4 rounded-lg font-mono">
+              <div className="glass-item p-4 font-mono">
                 <p className="font-bold text-lg">{lastSale.receipt_number}</p>
                 <p className="text-2xl font-bold text-primary mt-2">
                   {formatCurrency(lastSale.total)}
