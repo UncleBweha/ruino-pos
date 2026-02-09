@@ -15,6 +15,9 @@ import CashBoxPage from "./pages/CashBox";
 import SettingsPage from "./pages/Settings";
 import ReportsPage from "./pages/Reports";
 import ProfilePage from "./pages/Profile";
+import CustomersPage from "./pages/Customers";
+import SuppliersPage from "./pages/Suppliers";
+import InvoicesPage from "./pages/Invoices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +38,9 @@ const App = () => (
             <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
             <Route path="/credits" element={<ProtectedRoute><CreditsPage /></ProtectedRoute>} />
             <Route path="/cashbox" element={<ProtectedRoute requireAdmin><CashBoxPage /></ProtectedRoute>} />
+            <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
+            <Route path="/suppliers" element={<ProtectedRoute requireAdmin><SuppliersPage /></ProtectedRoute>} />
+            <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireAdmin><SettingsPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

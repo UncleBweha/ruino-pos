@@ -30,6 +30,9 @@ const adminNavItems = [
   { path: '/sales', label: 'Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
   { path: '/cashbox', label: 'Cash Box', icon: Wallet },
+  { path: '/customers', label: 'Customers', icon: Users },
+  { path: '/suppliers', label: 'Suppliers', icon: Truck },
+  { path: '/invoices', label: 'Invoices', icon: FileText },
   { path: '/reports', label: 'Reports', icon: FileBarChart },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
@@ -39,6 +42,8 @@ const cashierNavItems = [
   { path: '/inventory', label: 'Inventory', icon: Package },
   { path: '/sales', label: 'My Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
+  { path: '/customers', label: 'Customers', icon: Users },
+  { path: '/invoices', label: 'Invoices', icon: FileText },
   { path: '/reports', label: 'Reports', icon: FileBarChart },
 ];
 
