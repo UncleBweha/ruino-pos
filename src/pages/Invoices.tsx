@@ -227,7 +227,7 @@ export default function InvoicesPage() {
     const email = receiptSettings?.email || '';
     const address = receiptSettings?.address || '';
     const taxPin = receiptSettings?.tax_pin || '';
-    const logoUrl = receiptSettings?.logo_url || '';
+    const logoUrl = invoice.logo_url || receiptSettings?.logo_url || '';
     const items = invoice.invoice_items || [];
 
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${invoice.type === 'quotation' ? 'Quotation' : 'Invoice'} - ${invoice.invoice_number}</title>
