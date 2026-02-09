@@ -371,7 +371,7 @@ export default function POSPage() {
               const isPriceModified = item.unitPrice !== item.product.selling_price;
               
               return (
-                <div key={item.product.id} className="pos-cart-item p-5">
+                <div key={item.product.id} className="glass-item flex items-center gap-4 border-l-4 border-l-transparent hover:border-l-accent">
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-base truncate">{item.product.name}</p>
                     {isEditing ? (
