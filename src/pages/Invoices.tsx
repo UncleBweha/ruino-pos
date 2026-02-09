@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { format } from 'date-fns';
 import {
-  Plus, Loader2, FileText, Trash2, Download, Printer, Sparkles,
+  Plus, Loader2, FileText, Trash2, Download, Printer,
   ArrowRightLeft, Search, Eye, Upload, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ export default function InvoicesPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
+  
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -197,29 +197,6 @@ export default function InvoicesPage() {
     }
   }
 
-  async function handleAiNotes() {
-    setAiLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
-          action: 'invoice_notes',
-          data: {
-            type: form.type,
-            customer_name: form.customer_name || 'Customer',
-            total: calcTotal,
-            item_count: items.length,
-          },
-        },
-      });
-      if (error) throw error;
-      if (data?.notes) setForm(f => ({ ...f, notes: data.notes, payment_terms: data.payment_terms || f.payment_terms }));
-      toast({ title: 'AI Notes Generated' });
-    } catch {
-      toast({ title: 'AI Error', variant: 'destructive' });
-    } finally {
-      setAiLoading(false);
-    }
-  }
 
   function generateInvoiceHTML(invoice: Invoice): string {
     const companyName = receiptSettings?.company_name || 'Ruinu General Merchants';
@@ -522,13 +499,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Notes</Label>
-                <Button type="button" variant="ghost" size="sm" onClick={handleAiNotes} disabled={aiLoading} className="h-7 text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {aiLoading ? 'Generating...' : 'AI Generate'}
-                </Button>
-              </div>
+              <Label>Notes</Label>
               <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
             </div>
 
