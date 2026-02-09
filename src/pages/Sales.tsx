@@ -207,7 +207,7 @@ export default function SalesPage() {
                   <div key={sale.id}>
                     {/* Sale Row */}
                     <div
-                      className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                      className="p-4 hover:bg-background/60 cursor-pointer transition-colors"
                       onClick={() =>
                         setExpandedSale(expandedSale === sale.id ? null : sale.id)
                       }
