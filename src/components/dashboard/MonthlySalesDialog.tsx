@@ -115,7 +115,7 @@ export function MonthlySalesDialog({ open, onOpenChange }: MonthlySalesDialogPro
         {/* Filters */}
         <div className="flex flex-wrap gap-3 pb-4 border-b">
           {/* Filter Mode Toggle */}
-          <div className="flex gap-1 bg-muted rounded-lg p-1">
+          <div className="flex gap-1 glass-item !p-1 rounded-lg">
             <Button
               variant={filterMode === 'month' ? 'default' : 'ghost'}
               size="sm"
