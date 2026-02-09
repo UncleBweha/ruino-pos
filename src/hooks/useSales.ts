@@ -88,7 +88,7 @@ export function useSales() {
   async function createSale(params: CreateSaleParams): Promise<Sale> {
     if (!user) throw new Error('User not authenticated');
 
-    const { items, customerName, taxRate, discount, paymentMethod, soldOnBehalfOf, soldOnBehalfName, commissionAmount } = params;
+    const { items, customerName, customerId, taxRate, discount, paymentMethod, soldOnBehalfOf, soldOnBehalfName, commissionAmount } = params;
 
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = subtotal * (taxRate / 100);
