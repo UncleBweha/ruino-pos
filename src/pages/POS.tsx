@@ -164,6 +164,7 @@ export default function POSPage() {
       const sale = await createSale({
         items,
         customerName: customerName || undefined,
+        customerId: selectedCustomerId || undefined,
         taxRate,
         discount,
         paymentMethod: selectedPayment,
