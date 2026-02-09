@@ -6,11 +6,12 @@ import type { Sale, CartItem } from '@/types/database';
 interface CreateSaleParams {
   items: CartItem[];
   customerName?: string;
+  customerId?: string;
   taxRate: number;
   discount: number;
   paymentMethod: 'cash' | 'mpesa' | 'credit';
-  soldOnBehalfOf?: string | null; // casual ID
-  soldOnBehalfName?: string | null; // casual or staff name
+  soldOnBehalfOf?: string | null;
+  soldOnBehalfName?: string | null;
   commissionAmount?: number;
 }
 
