@@ -463,7 +463,7 @@ export default function POSPage() {
         </div>
 
         {/* Checkout Section */}
-        <div className="p-4 border-t space-y-3 bg-muted/30">
+        <div className="p-4 glass-divider border-t space-y-3 bg-background/40">
           {/* Customer, Tax & Discount - Compact Row */}
           <div className="grid grid-cols-3 gap-2">
             <div>
