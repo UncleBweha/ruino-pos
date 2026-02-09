@@ -237,7 +237,7 @@ export function CasualManagement() {
               {casuals.map((casual) => (
                 <div
                   key={casual.id}
-                  className="flex items-center justify-between p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors"
+                  className="glass-item flex items-center justify-between p-4"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">

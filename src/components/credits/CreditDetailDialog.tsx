@@ -172,7 +172,7 @@ export function CreditDetailDialog({ credit, open, onOpenChange }: CreditDetailD
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  className="glass-item flex items-center justify-between p-3"
                 >
                   <div>
                     <p className="font-medium">{item.product_name}</p>
