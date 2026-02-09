@@ -75,6 +75,7 @@ export function useInvoices() {
         notes: params.notes || null,
         created_by: user.id,
         converted_from: params.converted_from || null,
+        logo_url: params.logo_url || null,
       })
       .select()
       .single();
