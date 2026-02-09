@@ -78,7 +78,48 @@ export default function InvoicesPage() {
   function openForm(type: 'invoice' | 'quotation') {
     setForm({ type, customer_name: '', customer_phone: '', customer_address: '', customer_id: '', tax_rate: '0', payment_terms: '', notes: '' });
     setItems([{ product_name: '', description: '', quantity: '1', unit_price: '0' }]);
+    setLogoFile(null);
+    setLogoPreview(null);
     setShowForm(true);
+  }
+
+  function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Error', description: 'Please select an image file', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'Error', description: 'Image must be under 2MB', variant: 'destructive' });
+      return;
+    }
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
+
+  function removeLogo() {
+    setLogoFile(null);
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoPreview(null);
+  }
+
+  async function uploadLogo(): Promise<string | null> {
+    if (!logoFile) return null;
+    setLogoUploading(true);
+    try {
+      const ext = logoFile.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from('invoice-logos').upload(fileName, logoFile);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('invoice-logos').getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (err) {
+      toast({ title: 'Logo upload failed', variant: 'destructive' });
+      return null;
+    } finally {
+      setLogoUploading(false);
+    }
   }
 
   function addItemRow() {
