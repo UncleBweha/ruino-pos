@@ -35,6 +35,18 @@ export interface Product {
   category?: Category;
 }
 
+export interface Casual {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  commission_rate: number;
+  commission_type: 'percentage' | 'fixed';
+  status: 'active' | 'inactive';
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Sale {
   id: string;
   receipt_number: string;
@@ -50,6 +62,9 @@ export interface Sale {
   status: 'completed' | 'voided' | 'credit';
   voided_at: string | null;
   voided_by: string | null;
+  sold_on_behalf_of: string | null;
+  sold_on_behalf_name: string | null;
+  commission_amount: number;
   created_at: string;
   cashier?: Profile;
   sale_items?: SaleItem[];
