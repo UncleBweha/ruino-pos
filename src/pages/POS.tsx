@@ -250,7 +250,7 @@ export default function POSPage() {
     <AppLayout className="flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden">
       {/* Products Section */}
       <div className="flex-1 flex flex-col min-h-0 lg:overflow-hidden">
-        <div className="p-4 border-b bg-card">
+        <div className="p-4 glass-divider border-b glass-section">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
