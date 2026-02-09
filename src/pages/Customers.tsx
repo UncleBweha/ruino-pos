@@ -287,7 +287,7 @@ export default function CustomersPage() {
 
                   {/* Credit Check Result */}
                   {creditCheck && expandedId === customer.id && (
-                    <div className="mt-3 p-3 rounded-lg bg-muted/50 text-sm">
+                    <div className="glass-item mt-3 p-3 text-sm">
                       <p className="font-medium mb-1">Credit Eligibility</p>
                       <p>Eligible: <Badge variant={creditCheck.eligible ? 'default' : 'destructive'}>{creditCheck.eligible ? 'Yes' : 'No'}</Badge></p>
                       {creditCheck.limit && <p>Suggested limit: {formatCurrency(creditCheck.limit)}</p>}
