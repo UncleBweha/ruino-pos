@@ -197,29 +197,6 @@ export default function InvoicesPage() {
     }
   }
 
-  async function handleAiNotes() {
-    setAiLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
-          action: 'invoice_notes',
-          data: {
-            type: form.type,
-            customer_name: form.customer_name || 'Customer',
-            total: calcTotal,
-            item_count: items.length,
-          },
-        },
-      });
-      if (error) throw error;
-      if (data?.notes) setForm(f => ({ ...f, notes: data.notes, payment_terms: data.payment_terms || f.payment_terms }));
-      toast({ title: 'AI Notes Generated' });
-    } catch {
-      toast({ title: 'AI Error', variant: 'destructive' });
-    } finally {
-      setAiLoading(false);
-    }
-  }
 
   function generateInvoiceHTML(invoice: Invoice): string {
     const companyName = receiptSettings?.company_name || 'Ruinu General Merchants';
