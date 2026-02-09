@@ -91,10 +91,10 @@
     --background: 0 0% 6%;
     --foreground: 40 30% 94%;
 
-    --card: 0 0% 11%;
+    --card: 0 0% 12% / 0.5;
     --card-foreground: 40 30% 94%;
 
-    --popover: 0 0% 11%;
+    --popover: 0 0% 12% / 0.7;
     --popover-foreground: 40 30% 94%;
 
     --primary: 42 100% 68%;
@@ -121,7 +121,7 @@
     --info: 217 50% 52%;
     --info-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
+    --border: 0 0% 20% / 0.5;
     --input: 0 0% 18%;
     --ring: 42 100% 62%;
 
@@ -140,8 +140,10 @@
     --pos-warning-bg: 42 50% 12%;
     --pos-danger-bg: 0 50% 12%;
 
-    --glass-bg: 0 0% 12% / 0.7;
-    --glass-border: 0 0% 20% / 0.4;
+    --glass-bg: 0 0% 12% / 0.45;
+    --glass-border: 0 0% 25% / 0.5;
+    --glass-shadow: 0 0% 0% / 0.15;
+    --glass-blur: 25px;
   }
 }
 
