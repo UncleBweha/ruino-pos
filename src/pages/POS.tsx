@@ -51,6 +51,7 @@ export default function POSPage() {
   const { createSale } = useSales();
   const { receiptSettings } = useSettings();
   const { activeCasuals } = useCasuals();
+  const { customers, searchCustomers: searchCustomersFn } = useCustomers();
   const { profile } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
