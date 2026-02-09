@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,6 +10,7 @@ import {
   Legend,
 } from 'recharts';
 import type { MonthlySalesData } from '@/hooks/useDashboard';
+import { TrendingUp } from 'lucide-react';
 
 interface SalesChartProps {
   data: MonthlySalesData[];
@@ -20,75 +20,76 @@ interface SalesChartProps {
 export function SalesChart({ data, loading }: SalesChartProps) {
   if (loading) {
     return (
-      <Card className="col-span-full lg:col-span-2">
-        <CardHeader>
-          <Skeleton className="h-5 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[280px] w-full" />
-        </CardContent>
-      </Card>
+      <div className="bento-card col-span-full lg:col-span-2">
+        <Skeleton className="h-5 w-40 mb-4" />
+        <Skeleton className="h-[280px] w-full rounded-xl" />
+      </div>
     );
   }
 
   return (
-    <Card className="col-span-full lg:col-span-2">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Sales Overview</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis
-              dataKey="month"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-            />
-            <YAxis
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickFormatter={(v) =>
-                v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toString()
-              }
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)',
-              }}
-              labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
-              formatter={(value: number) => [
-                `Kshs ${value.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`,
-              ]}
-            />
-            <Legend
-              wrapperStyle={{ paddingTop: '10px' }}
-              iconType="circle"
-            />
-            <Line
-              type="monotone"
-              dataKey="sales"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2.5}
-              dot={{ r: 4, fill: 'hsl(var(--primary))' }}
-              activeDot={{ r: 6 }}
-              name="Sales"
-            />
-            <Line
-              type="monotone"
-              dataKey="profit"
-              stroke="hsl(var(--accent))"
-              strokeWidth={2.5}
-              dot={{ r: 4, fill: 'hsl(var(--accent))' }}
-              activeDot={{ r: 6 }}
-              name="Profit"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+    <div className="bento-card col-span-full lg:col-span-2">
+      <div className="flex items-center gap-2 mb-5">
+        <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+          <TrendingUp className="w-4 h-4 text-accent-foreground" />
+        </div>
+        <div>
+          <h3 className="font-bold text-base">Sales Overview</h3>
+          <p className="text-xs text-muted-foreground">Last 6 months</p>
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+          <XAxis
+            dataKey="month"
+            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v) =>
+              v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toString()
+            }
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px hsl(var(--foreground) / 0.08)',
+              padding: '12px 16px',
+            }}
+            labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 700, marginBottom: 4 }}
+            formatter={(value: number) => [
+              `Kshs ${value.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`,
+            ]}
+            cursor={{ fill: 'hsl(var(--muted) / 0.5)' }}
+          />
+          <Legend
+            wrapperStyle={{ paddingTop: '12px' }}
+            iconType="circle"
+            iconSize={8}
+          />
+          <Bar
+            dataKey="sales"
+            fill="hsl(var(--foreground))"
+            radius={[6, 6, 0, 0]}
+            maxBarSize={32}
+            name="Sales"
+          />
+          <Bar
+            dataKey="profit"
+            fill="hsl(var(--accent))"
+            radius={[6, 6, 0, 0]}
+            maxBarSize={32}
+            name="Profit"
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

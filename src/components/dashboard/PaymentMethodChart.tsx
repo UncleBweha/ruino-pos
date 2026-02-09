@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   PieChart,
@@ -6,7 +5,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from 'recharts';
 import type { SalesByPaymentMethod } from '@/hooks/useDashboard';
 
@@ -16,9 +14,9 @@ interface PaymentMethodChartProps {
 }
 
 const COLORS = [
-  'hsl(var(--primary))',
+  'hsl(var(--foreground))',
   'hsl(var(--accent))',
-  'hsl(var(--warning))',
+  'hsl(var(--muted-foreground))',
   'hsl(var(--info))',
 ];
 
@@ -27,27 +25,21 @@ export function PaymentMethodChart({ data, loading }: PaymentMethodChartProps) {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-32" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[220px] w-full rounded-full mx-auto max-w-[220px]" />
-        </CardContent>
-      </Card>
+      <div className="bento-card">
+        <Skeleton className="h-5 w-32 mb-4" />
+        <Skeleton className="h-[220px] w-full rounded-full mx-auto max-w-[220px]" />
+      </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Sale Analytics</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-[250px]">
+      <div className="bento-card">
+        <h3 className="font-bold text-base mb-2">Payment Methods</h3>
+        <div className="flex items-center justify-center h-[220px]">
           <p className="text-muted-foreground text-sm">No sales data yet</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -58,51 +50,52 @@ export function PaymentMethodChart({ data, loading }: PaymentMethodChartProps) {
   }));
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Sale Analytics</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              innerRadius={55}
-              outerRadius={85}
-              paddingAngle={4}
-              dataKey="value"
-              strokeWidth={2}
-              stroke="hsl(var(--card))"
-            >
-              {chartData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-              }}
-              formatter={(value: number, name: string) => [
-                `${value} sales`,
-                name,
-              ]}
+    <div className="bento-card">
+      <h3 className="font-bold text-base mb-4">Payment Methods</h3>
+      <ResponsiveContainer width="100%" height={200}>
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            innerRadius={50}
+            outerRadius={80}
+            paddingAngle={4}
+            dataKey="value"
+            strokeWidth={0}
+          >
+            {chartData.map((_, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px hsl(var(--foreground) / 0.08)',
+            }}
+            formatter={(value: number, name: string) => [
+              `${value} sales`,
+              name,
+            ]}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 mt-2 justify-center">
+        {chartData.map((item, index) => (
+          <div key={item.name} className="flex items-center gap-1.5">
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: COLORS[index % COLORS.length] }}
             />
-            <Legend
-              iconType="circle"
-              iconSize={8}
-              formatter={(value: string, entry: any) => (
-                <span className="text-xs text-muted-foreground">
-                  {value} ({entry.payload?.percentage}%)
-                </span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+            <span className="text-xs text-muted-foreground">
+              {item.name} ({item.percentage}%)
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

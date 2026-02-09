@@ -8,8 +8,8 @@ import {
   CreditCard,
   Wallet,
   DollarSign,
+  ArrowUpRight,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -22,33 +22,27 @@ interface SalesOverviewCardsProps {
 export function SalesOverviewCards({ stats, loading, onMonthSalesClick }: SalesOverviewCardsProps) {
   const navigate = useNavigate();
 
-  const cards = [
+  const primaryCards = [
     {
-      title: 'Total Revenue',
-      subtitle: "Today's Sales",
+      title: "Today's Revenue",
       value: formatCurrency(stats.todaySales),
       icon: DollarSign,
-      gradient: 'from-primary/15 to-primary/5',
-      iconBg: 'bg-primary/20',
-      iconColor: 'text-primary',
+      accent: 'bg-accent',
+      accentText: 'text-accent-foreground',
     },
     {
-      title: 'Total Profit',
-      subtitle: "Today's Profit",
+      title: "Today's Profit",
       value: formatCurrency(stats.todayProfit),
       icon: TrendingUp,
-      gradient: 'from-success/15 to-success/5',
-      iconBg: 'bg-success/20',
-      iconColor: 'text-success',
+      accent: 'bg-success',
+      accentText: 'text-success-foreground',
     },
     {
       title: 'Products',
-      subtitle: 'Total Inventory',
       value: stats.totalProducts.toString(),
       icon: Package,
-      gradient: 'from-info/15 to-info/5',
-      iconBg: 'bg-info/20',
-      iconColor: 'text-info',
+      accent: 'bg-info',
+      accentText: 'text-info-foreground',
       onClick: () => navigate('/inventory'),
     },
   ];
@@ -58,106 +52,105 @@ export function SalesOverviewCards({ stats, loading, onMonthSalesClick }: SalesO
       title: "Month's Sales",
       value: formatCurrency(stats.monthSales),
       icon: TrendingUp,
-      color: 'text-info',
       onClick: onMonthSalesClick,
     },
     {
       title: "Month's Profit",
       value: formatCurrency(stats.monthProfit),
       icon: TrendingUp,
-      color: 'text-success',
     },
     {
       title: 'Low Stock',
       value: stats.lowStockCount.toString(),
       icon: AlertTriangle,
-      color: stats.lowStockCount > 0 ? 'text-warning' : 'text-muted-foreground',
+      danger: stats.lowStockCount > 0,
       onClick: () => navigate('/inventory'),
     },
     {
       title: 'Pending Credits',
       value: formatCurrency(stats.pendingCredits),
       icon: CreditCard,
-      color: stats.pendingCredits > 0 ? 'text-destructive' : 'text-muted-foreground',
+      danger: stats.pendingCredits > 0,
       onClick: () => navigate('/credits'),
     },
     {
       title: "Today's Cash",
       value: formatCurrency(stats.todayCash),
       icon: Wallet,
-      color: 'text-success',
     },
     {
       title: 'Inventory Cost',
       value: formatCurrency(stats.inventoryCost),
       icon: DollarSign,
-      color: 'text-info',
       onClick: () => navigate('/inventory'),
     },
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Primary stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {cards.map((card, i) => (
-          <Card
+    <div className="space-y-5">
+      {/* Primary stat cards - big bento style */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {primaryCards.map((card, i) => (
+          <div
             key={i}
             className={cn(
-              'overflow-hidden transition-all hover:shadow-md border-0',
+              'bento-card relative overflow-hidden press-effect',
               card.onClick && 'cursor-pointer'
             )}
             onClick={card.onClick}
           >
-            <CardContent className={cn('p-5 bg-gradient-to-br', card.gradient)}>
-              {loading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-10 w-10 rounded-xl" />
-                  <Skeleton className="h-8 w-28" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-              ) : (
-                <>
-                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center mb-3', card.iconBg)}>
-                    <card.icon className={cn('w-5 h-5', card.iconColor)} />
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-10 rounded-xl" />
+                <Skeleton className="h-8 w-28" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between mb-4">
+                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', card.accent)}>
+                    <card.icon className={cn('w-5 h-5', card.accentText)} />
                   </div>
-                  <p className="text-2xl font-bold currency">{card.value}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{card.subtitle}</p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                  {card.onClick && (
+                    <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </div>
+                <p className="text-2xl font-extrabold currency">{card.value}</p>
+                <p className="text-sm text-muted-foreground mt-1">{card.title}</p>
+              </>
+            )}
+          </div>
         ))}
       </div>
 
-      {/* Secondary stat cards */}
+      {/* Secondary stat cards - compact bento */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {secondaryCards.map((card, i) => (
-          <Card
+          <div
             key={i}
             className={cn(
-              'transition-all hover:shadow-sm',
-              card.onClick && 'cursor-pointer hover:ring-1 hover:ring-primary/30'
+              'bento-card !p-4 press-effect',
+              card.onClick && 'cursor-pointer'
             )}
             onClick={card.onClick}
           >
-            <CardContent className="p-3">
-              {loading ? (
-                <div className="space-y-1.5">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-6 w-20" />
+            {loading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <card.icon className={cn('w-3.5 h-3.5', card.danger ? 'text-destructive' : 'text-muted-foreground')} />
+                  <p className="text-xs text-muted-foreground truncate">{card.title}</p>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <card.icon className={cn('w-3.5 h-3.5', card.color)} />
-                    <p className="text-xs text-muted-foreground">{card.title}</p>
-                  </div>
-                  <p className="text-sm font-bold currency">{card.value}</p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                <p className={cn('text-sm font-bold currency', card.danger && 'text-destructive')}>
+                  {card.value}
+                </p>
+              </>
+            )}
+          </div>
         ))}
       </div>
     </div>
