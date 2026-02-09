@@ -211,6 +211,7 @@ export interface Invoice {
   notes: string | null;
   created_by: string;
   converted_from: string | null;
+  logo_url: string | null;
   created_at: string;
   updated_at: string;
   invoice_items?: InvoiceItem[];

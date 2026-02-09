@@ -14,6 +14,7 @@ interface CreateInvoiceParams {
   payment_terms?: string;
   notes?: string;
   converted_from?: string;
+  logo_url?: string;
 }
 
 export function useInvoices() {
