@@ -468,12 +468,24 @@ export default function POSPage() {
           <div className="grid grid-cols-3 gap-2">
             <div>
               <Label className="text-xs">Customer {selectedPayment === 'credit' && <span className="text-destructive">*</span>}</Label>
-              <Input
-                placeholder="Walk-in"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="h-9 mt-0.5 text-sm"
-              />
+              <Select
+                value={selectedCustomerId}
+                onValueChange={(v) => {
+                  setSelectedCustomerId(v);
+                  const c = customers.find(c => c.id === v);
+                  if (c) setCustomerName(c.name);
+                }}
+              >
+                <SelectTrigger className="h-9 mt-0.5 text-sm">
+                  <SelectValue placeholder="Walk-in" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="walk-in">Walk-in</SelectItem>
+                  {customers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-xs">Tax (%)</Label>

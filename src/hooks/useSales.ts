@@ -108,6 +108,7 @@ export function useSales() {
         receipt_number: receiptNumber,
         cashier_id: user.id,
         customer_name: customerName || null,
+        customer_id: customerId || null,
         subtotal,
         tax_rate: taxRate,
         tax_amount: taxAmount,
