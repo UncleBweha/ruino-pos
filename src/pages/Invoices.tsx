@@ -161,6 +161,7 @@ export default function InvoicesPage() {
     }
     setSaving(true);
     try {
+      const logoUrl = await uploadLogo();
       await createInvoice({
         type: form.type,
         customer_name: form.customer_name,
@@ -176,6 +177,7 @@ export default function InvoicesPage() {
         tax_rate: parseFloat(form.tax_rate) || 0,
         payment_terms: form.payment_terms || undefined,
         notes: form.notes || undefined,
+        logo_url: logoUrl || undefined,
       });
       toast({ title: `${form.type === 'invoice' ? 'Invoice' : 'Quotation'} Created` });
       setShowForm(false);
