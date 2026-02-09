@@ -52,6 +52,7 @@ export interface Sale {
   receipt_number: string;
   cashier_id: string;
   customer_name: string | null;
+  customer_id: string | null;
   subtotal: number;
   tax_rate: number;
   tax_amount: number;
@@ -66,7 +67,7 @@ export interface Sale {
   sold_on_behalf_name: string | null;
   commission_amount: number;
   created_at: string;
-  cashier?: Profile;
+  cashier?: Partial<Profile> | null;
   sale_items?: SaleItem[];
 }
 
