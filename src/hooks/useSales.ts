@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Sale, SaleItem, CartItem, Credit } from '@/types/database';
+import type { Sale, CartItem } from '@/types/database';
 
 interface CreateSaleParams {
   items: CartItem[];
@@ -9,6 +9,9 @@ interface CreateSaleParams {
   taxRate: number;
   discount: number;
   paymentMethod: 'cash' | 'mpesa' | 'credit';
+  soldOnBehalfOf?: string | null; // casual ID
+  soldOnBehalfName?: string | null; // casual or staff name
+  commissionAmount?: number;
 }
 
 export function useSales() {
@@ -21,7 +24,6 @@ export function useSales() {
     if (!user) return;
 
     try {
-      // Fetch sales and profiles in parallel
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('*, sale_items(*)')
@@ -31,7 +33,6 @@ export function useSales() {
 
       const cashierIds = [...new Set(salesData?.map(s => s.cashier_id) || [])];
       
-      // Only fetch profiles if there are sales
       let profilesMap = new Map();
       if (cashierIds.length > 0) {
         const { data: profilesData } = await supabase
@@ -57,7 +58,6 @@ export function useSales() {
   useEffect(() => {
     fetchSales();
 
-    // Set up realtime subscription
     const channel = supabase
       .channel('sales-changes')
       .on(
@@ -75,7 +75,6 @@ export function useSales() {
   }, [fetchSales]);
 
   async function generateReceiptNumber(): Promise<string> {
-    // Use the database function to generate receipt number atomically
     const { data, error } = await supabase.rpc('generate_receipt_number');
     
     if (error) {
@@ -88,26 +87,20 @@ export function useSales() {
   async function createSale(params: CreateSaleParams): Promise<Sale> {
     if (!user) throw new Error('User not authenticated');
 
-    const { items, customerName, taxRate, discount, paymentMethod } = params;
+    const { items, customerName, taxRate, discount, paymentMethod, soldOnBehalfOf, soldOnBehalfName, commissionAmount } = params;
 
-    // Calculate totals
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = subtotal * (taxRate / 100);
     const total = subtotal + taxAmount - discount;
     const profit = items.reduce((sum, item) => sum + item.profit, 0);
 
-    // Generate receipt number
     const receiptNumber = await generateReceiptNumber();
-
-    // Determine status
     const status = paymentMethod === 'credit' ? 'credit' : 'completed';
 
-    // Validate credit sale requires customer name
     if (paymentMethod === 'credit' && !customerName?.trim()) {
       throw new Error('Customer name is required for credit sales');
     }
 
-    // Create sale
     const { data: saleData, error: saleError } = await supabase
       .from('sales')
       .insert({
@@ -122,6 +115,9 @@ export function useSales() {
         profit,
         payment_method: paymentMethod,
         status,
+        sold_on_behalf_of: soldOnBehalfOf || null,
+        sold_on_behalf_name: soldOnBehalfName || null,
+        commission_amount: commissionAmount || 0,
       })
       .select()
       .single();
@@ -130,13 +126,12 @@ export function useSales() {
 
     const saleId = saleData.id;
 
-    // Create sale items - use the custom unitPrice from cart
     const saleItems = items.map((item) => ({
       sale_id: saleId,
       product_id: item.product.id,
       product_name: item.product.name,
       quantity: item.quantity,
-      unit_price: item.unitPrice, // Use custom price instead of product.selling_price
+      unit_price: item.unitPrice,
       buying_price: item.product.buying_price,
       total: item.total,
       profit: item.profit,
@@ -148,10 +143,8 @@ export function useSales() {
 
     if (itemsError) throw itemsError;
 
-    // Update stock, cash box, and credits in parallel for speed
     const parallelOps: PromiseLike<any>[] = [];
 
-    // Stock updates - all in parallel
     for (const item of items) {
       parallelOps.push(
         supabase.rpc('update_product_stock', {
@@ -161,7 +154,6 @@ export function useSales() {
       );
     }
 
-    // Cash box insert for cash payments
     if (paymentMethod === 'cash') {
       parallelOps.push(
         supabase.from('cash_box').insert({
@@ -173,7 +165,6 @@ export function useSales() {
       );
     }
 
-    // Credit record for credit sales
     if (paymentMethod === 'credit') {
       parallelOps.push(
         supabase.from('credits').insert({
@@ -189,7 +180,6 @@ export function useSales() {
 
     await Promise.all(parallelOps);
 
-    // Fetch the complete sale with items to return with correct prices
     const { data: completeSale, error: fetchError } = await supabase
       .from('sales')
       .select('*, sale_items(*)')
@@ -207,7 +197,6 @@ export function useSales() {
     const sale = sales.find((s) => s.id === saleId);
     if (!sale) throw new Error('Sale not found');
 
-    // Update sale status
     const { error: updateError } = await supabase
       .from('sales')
       .update({
@@ -219,7 +208,6 @@ export function useSales() {
 
     if (updateError) throw updateError;
 
-    // Return items to inventory in parallel
     if (sale.sale_items) {
       await Promise.all(
         sale.sale_items.map(item =>

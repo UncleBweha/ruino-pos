@@ -1,18 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
 import { useSales } from '@/hooks/useSales';
 import { useSettings } from '@/hooks/useSettings';
+import { useCasuals } from '@/hooks/useCasuals';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2 } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import type { Product, Sale } from '@/types/database';
+import type { Product, Sale, Casual } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -39,6 +49,8 @@ export default function POSPage() {
   } = useCart();
   const { createSale } = useSales();
   const { receiptSettings } = useSettings();
+  const { activeCasuals } = useCasuals();
+  const { profile } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -50,6 +62,10 @@ export default function POSPage() {
   const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
   const [editPriceValue, setEditPriceValue] = useState('');
 
+  // Sell on behalf state
+  const [sellOnBehalf, setSellOnBehalf] = useState(false);
+  const [selectedBehalfId, setSelectedBehalfId] = useState<string>('');
+
   // On mobile, only show products when searching
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
 
@@ -57,6 +73,15 @@ export default function POSPage() {
     cash: Banknote,
     mpesa: Smartphone,
     credit: CreditCard,
+  };
+
+  // Calculate commission for the sale
+  const calculateCommission = (casual: Casual | undefined, saleTotal: number, itemCount: number): number => {
+    if (!casual) return 0;
+    if (casual.commission_type === 'percentage') {
+      return saleTotal * (casual.commission_rate / 100);
+    }
+    return casual.commission_rate * itemCount;
   };
 
   // Handle starting price edit
@@ -119,17 +144,36 @@ export default function POSPage() {
     setCheckoutLoading(true);
 
     try {
+      // Determine sell-on-behalf details
+      let soldOnBehalfOf: string | null = null;
+      let soldOnBehalfName: string | null = null;
+      let commissionAmount = 0;
+
+      if (sellOnBehalf && selectedBehalfId) {
+        const selectedCasual = activeCasuals.find(c => c.id === selectedBehalfId);
+        if (selectedCasual) {
+          soldOnBehalfOf = selectedCasual.id;
+          soldOnBehalfName = selectedCasual.full_name;
+          commissionAmount = calculateCommission(selectedCasual, total, itemCount);
+        }
+      }
+
       const sale = await createSale({
         items,
         customerName: customerName || undefined,
         taxRate,
         discount,
         paymentMethod: selectedPayment,
+        soldOnBehalfOf,
+        soldOnBehalfName,
+        commissionAmount,
       });
 
       setLastSale(sale);
       setShowReceipt(true);
       clearCart();
+      setSellOnBehalf(false);
+      setSelectedBehalfId('');
 
       toast({
         title: 'Sale Complete',
@@ -248,6 +292,63 @@ export default function POSPage() {
             <Button variant="ghost" size="sm" onClick={clearCart}>
               Clear
             </Button>
+          )}
+        </div>
+
+        {/* Sell on Behalf Toggle */}
+        <div className="px-4 py-3 border-b bg-muted/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-muted-foreground" />
+              <Label className="text-sm font-medium cursor-pointer" htmlFor="sell-on-behalf">
+                Sell on behalf
+              </Label>
+            </div>
+            <Switch
+              id="sell-on-behalf"
+              checked={sellOnBehalf}
+              onCheckedChange={(checked) => {
+                setSellOnBehalf(checked);
+                if (!checked) setSelectedBehalfId('');
+              }}
+            />
+          </div>
+          {sellOnBehalf && (
+            <div className="mt-2">
+              <Select value={selectedBehalfId} onValueChange={setSelectedBehalfId}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select person..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeCasuals.map((casual) => (
+                    <SelectItem key={casual.id} value={casual.id}>
+                      {casual.full_name}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({casual.commission_type === 'percentage' 
+                          ? `${casual.commission_rate}%` 
+                          : `${formatCurrency(casual.commission_rate)}/item`})
+                      </span>
+                    </SelectItem>
+                  ))}
+                  {activeCasuals.length === 0 && (
+                    <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                      No active casuals. Add them in Settings → Casuals.
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+              {selectedBehalfId && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Commission: {formatCurrency(
+                    calculateCommission(
+                      activeCasuals.find(c => c.id === selectedBehalfId),
+                      total,
+                      itemCount
+                    )
+                  )}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -412,6 +513,20 @@ export default function POSPage() {
                 <span className="currency">-{formatCurrency(discount)}</span>
               </div>
             )}
+            {sellOnBehalf && selectedBehalfId && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Commission</span>
+                <span className="currency">
+                  {formatCurrency(
+                    calculateCommission(
+                      activeCasuals.find(c => c.id === selectedBehalfId),
+                      total,
+                      itemCount
+                    )
+                  )}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-bold pt-2 border-t">
               <span>Total</span>
               <span className="currency">{formatCurrency(total)}</span>
@@ -476,6 +591,11 @@ export default function POSPage() {
                 <p className="text-2xl font-bold text-primary mt-2">
                   {formatCurrency(lastSale.total)}
                 </p>
+                {lastSale.sold_on_behalf_name && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Sold by: {lastSale.sold_on_behalf_name}
+                  </p>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 {receiptSettings?.company_name || 'Ruinu General Merchants'}

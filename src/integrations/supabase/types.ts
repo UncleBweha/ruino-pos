@@ -52,6 +52,42 @@ export type Database = {
           },
         ]
       }
+      casuals: {
+        Row: {
+          commission_rate: number
+          commission_type: string
+          created_at: string
+          created_by: string
+          full_name: string
+          id: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          created_by: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          created_by?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -287,6 +323,7 @@ export type Database = {
       sales: {
         Row: {
           cashier_id: string
+          commission_amount: number
           created_at: string
           customer_name: string | null
           discount: number
@@ -294,6 +331,8 @@ export type Database = {
           payment_method: string
           profit: number
           receipt_number: string
+          sold_on_behalf_name: string | null
+          sold_on_behalf_of: string | null
           status: string
           subtotal: number
           tax_amount: number
@@ -304,6 +343,7 @@ export type Database = {
         }
         Insert: {
           cashier_id: string
+          commission_amount?: number
           created_at?: string
           customer_name?: string | null
           discount?: number
@@ -311,6 +351,8 @@ export type Database = {
           payment_method: string
           profit?: number
           receipt_number: string
+          sold_on_behalf_name?: string | null
+          sold_on_behalf_of?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -321,6 +363,7 @@ export type Database = {
         }
         Update: {
           cashier_id?: string
+          commission_amount?: number
           created_at?: string
           customer_name?: string | null
           discount?: number
@@ -328,6 +371,8 @@ export type Database = {
           payment_method?: string
           profit?: number
           receipt_number?: string
+          sold_on_behalf_name?: string | null
+          sold_on_behalf_of?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -336,7 +381,15 @@ export type Database = {
           voided_at?: string | null
           voided_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sales_sold_on_behalf_of_fkey"
+            columns: ["sold_on_behalf_of"]
+            isOneToOne: false
+            referencedRelation: "casuals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

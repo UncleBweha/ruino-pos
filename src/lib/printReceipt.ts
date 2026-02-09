@@ -169,6 +169,12 @@ export function generateReceiptHTML(options: PrintReceiptOptions): string {
           <span>Payment:</span>
           <span class="payment-method">${sale.payment_method}</span>
         </div>
+        ${sale.sold_on_behalf_name ? `
+        <div>
+          <span>Sold by:</span>
+          <span>${sale.sold_on_behalf_name}</span>
+        </div>
+        ` : ''}
       </div>
 
       <table class="items-table">

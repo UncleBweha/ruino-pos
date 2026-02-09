@@ -15,6 +15,7 @@ import {
   Loader2,
   Printer,
   Download,
+  UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,7 +60,9 @@ export default function SalesPage() {
     const matchesSearch =
       !searchQuery ||
       sale.receipt_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sale.customer_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      sale.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sale.sold_on_behalf_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sale.cashier?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesDate =
       !selectedDate ||
@@ -124,6 +127,15 @@ export default function SalesPage() {
     );
   }
 
+  // Display sales attribution
+  function getSalesAttribution(sale: Sale): string {
+    const cashierName = sale.cashier?.full_name || 'Unknown';
+    if (sale.sold_on_behalf_name) {
+      return `${cashierName} (${sale.sold_on_behalf_name})`;
+    }
+    return cashierName;
+  }
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
@@ -140,7 +152,7 @@ export default function SalesPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search by receipt or customer..."
+              placeholder="Search by receipt, customer, or seller..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-12"
@@ -206,11 +218,21 @@ export default function SalesPage() {
                             <Receipt className="w-5 h-5 text-primary" />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-mono font-medium">
-                              {sale.receipt_number}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-mono font-medium">
+                                {sale.receipt_number}
+                              </p>
+                              {sale.sold_on_behalf_name && (
+                                <Badge variant="outline" className="text-2xs gap-1 rounded-full">
+                                  <UserCheck className="w-3 h-3" />
+                                  {sale.sold_on_behalf_name}
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground">
                               {format(new Date(sale.created_at), 'MMM dd, yyyy • HH:mm')}
+                              {' · '}
+                              <span className="font-medium">{getSalesAttribution(sale)}</span>
                             </p>
                           </div>
                         </div>
@@ -252,6 +274,14 @@ export default function SalesPage() {
                                 {sale.cashier?.full_name || 'Unknown'}
                               </p>
                             </div>
+                            {sale.sold_on_behalf_name && (
+                              <div>
+                                <p className="text-muted-foreground">Sold By</p>
+                                <p className="font-medium text-primary">
+                                  {sale.sold_on_behalf_name}
+                                </p>
+                              </div>
+                            )}
                             <div>
                               <p className="text-muted-foreground">Customer</p>
                               <p className="font-medium">
@@ -276,6 +306,14 @@ export default function SalesPage() {
                                 {formatCurrency(sale.discount)}
                               </p>
                             </div>
+                            {sale.commission_amount > 0 && (
+                              <div>
+                                <p className="text-muted-foreground">Commission</p>
+                                <p className="font-medium text-warning">
+                                  {formatCurrency(sale.commission_amount)}
+                                </p>
+                              </div>
+                            )}
                           </div>
 
                           {/* Items */}
