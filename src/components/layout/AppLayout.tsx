@@ -12,7 +12,7 @@ export function AppLayout({ children, className }: AppLayoutProps) {
       <AppSidebar />
       <main
         className={cn(
-          'min-h-screen pt-20 lg:pt-20 pb-6',
+          'min-h-screen pt-20 lg:pt-20 pb-6 relative z-[1]',
           className
         )}
       >
