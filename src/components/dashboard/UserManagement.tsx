@@ -275,25 +275,6 @@ export function UserManagement() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-2">
-                    {getTypeBadge(account.type)}
-                    {account.type !== 'casual' && !isCurrentUser && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                        disabled={deleting === account.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUserToDelete({ id: account.id, name: account.name });
-                        }}
-                      >
-                        {deleting === account.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
