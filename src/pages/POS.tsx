@@ -178,6 +178,7 @@ export default function POSPage() {
       clearCart();
       setSellOnBehalf(false);
       setSelectedBehalfId('');
+      setSelectedCustomerId('');
 
       toast({
         title: 'Sale Complete',
