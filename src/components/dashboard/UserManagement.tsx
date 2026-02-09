@@ -249,7 +249,7 @@ export function UserManagement() {
               return (
                 <div
                   key={`${account.type}-${account.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
+                  className="glass-item flex items-center justify-between p-3 cursor-pointer"
                   onClick={() => fetchDailyActivity(account)}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
