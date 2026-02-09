@@ -8,11 +8,11 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, className }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-warm-gradient">
       <AppSidebar />
       <main
         className={cn(
-          'lg:ml-64 min-h-screen pt-14 lg:pt-0',
+          'min-h-screen pt-20 lg:pt-20 pb-6',
           className
         )}
       >

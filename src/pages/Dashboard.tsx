@@ -24,43 +24,48 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="p-4 lg:p-6 space-y-6">
+      <div className="px-4 lg:px-8 space-y-6 max-w-[1400px] mx-auto">
         {/* Welcome Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">
+            <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">
               Welcome, {firstName} 👋
             </h1>
-            <p className="text-muted-foreground">Here's what's happening in your store.</p>
+            <p className="text-muted-foreground mt-1">Here's what's happening in your store today.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={refresh}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refresh}
+            className="rounded-full press-effect glass-panel border-border/50"
+          >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
         </div>
 
-        {/* Stat Cards */}
+        {/* Stat Cards - Bento Grid */}
         <SalesOverviewCards
           stats={stats}
           loading={loading}
           onMonthSalesClick={() => setShowMonthlySales(true)}
         />
 
-        {/* Charts Row: Line Chart + Sales Summary */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        {/* Charts Row - Bento Layout */}
+        <div className="grid lg:grid-cols-3 gap-5">
           <SalesChart data={monthlySalesData} loading={loading} />
           <SalesSummaryCard stats={stats} loading={loading} />
         </div>
 
         {/* Bottom Row: Pie Chart + Top Products + Low Stock */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           <PaymentMethodChart data={salesByPayment} loading={loading} />
           <TopProductsCard products={topProducts} loading={loading} />
           <LowStockCard products={lowStockProducts} />
         </div>
 
         {/* User Management */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-5">
           <UserManagement />
         </div>
       </div>

@@ -2,141 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ruinu General Merchants POS - Design System
-   Touch-first, professional retail design
+/* Ruinu General Merchants POS - Bento Box Design System
+   Warm cream background, Mustard & Charcoal accents, Glassmorphism cards
    All colors in HSL format
 */
 
 @layer base {
   :root {
-    /* Ruinu Merchants - Bold Terracotta & Ink identity */
-    --background: 30 25% 97%;
-    --foreground: 20 30% 8%;
+    /* Bento Box - Warm Cream & Mustard identity */
+    --background: 38 60% 96%;
+    --foreground: 0 0% 10%;
 
-    --card: 30 20% 99%;
-    --card-foreground: 20 30% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
 
-    --popover: 30 20% 99%;
-    --popover-foreground: 20 30% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Primary - Burnt Terracotta */
-    --primary: 16 65% 48%;
-    --primary-foreground: 30 20% 99%;
+    /* Primary - Deep Charcoal */
+    --primary: 0 0% 10%;
+    --primary-foreground: 40 100% 97%;
 
     /* Secondary - Warm Sand */
-    --secondary: 35 30% 92%;
-    --secondary-foreground: 20 30% 15%;
+    --secondary: 40 40% 93%;
+    --secondary-foreground: 0 0% 15%;
 
-    /* Muted - Soft Linen */
-    --muted: 35 25% 94%;
-    --muted-foreground: 20 15% 45%;
+    /* Muted - Soft Cream */
+    --muted: 40 30% 94%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Accent - Deep Forest */
-    --accent: 160 45% 28%;
-    --accent-foreground: 30 20% 99%;
+    /* Accent - Mustard Yellow */
+    --accent: 42 100% 68%;
+    --accent-foreground: 0 0% 10%;
 
-    /* Destructive - Brick Red */
-    --destructive: 5 70% 50%;
-    --destructive-foreground: 30 20% 99%;
+    /* Destructive - Soft Red */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Success - Olive */
-    --success: 95 40% 38%;
-    --success-foreground: 30 20% 99%;
+    /* Success - Soft Green */
+    --success: 142 60% 40%;
+    --success-foreground: 0 0% 100%;
 
-    /* Warning - Mustard */
-    --warning: 45 85% 48%;
-    --warning-foreground: 20 30% 8%;
+    /* Warning - Amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
 
-    /* Info - Slate Blue */
-    --info: 210 45% 50%;
-    --info-foreground: 30 20% 99%;
+    /* Info - Soft Blue */
+    --info: 217 55% 55%;
+    --info-foreground: 0 0% 100%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 16 65% 48%;
+    --border: 40 20% 90%;
+    --input: 40 20% 90%;
+    --ring: 42 100% 68%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    /* Sidebar - Deep Charcoal with warmth */
-    --sidebar-background: 25 20% 12%;
-    --sidebar-foreground: 35 25% 92%;
-    --sidebar-primary: 16 65% 55%;
-    --sidebar-primary-foreground: 30 20% 99%;
-    --sidebar-accent: 25 18% 20%;
-    --sidebar-accent-foreground: 35 25% 92%;
-    --sidebar-border: 25 15% 22%;
-    --sidebar-ring: 16 65% 55%;
+    /* Sidebar - Deep Charcoal */
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 40 30% 92%;
+    --sidebar-primary: 42 100% 68%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 40 30% 92%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 42 100% 68%;
 
     /* POS-specific tokens */
-    --pos-cart-bg: 35 25% 95%;
-    --pos-item-hover: 16 65% 96%;
-    --pos-success-bg: 95 40% 94%;
-    --pos-warning-bg: 45 85% 94%;
-    --pos-danger-bg: 5 70% 95%;
+    --pos-cart-bg: 40 30% 96%;
+    --pos-item-hover: 42 60% 96%;
+    --pos-success-bg: 142 50% 95%;
+    --pos-warning-bg: 42 80% 94%;
+    --pos-danger-bg: 0 60% 96%;
 
     /* Touch-friendly sizing */
     --touch-target: 48px;
     --touch-target-lg: 56px;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(16 65% 48%), hsl(12 70% 38%));
-    --gradient-accent: linear-gradient(135deg, hsl(160 45% 28%), hsl(165 50% 22%));
-    --gradient-dark: linear-gradient(180deg, hsl(25 20% 12%), hsl(25 25% 6%));
-    --gradient-warm: linear-gradient(135deg, hsl(35 30% 92%), hsl(30 25% 97%));
+    /* Bento-specific */
+    --bento-radius: 1.5rem;
+    --bento-radius-lg: 2rem;
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 0 0% 100% / 0.4;
   }
 
   .dark {
-    --background: 25 25% 8%;
-    --foreground: 35 25% 94%;
+    --background: 0 0% 6%;
+    --foreground: 40 30% 94%;
 
-    --card: 25 22% 12%;
-    --card-foreground: 35 25% 94%;
+    --card: 0 0% 11%;
+    --card-foreground: 40 30% 94%;
 
-    --popover: 25 22% 12%;
-    --popover-foreground: 35 25% 94%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 40 30% 94%;
 
-    --primary: 16 65% 55%;
-    --primary-foreground: 30 20% 99%;
+    --primary: 42 100% 68%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 25 20% 18%;
-    --secondary-foreground: 35 25% 92%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 40 30% 92%;
 
-    --muted: 25 18% 18%;
-    --muted-foreground: 30 15% 55%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 40 10% 55%;
 
-    --accent: 160 45% 35%;
-    --accent-foreground: 30 20% 99%;
+    --accent: 42 100% 62%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 5 65% 45%;
-    --destructive-foreground: 30 20% 99%;
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 95 38% 42%;
-    --success-foreground: 30 20% 99%;
+    --success: 142 55% 42%;
+    --success-foreground: 0 0% 100%;
 
-    --warning: 45 80% 45%;
-    --warning-foreground: 20 30% 8%;
+    --warning: 38 88% 48%;
+    --warning-foreground: 0 0% 10%;
 
-    --info: 210 40% 55%;
-    --info-foreground: 30 20% 99%;
+    --info: 217 50% 52%;
+    --info-foreground: 0 0% 100%;
 
-    --border: 25 18% 22%;
-    --input: 25 18% 22%;
-    --ring: 16 65% 55%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 42 100% 62%;
 
-    --sidebar-background: 25 25% 6%;
-    --sidebar-foreground: 35 25% 92%;
-    --sidebar-primary: 16 65% 58%;
-    --sidebar-primary-foreground: 30 20% 99%;
-    --sidebar-accent: 25 20% 14%;
-    --sidebar-accent-foreground: 35 25% 92%;
-    --sidebar-border: 25 18% 16%;
-    --sidebar-ring: 16 65% 58%;
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 40 30% 92%;
+    --sidebar-primary: 42 100% 62%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 40 30% 92%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 42 100% 62%;
 
-    --pos-cart-bg: 25 20% 14%;
-    --pos-item-hover: 16 65% 18%;
-    --pos-success-bg: 95 38% 14%;
-    --pos-warning-bg: 45 80% 14%;
-    --pos-danger-bg: 5 65% 14%;
+    --pos-cart-bg: 0 0% 14%;
+    --pos-item-hover: 42 30% 14%;
+    --pos-success-bg: 142 40% 12%;
+    --pos-warning-bg: 42 50% 12%;
+    --pos-danger-bg: 0 50% 12%;
+
+    --glass-bg: 0 0% 12% / 0.7;
+    --glass-border: 0 0% 20% / 0.4;
   }
 }
 
@@ -159,8 +162,8 @@
 
   /* Touch-friendly scrollbars */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   ::-webkit-scrollbar-track {
@@ -168,15 +171,55 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-foreground/15 rounded-full;
+    @apply bg-foreground/10 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-foreground/25;
+    @apply bg-foreground/20;
   }
 }
 
 @layer components {
+  /* Bento Grid Card */
+  .bento-card {
+    @apply rounded-[var(--bento-radius)] border border-border/50 p-6 transition-all duration-300;
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 2px 16px -4px hsl(var(--foreground) / 0.06),
+                0 0 0 1px hsl(var(--glass-border));
+  }
+
+  .bento-card:hover {
+    box-shadow: 0 8px 32px -8px hsl(var(--foreground) / 0.1),
+                0 0 0 1px hsl(var(--glass-border));
+    transform: translateY(-1px);
+  }
+
+  .bento-card-dark {
+    @apply rounded-[var(--bento-radius)] p-6 transition-all duration-300;
+    background: hsl(0 0% 12%);
+    color: hsl(40 30% 92%);
+    box-shadow: 0 4px 24px -8px hsl(0 0% 0% / 0.3);
+  }
+
+  /* Glassmorphism panel */
+  .glass-panel {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  /* Warm gradient background */
+  .bg-warm-gradient {
+    background:
+      radial-gradient(ellipse at 0% 0%, hsl(48 80% 92% / 0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 0%, hsl(32 70% 92% / 0.5) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, hsl(42 60% 94% / 0.4) 0%, transparent 50%),
+      hsl(var(--background));
+  }
+
   /* Touch-friendly button base */
   .touch-target {
     min-height: var(--touch-target);
@@ -190,33 +233,32 @@
 
   /* POS-specific components */
   .pos-card {
-    @apply bg-card rounded-lg border p-5 transition-all duration-200;
-    box-shadow: 0 1px 3px 0 hsl(var(--foreground) / 0.04), 
-                0 1px 2px -1px hsl(var(--foreground) / 0.04);
+    @apply bento-card;
   }
 
   .pos-card:hover {
-    box-shadow: 0 4px 12px -2px hsl(var(--foreground) / 0.08), 
-                0 2px 4px -2px hsl(var(--foreground) / 0.04);
+    box-shadow: 0 8px 32px -8px hsl(var(--foreground) / 0.1),
+                0 0 0 1px hsl(var(--glass-border));
   }
 
   .pos-product-card {
-    @apply bg-card rounded-lg border-2 border-transparent p-4 cursor-pointer transition-all duration-150 active:scale-[0.98];
-    box-shadow: 0 1px 2px 0 hsl(var(--foreground) / 0.03);
+    @apply rounded-[var(--bento-radius)] border-2 border-transparent p-4 cursor-pointer transition-all duration-200 active:scale-[0.98];
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(12px);
   }
 
   .pos-product-card:hover {
-    @apply border-primary/40;
+    @apply border-accent/40;
     background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--pos-item-hover)) 100%);
   }
 
   .pos-cart-item {
-    @apply flex items-center gap-4 p-4 rounded-md transition-colors border-l-4 border-transparent;
+    @apply flex items-center gap-4 p-4 rounded-xl transition-colors border-l-4 border-transparent;
     background: hsl(var(--pos-cart-bg));
   }
 
   .pos-cart-item:hover {
-    @apply border-l-primary;
+    @apply border-l-accent;
     background: hsl(var(--pos-item-hover));
   }
 
@@ -233,10 +275,10 @@
     @apply bg-[hsl(var(--pos-danger-bg))] text-destructive font-medium px-3 py-1 rounded-full text-sm;
   }
 
-  /* Numeric keypad styling */
+  /* Keypad */
   .keypad-btn {
-    @apply touch-target-lg flex items-center justify-center text-xl font-bold rounded-md bg-secondary hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all duration-100;
-    box-shadow: 0 2px 0 hsl(var(--foreground) / 0.1);
+    @apply touch-target-lg flex items-center justify-center text-xl font-bold rounded-xl bg-secondary hover:bg-accent hover:text-accent-foreground active:scale-95 transition-all duration-100;
+    box-shadow: 0 2px 0 hsl(var(--foreground) / 0.08);
   }
 
   .keypad-btn:active {
@@ -244,30 +286,28 @@
     transform: translateY(2px) scale(0.95);
   }
 
-  /* Dashboard stat cards */
+  /* Stat cards - Bento style */
   .stat-card {
-    @apply pos-card relative overflow-hidden border-l-4;
+    @apply bento-card relative overflow-hidden;
   }
 
-  .stat-card.stat-primary {
-    @apply border-l-primary;
+  /* Pill Navigation */
+  .nav-pill {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
   }
 
-  .stat-card.stat-accent {
-    @apply border-l-accent;
+  .nav-pill.active {
+    @apply bg-foreground text-background;
+    box-shadow: 0 2px 8px hsl(var(--foreground) / 0.2);
   }
 
-  .stat-card.stat-success {
-    @apply border-l-success;
+  .nav-pill:not(.active) {
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted;
   }
 
-  .stat-card.stat-warning {
-    @apply border-l-warning;
-  }
-
-  /* Sidebar navigation */
+  /* Sidebar navigation (mobile) */
   .nav-item {
-    @apply flex items-center gap-3 px-4 py-3.5 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-150 touch-target font-medium;
+    @apply flex items-center gap-3 px-4 py-3.5 rounded-xl text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-150 touch-target font-medium;
   }
 
   .nav-item.active {
@@ -280,19 +320,6 @@
     @apply touch-target text-base px-4 font-medium;
   }
 
-  /* Loading skeleton */
-  .skeleton {
-    @apply animate-pulse rounded;
-    background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 100%);
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  }
-
-  @keyframes skeleton-shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
   /* Currency formatting */
   .currency {
     font-variant-numeric: tabular-nums;
@@ -302,7 +329,7 @@
 
   /* Page header */
   .page-header {
-    @apply pb-6 mb-6 border-b border-border/50;
+    @apply pb-6 mb-6;
   }
 
   .page-title {
@@ -311,6 +338,16 @@
 
   .page-subtitle {
     @apply text-muted-foreground mt-1;
+  }
+
+  /* Mustard highlight bar */
+  .highlight-bar {
+    @apply h-1 rounded-full bg-accent;
+  }
+
+  /* Progress ring */
+  .progress-ring {
+    stroke-linecap: round;
   }
 
   /* Print styles */
@@ -332,11 +369,11 @@
 @layer utilities {
   /* Animation utilities */
   .animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeIn 0.3s ease-out;
   }
 
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.4s ease-out;
   }
 
   .animate-slide-in-right {
@@ -344,7 +381,7 @@
   }
 
   .animate-scale-in {
-    animation: scaleIn 0.2s ease-out;
+    animation: scaleIn 0.25s ease-out;
   }
 
   .animate-pulse-soft {
@@ -357,7 +394,7 @@
   }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -374,6 +411,11 @@
   @keyframes pulseSoft {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
+  }
+
+  /* Btn press animation */
+  .press-effect {
+    @apply transition-transform duration-100 active:scale-[0.97];
   }
 
   /* Safe area padding for mobile */
