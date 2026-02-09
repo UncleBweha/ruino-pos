@@ -4,14 +4,13 @@ import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Settings as SettingsIcon,
   Receipt,
   Users,
   Loader2,
   Plus,
   Trash2,
-  Key,
   Save,
+  UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { CasualManagement } from '@/components/settings/CasualManagement';
 import type { Profile } from '@/types/database';
 
 interface UserWithRole extends Profile {
@@ -98,7 +98,6 @@ export default function SettingsPage() {
 
       if (error) throw error;
 
-      // Fetch roles for each user
       const usersWithRoles: UserWithRole[] = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { data: roleData } = await supabase
@@ -148,7 +147,6 @@ export default function SettingsPage() {
     setAddingUser(true);
 
     try {
-      // Call edge function to create user (preserves admin session)
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email: newUserForm.email,
@@ -186,7 +184,6 @@ export default function SettingsPage() {
     }
 
     try {
-      // Call the edge function to delete the user
       const { error } = await supabase.functions.invoke('delete-user', {
         body: { userId },
       });
@@ -211,7 +208,6 @@ export default function SettingsPage() {
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
-        {/* Header */}
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Settings</h1>
           <p className="text-muted-foreground">Manage your POS configuration</p>
@@ -224,10 +220,16 @@ export default function SettingsPage() {
               Receipt
             </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="users" className="gap-2">
-                <Users className="w-4 h-4" />
-                Users
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="users" className="gap-2">
+                  <Users className="w-4 h-4" />
+                  Users
+                </TabsTrigger>
+                <TabsTrigger value="casuals" className="gap-2">
+                  <UserCheck className="w-4 h-4" />
+                  Casuals
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -393,6 +395,13 @@ export default function SettingsPage() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+          )}
+
+          {/* Casuals Management */}
+          {isAdmin && (
+            <TabsContent value="casuals">
+              <CasualManagement />
             </TabsContent>
           )}
         </Tabs>
