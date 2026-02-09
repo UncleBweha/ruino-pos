@@ -9,17 +9,17 @@
 
 @layer base {
   :root {
-    /* Bento Box - Warm Cream & Mustard identity */
-    --background: 38 60% 96%;
+    /* Warm Cream base — #F8F7F2 */
+    --background: 43 25% 96%;
     --foreground: 0 0% 10%;
 
-    --card: 0 0% 100%;
+    --card: 0 0% 100% / 0.4;
     --card-foreground: 0 0% 10%;
 
-    --popover: 0 0% 100%;
+    --popover: 0 0% 100% / 0.65;
     --popover-foreground: 0 0% 10%;
 
-    /* Primary - Deep Charcoal */
+    /* Primary - Deep Charcoal #1A1A1A */
     --primary: 0 0% 10%;
     --primary-foreground: 40 100% 97%;
 
@@ -27,11 +27,11 @@
     --secondary: 40 40% 93%;
     --secondary-foreground: 0 0% 15%;
 
-    /* Muted - Soft Cream */
+    /* Muted - Soft Cream / #7A7A7A text */
     --muted: 40 30% 94%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 48%;
 
-    /* Accent - Mustard Yellow */
+    /* Accent - Mustard Yellow #FFD35C */
     --accent: 42 100% 68%;
     --accent-foreground: 0 0% 10%;
 
@@ -51,7 +51,7 @@
     --info: 217 55% 55%;
     --info-foreground: 0 0% 100%;
 
-    --border: 40 20% 90%;
+    --border: 0 0% 100% / 0.6;
     --input: 40 20% 90%;
     --ring: 42 100% 68%;
 
@@ -78,21 +78,23 @@
     --touch-target: 48px;
     --touch-target-lg: 56px;
 
-    /* Bento-specific */
-    --bento-radius: 1.5rem;
-    --bento-radius-lg: 2rem;
-    --glass-bg: 0 0% 100% / 0.7;
-    --glass-border: 0 0% 100% / 0.4;
+    /* Bento / Glass tokens */
+    --bento-radius: 2rem;
+    --bento-radius-lg: 2.5rem;
+    --glass-bg: 0 0% 100% / 0.4;
+    --glass-border: 0 0% 100% / 0.6;
+    --glass-shadow: 0 0% 0% / 0.03;
+    --glass-blur: 25px;
   }
 
   .dark {
     --background: 0 0% 6%;
     --foreground: 40 30% 94%;
 
-    --card: 0 0% 11%;
+    --card: 0 0% 12% / 0.5;
     --card-foreground: 40 30% 94%;
 
-    --popover: 0 0% 11%;
+    --popover: 0 0% 12% / 0.7;
     --popover-foreground: 40 30% 94%;
 
     --primary: 42 100% 68%;
@@ -119,7 +121,7 @@
     --info: 217 50% 52%;
     --info-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
+    --border: 0 0% 20% / 0.5;
     --input: 0 0% 18%;
     --ring: 42 100% 62%;
 
@@ -138,8 +140,10 @@
     --pos-warning-bg: 42 50% 12%;
     --pos-danger-bg: 0 50% 12%;
 
-    --glass-bg: 0 0% 12% / 0.7;
-    --glass-border: 0 0% 20% / 0.4;
+    --glass-bg: 0 0% 12% / 0.45;
+    --glass-border: 0 0% 25% / 0.5;
+    --glass-shadow: 0 0% 0% / 0.15;
+    --glass-blur: 25px;
   }
 }
 
@@ -180,44 +184,61 @@
 }
 
 @layer components {
-  /* Bento Grid Card */
+  /* Bento Grid Card — Glassmorphism */
   .bento-card {
-    @apply rounded-[var(--bento-radius)] border border-border/50 p-6 transition-all duration-300;
+    @apply rounded-[var(--bento-radius)] p-6 transition-all duration-300;
     background: hsl(var(--glass-bg));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 2px 16px -4px hsl(var(--foreground) / 0.06),
-                0 0 0 1px hsl(var(--glass-border));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 8px 40px -12px hsl(var(--glass-shadow)),
+                0 2px 6px -2px hsl(var(--glass-shadow));
   }
 
   .bento-card:hover {
-    box-shadow: 0 8px 32px -8px hsl(var(--foreground) / 0.1),
-                0 0 0 1px hsl(var(--glass-border));
+    box-shadow: 0 16px 56px -16px hsl(var(--glass-shadow)),
+                0 4px 12px -4px hsl(var(--glass-shadow));
     transform: translateY(-1px);
   }
 
   .bento-card-dark {
     @apply rounded-[var(--bento-radius)] p-6 transition-all duration-300;
-    background: hsl(0 0% 12%);
+    background: hsl(0 0% 12% / 0.85);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     color: hsl(40 30% 92%);
-    box-shadow: 0 4px 24px -8px hsl(0 0% 0% / 0.3);
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    box-shadow: 0 8px 40px -12px hsl(0 0% 0% / 0.25);
   }
 
   /* Glassmorphism panel */
   .glass-panel {
     background: hsl(var(--glass-bg));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 8px 40px -12px hsl(var(--glass-shadow));
   }
 
-  /* Warm gradient background */
+  /* Atmospheric warm gradient background with noise texture */
   .bg-warm-gradient {
     background:
-      radial-gradient(ellipse at 0% 0%, hsl(48 80% 92% / 0.6) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 0%, hsl(32 70% 92% / 0.5) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, hsl(42 60% 94% / 0.4) 0%, transparent 50%),
-      hsl(var(--background));
+      radial-gradient(ellipse 80% 70% at 85% 10%, #FFF4B5 0%, transparent 60%),
+      radial-gradient(ellipse 70% 60% at 10% 90%, #F5EEE6 0%, transparent 55%),
+      #F8F7F2;
+    position: relative;
+  }
+
+  .bg-warm-gradient::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.02;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
   }
 
   /* Touch-friendly button base */
