@@ -67,6 +67,7 @@ export default function POSPage() {
   // Sell on behalf state
   const [sellOnBehalf, setSellOnBehalf] = useState(false);
   const [selectedBehalfId, setSelectedBehalfId] = useState<string>('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
 
   // On mobile, only show products when searching
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
