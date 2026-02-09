@@ -5,9 +5,10 @@ import { useCart } from '@/hooks/useCart';
 import { useSales } from '@/hooks/useSales';
 import { useSettings } from '@/hooks/useSettings';
 import { useCasuals } from '@/hooks/useCasuals';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,6 +51,7 @@ export default function POSPage() {
   const { createSale } = useSales();
   const { receiptSettings } = useSettings();
   const { activeCasuals } = useCasuals();
+  const { customers, searchCustomers: searchCustomersFn } = useCustomers();
   const { profile } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -65,6 +67,7 @@ export default function POSPage() {
   // Sell on behalf state
   const [sellOnBehalf, setSellOnBehalf] = useState(false);
   const [selectedBehalfId, setSelectedBehalfId] = useState<string>('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
 
   // On mobile, only show products when searching
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
@@ -161,6 +164,7 @@ export default function POSPage() {
       const sale = await createSale({
         items,
         customerName: customerName || undefined,
+        customerId: selectedCustomerId || undefined,
         taxRate,
         discount,
         paymentMethod: selectedPayment,
@@ -174,6 +178,7 @@ export default function POSPage() {
       clearCart();
       setSellOnBehalf(false);
       setSelectedBehalfId('');
+      setSelectedCustomerId('');
 
       toast({
         title: 'Sale Complete',
@@ -463,12 +468,24 @@ export default function POSPage() {
           <div className="grid grid-cols-3 gap-2">
             <div>
               <Label className="text-xs">Customer {selectedPayment === 'credit' && <span className="text-destructive">*</span>}</Label>
-              <Input
-                placeholder="Walk-in"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="h-9 mt-0.5 text-sm"
-              />
+              <Select
+                value={selectedCustomerId}
+                onValueChange={(v) => {
+                  setSelectedCustomerId(v);
+                  const c = customers.find(c => c.id === v);
+                  if (c) setCustomerName(c.name);
+                }}
+              >
+                <SelectTrigger className="h-9 mt-0.5 text-sm">
+                  <SelectValue placeholder="Walk-in" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="walk-in">Walk-in</SelectItem>
+                  {customers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-xs">Tax (%)</Label>

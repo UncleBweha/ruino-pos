@@ -79,7 +79,7 @@ export function MonthlySalesDialog({ open, onOpenChange }: MonthlySalesDialogPro
         cashier: profilesMap.get(sale.cashier_id) || null
       })) || [];
 
-      setSales(salesWithCashier as Sale[]);
+      setSales(salesWithCashier as unknown as Sale[]);
     } catch (err) {
       console.error('Failed to fetch sales:', err);
     } finally {

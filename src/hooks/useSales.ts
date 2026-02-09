@@ -6,11 +6,12 @@ import type { Sale, CartItem } from '@/types/database';
 interface CreateSaleParams {
   items: CartItem[];
   customerName?: string;
+  customerId?: string;
   taxRate: number;
   discount: number;
   paymentMethod: 'cash' | 'mpesa' | 'credit';
-  soldOnBehalfOf?: string | null; // casual ID
-  soldOnBehalfName?: string | null; // casual or staff name
+  soldOnBehalfOf?: string | null;
+  soldOnBehalfName?: string | null;
   commissionAmount?: number;
 }
 
@@ -87,7 +88,7 @@ export function useSales() {
   async function createSale(params: CreateSaleParams): Promise<Sale> {
     if (!user) throw new Error('User not authenticated');
 
-    const { items, customerName, taxRate, discount, paymentMethod, soldOnBehalfOf, soldOnBehalfName, commissionAmount } = params;
+    const { items, customerName, customerId, taxRate, discount, paymentMethod, soldOnBehalfOf, soldOnBehalfName, commissionAmount } = params;
 
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = subtotal * (taxRate / 100);
@@ -107,6 +108,7 @@ export function useSales() {
         receipt_number: receiptNumber,
         cashier_id: user.id,
         customer_name: customerName || null,
+        customer_id: customerId || null,
         subtotal,
         tax_rate: taxRate,
         tax_amount: taxAmount,

@@ -52,6 +52,7 @@ export interface Sale {
   receipt_number: string;
   cashier_id: string;
   customer_name: string | null;
+  customer_id: string | null;
   subtotal: number;
   tax_rate: number;
   tax_amount: number;
@@ -66,7 +67,7 @@ export interface Sale {
   sold_on_behalf_name: string | null;
   commission_amount: number;
   created_at: string;
-  cashier?: Profile;
+  cashier?: Partial<Profile> | null;
   sale_items?: SaleItem[];
 }
 
@@ -148,4 +149,80 @@ export interface TopProduct {
   product_name: string;
   total_quantity: number;
   total_revenue: number;
+}
+
+// Customer types
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string | null;
+  business_name: string | null;
+  location: string | null;
+  category: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Supplier types
+export interface Supplier {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  payment_terms: number;
+  notes: string | null;
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at: string;
+  supplier_products?: SupplierProduct[];
+}
+
+export interface SupplierProduct {
+  id: string;
+  supplier_id: string;
+  product_name: string;
+  quantity: number;
+  buying_price: number;
+  total_amount: number;
+  payment_status: 'paid' | 'unpaid';
+  supplied_at: string;
+  due_date: string | null;
+  paid_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+// Invoice types
+export interface Invoice {
+  id: string;
+  invoice_number: string;
+  type: 'invoice' | 'quotation';
+  customer_id: string | null;
+  customer_name: string;
+  customer_phone: string | null;
+  customer_address: string | null;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total: number;
+  payment_status: 'paid' | 'unpaid' | 'partial';
+  payment_terms: string | null;
+  notes: string | null;
+  created_by: string;
+  converted_from: string | null;
+  created_at: string;
+  updated_at: string;
+  invoice_items?: InvoiceItem[];
+}
+
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  product_name: string;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  total: number;
+  created_at: string;
 }
