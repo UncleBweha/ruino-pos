@@ -224,7 +224,8 @@
   .bg-warm-gradient {
     background:
       radial-gradient(ellipse 80% 70% at 85% 10%, #FFF4B5 0%, transparent 60%),
-      radial-gradient(ellipse 70% 60% at 10% 90%, #F5EEE6 0%, transparent 55%),
+      radial-gradient(ellipse 60% 50% at 90% 85%, #FFF4B5 0%, transparent 55%),
+      radial-gradient(ellipse 70% 60% at 10% 90%, #FFF4B5 0%, transparent 55%),
       #F8F7F2;
     position: relative;
   }
