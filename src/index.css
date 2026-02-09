@@ -184,35 +184,40 @@
 }
 
 @layer components {
-  /* Bento Grid Card */
+  /* Bento Grid Card — Glassmorphism */
   .bento-card {
-    @apply rounded-[var(--bento-radius)] border border-border/50 p-6 transition-all duration-300;
+    @apply rounded-[var(--bento-radius)] p-6 transition-all duration-300;
     background: hsl(var(--glass-bg));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 2px 16px -4px hsl(var(--foreground) / 0.06),
-                0 0 0 1px hsl(var(--glass-border));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 8px 40px -12px hsl(var(--glass-shadow)),
+                0 2px 6px -2px hsl(var(--glass-shadow));
   }
 
   .bento-card:hover {
-    box-shadow: 0 8px 32px -8px hsl(var(--foreground) / 0.1),
-                0 0 0 1px hsl(var(--glass-border));
+    box-shadow: 0 16px 56px -16px hsl(var(--glass-shadow)),
+                0 4px 12px -4px hsl(var(--glass-shadow));
     transform: translateY(-1px);
   }
 
   .bento-card-dark {
     @apply rounded-[var(--bento-radius)] p-6 transition-all duration-300;
-    background: hsl(0 0% 12%);
+    background: hsl(0 0% 12% / 0.85);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     color: hsl(40 30% 92%);
-    box-shadow: 0 4px 24px -8px hsl(0 0% 0% / 0.3);
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    box-shadow: 0 8px 40px -12px hsl(0 0% 0% / 0.25);
   }
 
   /* Glassmorphism panel */
   .glass-panel {
     background: hsl(var(--glass-bg));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 8px 40px -12px hsl(var(--glass-shadow));
   }
 
   /* Atmospheric warm gradient background with noise texture */
