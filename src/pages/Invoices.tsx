@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { format } from 'date-fns';
 import {
-  Plus, Loader2, FileText, Trash2, Download, Printer, Sparkles,
+  Plus, Loader2, FileText, Trash2, Download, Printer,
   ArrowRightLeft, Search, Eye, Upload, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
