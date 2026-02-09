@@ -301,7 +301,7 @@ export default function POSPage() {
         </div>
 
         {/* Sell on Behalf Toggle */}
-        <div className="px-4 py-3 border-b bg-muted/20">
+        <div className="px-4 py-3 glass-divider border-b bg-background/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <UserCheck className="w-4 h-4 text-muted-foreground" />
