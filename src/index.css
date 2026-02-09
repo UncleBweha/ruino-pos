@@ -9,17 +9,17 @@
 
 @layer base {
   :root {
-    /* Bento Box - Warm Cream & Mustard identity */
-    --background: 38 60% 96%;
+    /* Warm Cream base — #F8F7F2 */
+    --background: 43 25% 96%;
     --foreground: 0 0% 10%;
 
-    --card: 0 0% 100%;
+    --card: 0 0% 100% / 0.4;
     --card-foreground: 0 0% 10%;
 
-    --popover: 0 0% 100%;
+    --popover: 0 0% 100% / 0.65;
     --popover-foreground: 0 0% 10%;
 
-    /* Primary - Deep Charcoal */
+    /* Primary - Deep Charcoal #1A1A1A */
     --primary: 0 0% 10%;
     --primary-foreground: 40 100% 97%;
 
@@ -27,11 +27,11 @@
     --secondary: 40 40% 93%;
     --secondary-foreground: 0 0% 15%;
 
-    /* Muted - Soft Cream */
+    /* Muted - Soft Cream / #7A7A7A text */
     --muted: 40 30% 94%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 48%;
 
-    /* Accent - Mustard Yellow */
+    /* Accent - Mustard Yellow #FFD35C */
     --accent: 42 100% 68%;
     --accent-foreground: 0 0% 10%;
 
@@ -51,7 +51,7 @@
     --info: 217 55% 55%;
     --info-foreground: 0 0% 100%;
 
-    --border: 40 20% 90%;
+    --border: 0 0% 100% / 0.6;
     --input: 40 20% 90%;
     --ring: 42 100% 68%;
 
@@ -78,11 +78,13 @@
     --touch-target: 48px;
     --touch-target-lg: 56px;
 
-    /* Bento-specific */
-    --bento-radius: 1.5rem;
-    --bento-radius-lg: 2rem;
-    --glass-bg: 0 0% 100% / 0.7;
-    --glass-border: 0 0% 100% / 0.4;
+    /* Bento / Glass tokens */
+    --bento-radius: 2rem;
+    --bento-radius-lg: 2.5rem;
+    --glass-bg: 0 0% 100% / 0.4;
+    --glass-border: 0 0% 100% / 0.6;
+    --glass-shadow: 0 0% 0% / 0.03;
+    --glass-blur: 25px;
   }
 
   .dark {
