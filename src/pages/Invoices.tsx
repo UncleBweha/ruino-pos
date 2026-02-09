@@ -532,7 +532,28 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
               <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
             </div>
 
-            {/* Totals Preview */}
+            {/* Logo Upload */}
+            <div className="space-y-2">
+              <Label>Invoice Logo</Label>
+              {logoPreview ? (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                  <img src={logoPreview} alt="Logo preview" className="h-12 max-w-[160px] object-contain rounded" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{logoFile?.name}</p>
+                    <p className="text-xs text-muted-foreground">{logoFile ? (logoFile.size / 1024).toFixed(1) + ' KB' : ''}</p>
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={removeLogo}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Click to upload logo (max 2MB)</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoSelect} />
+                </label>
+              )}
+            </div>
             <div className="bg-muted/50 rounded-lg p-4 space-y-1 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><span className="currency">{formatCurrency(calcSubtotal)}</span></div>
               {calcTax > 0 && <div className="flex justify-between"><span>Tax ({form.tax_rate}%)</span><span className="currency">{formatCurrency(calcTax)}</span></div>}
