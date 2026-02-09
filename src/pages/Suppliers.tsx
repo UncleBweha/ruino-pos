@@ -268,7 +268,7 @@ export default function SuppliersPage() {
 
                     {/* AI Insights */}
                     {aiInsights && expandedId === supplier.id && (
-                      <div className="mt-3 p-3 rounded-lg bg-accent/10 text-sm space-y-2">
+                      <div className="glass-item mt-3 p-3 text-sm space-y-2">
                         <p className="font-medium flex items-center gap-1"><Sparkles className="w-4 h-4" /> AI Insights</p>
                         <Badge variant={aiInsights.risk_level === 'low' ? 'default' : aiInsights.risk_level === 'high' ? 'destructive' : 'secondary'}>
                           {aiInsights.risk_level} risk
