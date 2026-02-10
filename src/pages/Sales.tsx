@@ -44,7 +44,6 @@ import type { Sale } from '@/types/database';
 import { cn } from '@/lib/utils';
 
 export default function SalesPage() {
-  const { sales, loading, voidSale } = useSales();
   const { receiptSettings } = useSettings();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
@@ -55,20 +54,22 @@ export default function SalesPage() {
   const [voidingSale, setVoidingSale] = useState<Sale | null>(null);
   const [voidLoading, setVoidLoading] = useState(false);
 
-  // Filter sales
+  // Pass date and search to hook — when searching, hook fetches all sales
+  const { sales, loading, voidSale } = useSales(
+    searchQuery.trim() ? null : selectedDate || null,
+    searchQuery
+  );
+
+  // Filter sales client-side for search (data already fetched)
   const filteredSales = sales.filter((sale) => {
-    const matchesSearch =
-      !searchQuery ||
-      sale.receipt_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sale.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sale.sold_on_behalf_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sale.cashier?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesDate =
-      !selectedDate ||
-      format(new Date(sale.created_at), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-
-    return matchesSearch && matchesDate;
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      sale.receipt_number.toLowerCase().includes(q) ||
+      sale.customer_name?.toLowerCase().includes(q) ||
+      sale.sold_on_behalf_name?.toLowerCase().includes(q) ||
+      sale.cashier?.full_name?.toLowerCase().includes(q)
+    );
   });
 
   async function handleVoidSale() {

@@ -15,7 +15,7 @@ interface CreateSaleParams {
   commissionAmount?: number;
 }
 
-export function useSales() {
+export function useSales(filterDate?: Date | null, searchQuery?: string) {
   const { user, isAdmin } = useAuth();
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,14 +25,29 @@ export function useSales() {
     if (!user) return;
 
     try {
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const { data: salesData, error: salesError } = await supabase
+      let query = supabase
         .from('sales')
         .select('*, sale_items(*)')
-        .gte('created_at', startOfDay.toISOString())
         .order('created_at', { ascending: false });
+
+      // If there's a search query, fetch broadly (no date filter)
+      // If there's a specific date selected, filter by that date
+      // Default (no search, no date or today) → today only
+      if (searchQuery && searchQuery.trim().length > 0) {
+        // No date filter when searching — search across all sales
+      } else if (filterDate) {
+        const start = new Date(filterDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(filterDate);
+        end.setHours(23, 59, 59, 999);
+        query = query.gte('created_at', start.toISOString()).lte('created_at', end.toISOString());
+      } else {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        query = query.gte('created_at', startOfDay.toISOString());
+      }
+
+      const { data: salesData, error: salesError } = await query;
 
       if (salesError) throw salesError;
 
@@ -58,7 +73,7 @@ export function useSales() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, filterDate, searchQuery]);
 
   useEffect(() => {
     fetchSales();
