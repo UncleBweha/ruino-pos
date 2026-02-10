@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@/lib/constants';
 import type { DashboardStats } from '@/types/database';
+import type { BestEmployee } from '@/hooks/useDashboard';
 import {
   TrendingUp,
   Package,
@@ -9,6 +10,7 @@ import {
   Wallet,
   DollarSign,
   ArrowUpRight,
+  Trophy,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -16,10 +18,11 @@ import { cn } from '@/lib/utils';
 interface SalesOverviewCardsProps {
   stats: DashboardStats;
   loading: boolean;
+  bestEmployee: BestEmployee | null;
   onMonthSalesClick: () => void;
 }
 
-export function SalesOverviewCards({ stats, loading, onMonthSalesClick }: SalesOverviewCardsProps) {
+export function SalesOverviewCards({ stats, loading, bestEmployee, onMonthSalesClick }: SalesOverviewCardsProps) {
   const navigate = useNavigate();
 
   const primaryCards = [
