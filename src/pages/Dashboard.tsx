@@ -48,6 +48,7 @@ export default function DashboardPage() {
         <SalesOverviewCards
           stats={stats}
           loading={loading}
+          bestEmployee={bestEmployee}
           onMonthSalesClick={() => setShowMonthlySales(true)}
         />
 

@@ -152,12 +152,15 @@ export function SalesOverviewCards({ stats, loading, bestEmployee, onMonthSalesC
             ) : (
               <>
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <card.icon className={cn('w-3.5 h-3.5', card.danger ? 'text-destructive' : 'text-muted-foreground')} />
+                  <card.icon className={cn('w-3.5 h-3.5', card.danger ? 'text-destructive' : card.highlight ? 'text-yellow-500' : 'text-muted-foreground')} />
                   <p className="text-xs text-muted-foreground truncate">{card.title}</p>
                 </div>
-                <p className={cn('text-sm font-bold currency', card.danger && 'text-destructive')}>
+                <p className={cn('text-sm font-bold', card.danger && 'text-destructive', !card.subValue && 'currency')}>
                   {card.value}
                 </p>
+                {card.subValue && (
+                  <p className="text-xs text-muted-foreground currency">{card.subValue}</p>
+                )}
               </>
             )}
           </div>
