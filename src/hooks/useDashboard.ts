@@ -56,6 +56,7 @@ export function useDashboard() {
         { data: cashBox },
         { data: saleItems },
         { data: chartSales },
+        { data: monthCashierSales },
       ] = await Promise.all([
         supabase
           .from('sales')
@@ -89,6 +90,11 @@ export function useDashboard() {
           .from('sales')
           .select('total, profit, payment_method, created_at')
           .gte('created_at', sixMonthsAgo.toISOString())
+          .neq('status', 'voided'),
+        supabase
+          .from('sales')
+          .select('cashier_id, total')
+          .gte('created_at', startOfMonth.toISOString())
           .neq('status', 'voided'),
       ]);
 
