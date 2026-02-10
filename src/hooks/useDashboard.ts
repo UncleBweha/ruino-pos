@@ -14,6 +14,11 @@ export interface SalesByPaymentMethod {
   total: number;
 }
 
+export interface BestEmployee {
+  name: string;
+  totalSales: number;
+}
+
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
@@ -26,6 +31,7 @@ export function useDashboard() {
     todayCash: 0,
     inventoryCost: 0,
   });
+  const [bestEmployee, setBestEmployee] = useState<BestEmployee | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [monthlySalesData, setMonthlySalesData] = useState<MonthlySalesData[]>([]);
   const [salesByPayment, setSalesByPayment] = useState<SalesByPaymentMethod[]>([]);
@@ -50,6 +56,7 @@ export function useDashboard() {
         { data: cashBox },
         { data: saleItems },
         { data: chartSales },
+        { data: monthCashierSales },
       ] = await Promise.all([
         supabase
           .from('sales')
@@ -83,6 +90,11 @@ export function useDashboard() {
           .from('sales')
           .select('total, profit, payment_method, created_at')
           .gte('created_at', sixMonthsAgo.toISOString())
+          .neq('status', 'voided'),
+        supabase
+          .from('sales')
+          .select('cashier_id, total')
+          .gte('created_at', startOfMonth.toISOString())
           .neq('status', 'voided'),
       ]);
 
@@ -161,6 +173,27 @@ export function useDashboard() {
         total: data.total,
       }));
 
+      // Find best employee this month
+      const cashierAgg: Record<string, number> = {};
+      monthCashierSales?.forEach((s) => {
+        cashierAgg[s.cashier_id] = (cashierAgg[s.cashier_id] || 0) + Number(s.total);
+      });
+      const topCashierEntry = Object.entries(cashierAgg).sort((a, b) => b[1] - a[1])[0];
+      
+      if (topCashierEntry) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', topCashierEntry[0])
+          .maybeSingle();
+        setBestEmployee({
+          name: profile?.full_name || 'Unknown',
+          totalSales: topCashierEntry[1],
+        });
+      } else {
+        setBestEmployee(null);
+      }
+
       setStats({
         todaySales: todaySales?.reduce((sum, s) => sum + Number(s.total), 0) || 0,
         todayProfit: todaySales?.reduce((sum, s) => sum + Number(s.profit), 0) || 0,
@@ -220,6 +253,7 @@ export function useDashboard() {
     topProducts,
     monthlySalesData,
     salesByPayment,
+    bestEmployee,
     loading,
     refresh: fetchDashboardData,
   };

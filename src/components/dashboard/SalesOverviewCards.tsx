@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@/lib/constants';
 import type { DashboardStats } from '@/types/database';
+import type { BestEmployee } from '@/hooks/useDashboard';
 import {
   TrendingUp,
   Package,
@@ -9,6 +10,7 @@ import {
   Wallet,
   DollarSign,
   ArrowUpRight,
+  Trophy,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -16,10 +18,11 @@ import { cn } from '@/lib/utils';
 interface SalesOverviewCardsProps {
   stats: DashboardStats;
   loading: boolean;
+  bestEmployee: BestEmployee | null;
   onMonthSalesClick: () => void;
 }
 
-export function SalesOverviewCards({ stats, loading, onMonthSalesClick }: SalesOverviewCardsProps) {
+export function SalesOverviewCards({ stats, loading, bestEmployee, onMonthSalesClick }: SalesOverviewCardsProps) {
   const navigate = useNavigate();
 
   const primaryCards = [
@@ -77,6 +80,13 @@ export function SalesOverviewCards({ stats, loading, onMonthSalesClick }: SalesO
       title: "Today's Cash",
       value: formatCurrency(stats.todayCash),
       icon: Wallet,
+    },
+    {
+      title: 'Best Employee',
+      value: bestEmployee?.name || '—',
+      subValue: bestEmployee ? formatCurrency(bestEmployee.totalSales) : undefined,
+      icon: Trophy,
+      highlight: true,
     },
     {
       title: 'Inventory Cost',
@@ -142,12 +152,15 @@ export function SalesOverviewCards({ stats, loading, onMonthSalesClick }: SalesO
             ) : (
               <>
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <card.icon className={cn('w-3.5 h-3.5', card.danger ? 'text-destructive' : 'text-muted-foreground')} />
+                  <card.icon className={cn('w-3.5 h-3.5', card.danger ? 'text-destructive' : card.highlight ? 'text-accent-foreground' : 'text-muted-foreground')} />
                   <p className="text-xs text-muted-foreground truncate">{card.title}</p>
                 </div>
-                <p className={cn('text-sm font-bold currency', card.danger && 'text-destructive')}>
+                <p className={cn('text-sm font-bold', card.danger && 'text-destructive', !card.subValue && 'currency')}>
                   {card.value}
                 </p>
+                {card.subValue && (
+                  <p className="text-xs text-muted-foreground currency">{card.subValue}</p>
+                )}
               </>
             )}
           </div>
