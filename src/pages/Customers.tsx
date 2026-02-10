@@ -7,12 +7,12 @@ import { formatCurrency } from '@/lib/constants';
 import { format } from 'date-fns';
 import {
   Search, Plus, Edit2, Trash2, Loader2, Phone, MapPin, Building2, UserCircle,
-  ChevronDown, ChevronUp, Download, Sparkles, CreditCard,
+  ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -122,70 +122,6 @@ export default function CustomersPage() {
     }
   }
 
-  async function aiCategorize(customer: Customer) {
-    setAiLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
-          action: 'categorize_customer',
-          data: {
-            name: customer.name,
-            phone: customer.phone,
-            business_name: customer.business_name,
-            location: customer.location,
-          },
-        },
-      });
-      if (error) throw error;
-      if (data?.category) {
-        await updateCustomer(customer.id, { category: data.category });
-        toast({ title: 'AI Suggestion', description: `Categorized as ${data.category}: ${data.reason}` });
-      }
-    } catch (err) {
-      toast({ title: 'AI Error', description: 'Could not get AI suggestion', variant: 'destructive' });
-    } finally {
-      setAiLoading(false);
-    }
-  }
-
-  async function checkCreditEligibility(customer: Customer) {
-    setAiLoading(true);
-    setCreditCheck(null);
-    try {
-      const { data: sales } = await supabase
-        .from('sales')
-        .select('total')
-        .eq('customer_id', customer.id);
-
-      const { data: credits } = await supabase
-        .from('credits')
-        .select('balance')
-        .eq('customer_name', customer.name)
-        .eq('status', 'pending');
-
-      const totalSpent = sales?.reduce((s, r) => s + Number(r.total), 0) || 0;
-      const outstanding = credits?.reduce((s, r) => s + Number(r.balance), 0) || 0;
-
-      const { data, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
-          action: 'credit_eligibility',
-          data: {
-            name: customer.name,
-            total_purchases: sales?.length || 0,
-            total_spent: totalSpent,
-            outstanding_credit: outstanding,
-          },
-        },
-      });
-      if (error) throw error;
-      setCreditCheck(data);
-    } catch {
-      toast({ title: 'AI Error', description: 'Could not check eligibility', variant: 'destructive' });
-    } finally {
-      setAiLoading(false);
-    }
-  }
-
   const categoryColor = (cat: string) => {
     switch (cat) {
       case 'wholesale': return 'bg-info/10 text-info';
@@ -236,9 +172,12 @@ export default function CustomersPage() {
               <Card key={customer.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => toggleExpand(customer)}
+                    >
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-lg">{customer.name}</h3>
+                        <h3 className="font-semibold text-lg hover:text-primary transition-colors">{customer.name}</h3>
                         <Badge variant="secondary" className={categoryColor(customer.category)}>
                           {customer.category}
                         </Badge>
@@ -262,12 +201,6 @@ export default function CustomersPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => aiCategorize(customer)} disabled={aiLoading} title="AI categorize">
-                        <Sparkles className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => checkCreditEligibility(customer)} disabled={aiLoading} title="Check credit eligibility">
-                        <CreditCard className="w-4 h-4" />
-                      </Button>
                       {isAdmin && (
                         <>
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(customer)}>
@@ -284,16 +217,6 @@ export default function CustomersPage() {
                     </div>
                   </div>
 
-                  {/* Credit Check Result */}
-                  {creditCheck && expandedId === customer.id && (
-                    <div className="glass-item mt-3 p-3 text-sm">
-                      <p className="font-medium mb-1">Credit Eligibility</p>
-                      <p>Eligible: <Badge variant={creditCheck.eligible ? 'default' : 'destructive'}>{creditCheck.eligible ? 'Yes' : 'No'}</Badge></p>
-                      {creditCheck.limit && <p>Suggested limit: {formatCurrency(creditCheck.limit)}</p>}
-                      <p className="text-muted-foreground mt-1">{creditCheck.reason}</p>
-                    </div>
-                  )}
-
                   {/* Purchase History */}
                   {expandedId === customer.id && (
                     <div className="mt-4 border-t pt-4">
@@ -305,7 +228,11 @@ export default function CustomersPage() {
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                           {customerSales.map((sale) => (
-                            <div key={sale.id} className="glass-item flex items-center justify-between p-2 text-sm">
+                            <div
+                              key={sale.id}
+                              className="glass-item flex items-center justify-between p-2 text-sm cursor-pointer hover:bg-accent/50 rounded-md transition-colors"
+                              onClick={() => setSelectedSale(sale)}
+                            >
                               <div>
                                 <p className="font-medium">#{sale.receipt_number}</p>
                                 <p className="text-xs text-muted-foreground">
@@ -328,6 +255,49 @@ export default function CustomersPage() {
           </div>
         )}
       </div>
+
+      {/* Sale Detail Dialog */}
+      <Dialog open={!!selectedSale} onOpenChange={(open) => !open && setSelectedSale(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Receipt #{selectedSale?.receipt_number}</DialogTitle>
+          </DialogHeader>
+          {selectedSale && (
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{format(new Date(selectedSale.created_at), 'dd MMM yyyy HH:mm')}</span>
+                <Badge variant="outline" className="capitalize">{selectedSale.payment_method}</Badge>
+              </div>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="text-left p-2 font-medium">Product</th>
+                      <th className="text-center p-2 font-medium">Qty</th>
+                      <th className="text-right p-2 font-medium">Price</th>
+                      <th className="text-right p-2 font-medium">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedSale as any).sale_items?.map((item: any) => (
+                      <tr key={item.id} className="border-t">
+                        <td className="p-2">{item.product_name}</td>
+                        <td className="p-2 text-center">{item.quantity}</td>
+                        <td className="p-2 text-right">{formatCurrency(item.unit_price)}</td>
+                        <td className="p-2 text-right font-medium">{formatCurrency(item.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-between font-bold text-lg border-t pt-3">
+                <span>Total</span>
+                <span>{formatCurrency(selectedSale.total)}</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
