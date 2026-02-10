@@ -50,7 +50,7 @@ export default function SalesPage() {
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [expandedSale, setExpandedSale] = useState<string | null>(null);
   const [voidingSale, setVoidingSale] = useState<Sale | null>(null);
   const [voidLoading, setVoidLoading] = useState(false);
