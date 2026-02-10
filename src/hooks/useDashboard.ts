@@ -14,6 +14,11 @@ export interface SalesByPaymentMethod {
   total: number;
 }
 
+export interface BestEmployee {
+  name: string;
+  totalSales: number;
+}
+
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
@@ -26,6 +31,7 @@ export function useDashboard() {
     todayCash: 0,
     inventoryCost: 0,
   });
+  const [bestEmployee, setBestEmployee] = useState<BestEmployee | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [monthlySalesData, setMonthlySalesData] = useState<MonthlySalesData[]>([]);
   const [salesByPayment, setSalesByPayment] = useState<SalesByPaymentMethod[]>([]);
