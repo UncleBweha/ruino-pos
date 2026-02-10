@@ -16,7 +16,7 @@ import { MonthlySalesDialog } from '@/components/dashboard/MonthlySalesDialog';
 
 export default function DashboardPage() {
   const { profile } = useAuth();
-  const { stats, topProducts, monthlySalesData, salesByPayment, loading, refresh } = useDashboard();
+  const { stats, topProducts, monthlySalesData, salesByPayment, bestEmployee, loading, refresh } = useDashboard();
   const { lowStockProducts } = useProducts();
   const [showMonthlySales, setShowMonthlySales] = useState(false);
 
