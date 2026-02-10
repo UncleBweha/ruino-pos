@@ -253,6 +253,7 @@ export function useDashboard() {
     topProducts,
     monthlySalesData,
     salesByPayment,
+    bestEmployee,
     loading,
     refresh: fetchDashboardData,
   };
