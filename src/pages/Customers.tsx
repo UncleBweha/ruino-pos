@@ -37,8 +37,7 @@ export default function CustomersPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [customerSales, setCustomerSales] = useState<Sale[]>([]);
   const [salesLoading, setSalesLoading] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [creditCheck, setCreditCheck] = useState<any>(null);
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   const [form, setForm] = useState({
     name: '', phone: '', business_name: '', location: '', category: 'retail', notes: '',
