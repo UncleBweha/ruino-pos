@@ -110,7 +110,7 @@ export default function CustomersPage() {
     try {
       const { data } = await supabase
         .from('sales')
-        .select('*, sale_items(*)')
+        .select('*, sale_items(*), credits(*)')
         .eq('customer_id', customer.id)
         .order('created_at', { ascending: false })
         .limit(20);
