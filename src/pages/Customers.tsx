@@ -110,7 +110,7 @@ export default function CustomersPage() {
     try {
       const { data } = await supabase
         .from('sales')
-        .select('*, sale_items(*)')
+        .select('*, sale_items(*), credits(*)')
         .eq('customer_id', customer.id)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -227,7 +227,10 @@ export default function CustomersPage() {
                         <p className="text-sm text-muted-foreground">No purchases recorded</p>
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {customerSales.map((sale) => (
+                          {customerSales.map((sale) => {
+                            const credit = (sale as any).credits?.[0];
+                            const isCredit = sale.payment_method === 'credit' || !!credit;
+                            return (
                             <div
                               key={sale.id}
                               className="glass-item flex items-center justify-between p-2 text-sm cursor-pointer hover:bg-accent/50 rounded-md transition-colors"
@@ -239,12 +242,23 @@ export default function CustomersPage() {
                                   {format(new Date(sale.created_at), 'dd MMM yyyy HH:mm')}
                                 </p>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right flex flex-col items-end gap-1">
                                 <p className="font-bold currency">{formatCurrency(sale.total)}</p>
-                                <Badge variant="outline" className="text-xs capitalize">{sale.payment_method}</Badge>
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="outline" className="text-xs capitalize">{sale.payment_method}</Badge>
+                                  {isCredit && (
+                                    <Badge
+                                      variant={credit?.status === 'paid' ? 'default' : 'destructive'}
+                                      className="text-xs capitalize"
+                                    >
+                                      {credit?.status === 'paid' ? 'Paid' : 'Pending'}
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
