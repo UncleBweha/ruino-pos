@@ -25,9 +25,13 @@ export function useSales() {
     if (!user) return;
 
     try {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('*, sale_items(*)')
+        .gte('created_at', startOfDay.toISOString())
         .order('created_at', { ascending: false });
 
       if (salesError) throw salesError;
