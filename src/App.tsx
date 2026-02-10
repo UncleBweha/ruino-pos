@@ -16,6 +16,7 @@ import SettingsPage from "./pages/Settings";
 import ReportsPage from "./pages/Reports";
 import ProfilePage from "./pages/Profile";
 import CustomersPage from "./pages/Customers";
+import CustomerProfilePage from "./pages/CustomerProfile";
 import SuppliersPage from "./pages/Suppliers";
 import InvoicesPage from "./pages/Invoices";
 import NotFound from "./pages/NotFound";
