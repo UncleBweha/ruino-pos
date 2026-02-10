@@ -1,13 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/lib/constants';
-import { format } from 'date-fns';
 import {
   Search, Plus, Edit2, Trash2, Loader2, Phone, MapPin, Building2, UserCircle,
-  ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import type { Customer, Sale } from '@/types/database';
+import type { Customer } from '@/types/database';
 
 const CATEGORIES = ['retail', 'wholesale', 'loyal', 'occasional'];
 
@@ -30,14 +27,11 @@ export default function CustomersPage() {
   const { customers, loading, createCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [customerSales, setCustomerSales] = useState<Sale[]>([]);
-  const [salesLoading, setSalesLoading] = useState(false);
-  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   const [form, setForm] = useState({
     name: '', phone: '', business_name: '', location: '', category: 'retail', notes: '',
@@ -58,7 +52,8 @@ export default function CustomersPage() {
     setShowForm(true);
   }
 
-  function openEdit(customer: Customer) {
+  function openEdit(customer: Customer, e: React.MouseEvent) {
+    e.stopPropagation();
     setEditing(customer);
     setForm({
       name: customer.name,
@@ -90,35 +85,14 @@ export default function CustomersPage() {
     }
   }
 
-  async function handleDelete(customer: Customer) {
+  async function handleDelete(customer: Customer, e: React.MouseEvent) {
+    e.stopPropagation();
     if (!confirm(`Delete ${customer.name}?`)) return;
     try {
       await deleteCustomer(customer.id);
       toast({ title: 'Deleted', description: `${customer.name} removed` });
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
-    }
-  }
-
-  async function toggleExpand(customer: Customer) {
-    if (expandedId === customer.id) {
-      setExpandedId(null);
-      return;
-    }
-    setExpandedId(customer.id);
-    setSalesLoading(true);
-    try {
-      const { data } = await supabase
-        .from('sales')
-        .select('*, sale_items(*), credits(*)')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      setCustomerSales((data || []) as unknown as Sale[]);
-    } catch {
-      setCustomerSales([]);
-    } finally {
-      setSalesLoading(false);
     }
   }
 
@@ -169,13 +143,14 @@ export default function CustomersPage() {
         ) : (
           <div className="space-y-3">
             {filtered.map((customer) => (
-              <Card key={customer.id} className="overflow-hidden">
+              <Card
+                key={customer.id}
+                className="overflow-hidden cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => navigate(`/customers/${customer.id}`)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div
-                      className="flex-1 min-w-0 cursor-pointer"
-                      onClick={() => toggleExpand(customer)}
-                    >
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-lg hover:text-primary transition-colors">{customer.name}</h3>
                         <Badge variant="secondary" className={categoryColor(customer.category)}>
@@ -200,118 +175,25 @@ export default function CustomersPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                       {isAdmin && (
                         <>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(customer)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => openEdit(customer, e)}>
                             <Edit2 className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(customer)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => handleDelete(customer, e)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </>
                       )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleExpand(customer)}>
-                        {expandedId === customer.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </Button>
                     </div>
                   </div>
-
-                  {/* Purchase History */}
-                  {expandedId === customer.id && (
-                    <div className="mt-4 border-t pt-4">
-                      <h4 className="font-medium mb-3">Purchase History</h4>
-                      {salesLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                      ) : customerSales.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No purchases recorded</p>
-                      ) : (
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {customerSales.map((sale) => {
-                            const credit = (sale as any).credits?.[0];
-                            const isCredit = sale.payment_method === 'credit' || !!credit;
-                            return (
-                            <div
-                              key={sale.id}
-                              className="glass-item flex items-center justify-between p-2 text-sm cursor-pointer hover:bg-accent/50 rounded-md transition-colors"
-                              onClick={() => setSelectedSale(sale)}
-                            >
-                              <div>
-                                <p className="font-medium">#{sale.receipt_number}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {format(new Date(sale.created_at), 'dd MMM yyyy HH:mm')}
-                                </p>
-                              </div>
-                              <div className="text-right flex flex-col items-end gap-1">
-                                <p className="font-bold currency">{formatCurrency(sale.total)}</p>
-                                <div className="flex items-center gap-1">
-                                  <Badge variant="outline" className="text-xs capitalize">{sale.payment_method}</Badge>
-                                  {isCredit && (
-                                    <Badge
-                                      variant={credit?.status === 'paid' ? 'default' : 'destructive'}
-                                      className="text-xs capitalize"
-                                    >
-                                      {credit?.status === 'paid' ? 'Paid' : 'Pending'}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
-
-      {/* Sale Detail Dialog */}
-      <Dialog open={!!selectedSale} onOpenChange={(open) => !open && setSelectedSale(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Receipt #{selectedSale?.receipt_number}</DialogTitle>
-          </DialogHeader>
-          {selectedSale && (
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>{format(new Date(selectedSale.created_at), 'dd MMM yyyy HH:mm')}</span>
-                <Badge variant="outline" className="capitalize">{selectedSale.payment_method}</Badge>
-              </div>
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/50">
-                      <th className="text-left p-2 font-medium">Product</th>
-                      <th className="text-center p-2 font-medium">Qty</th>
-                      <th className="text-right p-2 font-medium">Price</th>
-                      <th className="text-right p-2 font-medium">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(selectedSale as any).sale_items?.map((item: any) => (
-                      <tr key={item.id} className="border-t">
-                        <td className="p-2">{item.product_name}</td>
-                        <td className="p-2 text-center">{item.quantity}</td>
-                        <td className="p-2 text-right">{formatCurrency(item.unit_price)}</td>
-                        <td className="p-2 text-right font-medium">{formatCurrency(item.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-3">
-                <span>Total</span>
-                <span>{formatCurrency(selectedSale.total)}</span>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Add/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
