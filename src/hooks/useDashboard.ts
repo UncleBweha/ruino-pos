@@ -173,6 +173,27 @@ export function useDashboard() {
         total: data.total,
       }));
 
+      // Find best employee this month
+      const cashierAgg: Record<string, number> = {};
+      monthCashierSales?.forEach((s) => {
+        cashierAgg[s.cashier_id] = (cashierAgg[s.cashier_id] || 0) + Number(s.total);
+      });
+      const topCashierEntry = Object.entries(cashierAgg).sort((a, b) => b[1] - a[1])[0];
+      
+      if (topCashierEntry) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', topCashierEntry[0])
+          .maybeSingle();
+        setBestEmployee({
+          name: profile?.full_name || 'Unknown',
+          totalSales: topCashierEntry[1],
+        });
+      } else {
+        setBestEmployee(null);
+      }
+
       setStats({
         todaySales: todaySales?.reduce((sum, s) => sum + Number(s.total), 0) || 0,
         todayProfit: todaySales?.reduce((sum, s) => sum + Number(s.profit), 0) || 0,
