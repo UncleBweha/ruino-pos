@@ -82,6 +82,13 @@ export function SalesOverviewCards({ stats, loading, bestEmployee, onMonthSalesC
       icon: Wallet,
     },
     {
+      title: 'Best Employee',
+      value: bestEmployee?.name || '—',
+      subValue: bestEmployee ? formatCurrency(bestEmployee.totalSales) : undefined,
+      icon: Trophy,
+      highlight: true,
+    },
+    {
       title: 'Inventory Cost',
       value: formatCurrency(stats.inventoryCost),
       icon: DollarSign,
