@@ -18,6 +18,7 @@ import ProfilePage from "./pages/Profile";
 import CustomersPage from "./pages/Customers";
 import CustomerProfilePage from "./pages/CustomerProfile";
 import SuppliersPage from "./pages/Suppliers";
+import SupplierProfilePage from "./pages/SupplierProfile";
 import InvoicesPage from "./pages/Invoices";
 import NotFound from "./pages/NotFound";
 
