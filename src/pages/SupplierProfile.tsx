@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { format, differenceInDays } from 'date-fns';
+import { generatePDFFromHTML, printHTML } from '@/lib/pdfUtils';
 import {
   ArrowLeft, Printer, Download, Loader2, Phone, Mail, Package,
   Clock, AlertTriangle, CheckCircle,
@@ -94,21 +95,11 @@ export default function SupplierProfilePage() {
   }
 
   function handlePrint() {
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(generateReportHTML());
-    w.document.close();
-    w.onload = () => { w.print(); };
+    printHTML(generateReportHTML());
   }
 
-  function handleDownload() {
-    const blob = new Blob([generateReportHTML()], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Supplier_${supplier?.name?.replace(/\s+/g, '_')}_Report.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async function handleDownload() {
+    await generatePDFFromHTML(generateReportHTML(), `Supplier_${supplier?.name?.replace(/\s+/g, '_')}_Report.pdf`);
   }
 
   if (loading) {

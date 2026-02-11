@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { useSettings } from '@/hooks/useSettings';
 import { format } from 'date-fns';
+import { generatePDFFromHTML, printHTML } from '@/lib/pdfUtils';
 import {
   ArrowLeft, Loader2, Phone, MapPin, Building2, Printer, Download,
   Receipt, RotateCcw, CheckCircle2, Clock, UserCircle,
@@ -171,31 +172,11 @@ export default function CustomerProfilePage() {
   }
 
   function handlePrint() {
-    const html = generateReportHTML();
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:absolute;width:0;height:0;border:none;left:-9999px';
-    document.body.appendChild(iframe);
-    const doc = iframe.contentWindow?.document;
-    if (!doc) { document.body.removeChild(iframe); return; }
-    doc.open(); doc.write(html); doc.close();
-    iframe.onload = () => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    };
+    printHTML(generateReportHTML());
   }
 
-  function handleDownload() {
-    const html = generateReportHTML();
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `customer-report-${customer?.name?.replace(/\s+/g, '-')}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  async function handleDownload() {
+    await generatePDFFromHTML(generateReportHTML(), `Customer_${customer?.name?.replace(/\s+/g, '_')}_Report.pdf`);
   }
 
   if (loading) {
