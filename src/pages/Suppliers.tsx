@@ -191,7 +191,7 @@ export default function SuppliersPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-lg">{supplier.name}</h3>
+                          <h3 className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors" onClick={() => navigate(`/suppliers/${supplier.id}`)}>{supplier.name}</h3>
                           <Badge variant="secondary">{supplier.payment_terms}d terms</Badge>
                           {totalUnpaid > 0 && (
                             <Badge variant="destructive" className="text-xs">
