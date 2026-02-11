@@ -1,7 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useReports } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Calendar, RefreshCw, Printer, Clock } from 'lucide-react';
+import { Calendar, RefreshCw, Printer, Clock, FileText } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { format } from 'date-fns';
