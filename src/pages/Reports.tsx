@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function ReportsPage() {
+  const navigate = useNavigate();
   const { report, loading, selectedDate, setSelectedDate, refresh } = useReports();
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
