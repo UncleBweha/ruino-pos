@@ -75,6 +75,9 @@ export default function ReportsPage() {
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer className="w-4 h-4" />
             </Button>
+            <Button size="sm" onClick={() => navigate(`/reports/full?date=${format(selectedDate, 'yyyy-MM-dd')}`)}>
+              <FileText className="w-4 h-4 mr-2" /> Full Report
+            </Button>
           </div>
         </div>
 
