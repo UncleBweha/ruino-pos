@@ -1,13 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { format, differenceInDays, addDays } from 'date-fns';
 import {
   Search, Plus, Edit2, Trash2, Loader2, Phone, Mail, Package, Clock,
-  ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Sparkles, DollarSign,
+  ChevronDown, ChevronUp, AlertTriangle, CheckCircle, DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ export default function SuppliersPage() {
   const { suppliers, loading, createSupplier, updateSupplier, deleteSupplier, addSupplyRecord, updateSupplyPayment, deleteSupplyRecord } = useSuppliers();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -32,8 +33,6 @@ export default function SuppliersPage() {
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiInsights, setAiInsights] = useState<any>(null);
 
   const [form, setForm] = useState({ name: '', phone: '', email: '', payment_terms: '30', notes: '' });
   const [supplyForm, setSupplyForm] = useState({
@@ -132,37 +131,6 @@ export default function SuppliersPage() {
     }
   }
 
-  async function getAiInsights(supplier: Supplier) {
-    setAiLoading(true);
-    setAiInsights(null);
-    try {
-      const products = supplier.supplier_products || [];
-      const unpaid = products.filter(p => p.payment_status === 'unpaid').reduce((s, p) => s + p.total_amount, 0);
-      const latePayments = products.filter(p => {
-        if (p.payment_status === 'paid' || !p.due_date) return false;
-        return new Date(p.due_date) < new Date();
-      }).length;
-
-      const { data, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
-          action: 'supplier_insights',
-          data: {
-            name: supplier.name,
-            payment_terms: supplier.payment_terms,
-            total_supplies: products.length,
-            unpaid_amount: unpaid,
-            late_payments: latePayments,
-          },
-        },
-      });
-      if (error) throw error;
-      setAiInsights(data);
-    } catch {
-      toast({ title: 'AI Error', description: 'Could not get insights', variant: 'destructive' });
-    } finally {
-      setAiLoading(false);
-    }
-  }
 
   function getPaymentStatus(product: SupplierProduct) {
     if (product.payment_status === 'paid') return { label: 'Paid', color: 'bg-success/10 text-success', icon: CheckCircle };
@@ -223,7 +191,7 @@ export default function SuppliersPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-lg">{supplier.name}</h3>
+                          <h3 className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors" onClick={() => navigate(`/suppliers/${supplier.id}`)}>{supplier.name}</h3>
                           <Badge variant="secondary">{supplier.payment_terms}d terms</Badge>
                           {totalUnpaid > 0 && (
                             <Badge variant="destructive" className="text-xs">
@@ -244,9 +212,6 @@ export default function SuppliersPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => getAiInsights(supplier)} disabled={aiLoading} title="AI insights">
-                          <Sparkles className="w-4 h-4" />
-                        </Button>
                         {isAdmin && (
                           <>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSupplyForm(supplier.id)} title="Add supply">
@@ -265,23 +230,6 @@ export default function SuppliersPage() {
                         </Button>
                       </div>
                     </div>
-
-                    {/* AI Insights */}
-                    {aiInsights && expandedId === supplier.id && (
-                      <div className="glass-item mt-3 p-3 text-sm space-y-2">
-                        <p className="font-medium flex items-center gap-1"><Sparkles className="w-4 h-4" /> AI Insights</p>
-                        <Badge variant={aiInsights.risk_level === 'low' ? 'default' : aiInsights.risk_level === 'high' ? 'destructive' : 'secondary'}>
-                          {aiInsights.risk_level} risk
-                        </Badge>
-                        {aiInsights.insights?.map((i: string, idx: number) => (
-                          <p key={idx} className="text-muted-foreground">• {i}</p>
-                        ))}
-                        {aiInsights.recommendations?.map((r: string, idx: number) => (
-                          <p key={idx} className="text-foreground">→ {r}</p>
-                        ))}
-                      </div>
-                    )}
-
                     {/* Supply Records */}
                     {expandedId === supplier.id && (
                       <div className="mt-4 border-t pt-4">
