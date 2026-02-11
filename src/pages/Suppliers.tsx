@@ -212,43 +212,7 @@ export default function SuppliersPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => getAiInsights(supplier)} disabled={aiLoading} title="AI insights">
-                          <Sparkles className="w-4 h-4" />
-                        </Button>
                         {isAdmin && (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSupplyForm(supplier.id)} title="Add supply">
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(supplier)}>
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(supplier)}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpandedId(expandedId === supplier.id ? null : supplier.id)}>
-                          {expandedId === supplier.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* AI Insights */}
-                    {aiInsights && expandedId === supplier.id && (
-                      <div className="glass-item mt-3 p-3 text-sm space-y-2">
-                        <p className="font-medium flex items-center gap-1"><Sparkles className="w-4 h-4" /> AI Insights</p>
-                        <Badge variant={aiInsights.risk_level === 'low' ? 'default' : aiInsights.risk_level === 'high' ? 'destructive' : 'secondary'}>
-                          {aiInsights.risk_level} risk
-                        </Badge>
-                        {aiInsights.insights?.map((i: string, idx: number) => (
-                          <p key={idx} className="text-muted-foreground">• {i}</p>
-                        ))}
-                        {aiInsights.recommendations?.map((r: string, idx: number) => (
-                          <p key={idx} className="text-foreground">→ {r}</p>
-                        ))}
-                      </div>
-                    )}
 
                     {/* Supply Records */}
                     {expandedId === supplier.id && (
