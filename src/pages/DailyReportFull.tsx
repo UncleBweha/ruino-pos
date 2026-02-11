@@ -309,21 +309,11 @@ export default function DailyReportFullPage() {
   }
 
   function handlePrint() {
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(generateReportHTML());
-    w.document.close();
-    w.onload = () => { w.print(); };
+    printHTML(generateReportHTML());
   }
 
-  function handleDownload() {
-    const blob = new Blob([generateReportHTML()], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Daily_Report_${format(reportDate, 'yyyy-MM-dd')}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async function handleDownload() {
+    await generatePDFFromHTML(generateReportHTML(), `Daily_Report_${format(reportDate, 'yyyy-MM-dd')}.pdf`);
   }
 
   if (loading) {
