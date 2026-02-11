@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { format } from 'date-fns';
+import { generatePDFFromHTML, printHTML } from '@/lib/pdfUtils';
 import {
   ArrowLeft, Printer, Download, Loader2, TrendingUp, Users, Package,
   CreditCard, DollarSign, ShoppingCart, AlertTriangle, Truck, Clock,
