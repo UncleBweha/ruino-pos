@@ -1,7 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useReports } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Calendar, RefreshCw, Printer, Clock } from 'lucide-react';
+import { Calendar, RefreshCw, Printer, Clock, FileText } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -14,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function ReportsPage() {
+  const navigate = useNavigate();
   const { report, loading, selectedDate, setSelectedDate, refresh } = useReports();
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
@@ -72,6 +74,9 @@ export default function ReportsPage() {
             </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer className="w-4 h-4" />
+            </Button>
+            <Button size="sm" onClick={() => navigate(`/reports/full?date=${format(selectedDate, 'yyyy-MM-dd')}`)}>
+              <FileText className="w-4 h-4 mr-2" /> Full Report
             </Button>
           </div>
         </div>
