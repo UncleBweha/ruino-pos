@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { useSettings } from '@/hooks/useSettings';
 import { format } from 'date-fns';
+import { generatePDFFromHTML, printHTML } from '@/lib/pdfUtils';
 import {
   ArrowLeft, Loader2, Phone, MapPin, Building2, Printer, Download,
   Receipt, RotateCcw, CheckCircle2, Clock, UserCircle,
