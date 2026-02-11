@@ -1,13 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { format, differenceInDays, addDays } from 'date-fns';
 import {
   Search, Plus, Edit2, Trash2, Loader2, Phone, Mail, Package, Clock,
-  ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Sparkles, DollarSign,
+  ChevronDown, ChevronUp, AlertTriangle, CheckCircle, DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
