@@ -131,37 +131,6 @@ export default function SuppliersPage() {
     }
   }
 
-  async function getAiInsights(supplier: Supplier) {
-    setAiLoading(true);
-    setAiInsights(null);
-    try {
-      const products = supplier.supplier_products || [];
-      const unpaid = products.filter(p => p.payment_status === 'unpaid').reduce((s, p) => s + p.total_amount, 0);
-      const latePayments = products.filter(p => {
-        if (p.payment_status === 'paid' || !p.due_date) return false;
-        return new Date(p.due_date) < new Date();
-      }).length;
-
-      const { data, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
-          action: 'supplier_insights',
-          data: {
-            name: supplier.name,
-            payment_terms: supplier.payment_terms,
-            total_supplies: products.length,
-            unpaid_amount: unpaid,
-            late_payments: latePayments,
-          },
-        },
-      });
-      if (error) throw error;
-      setAiInsights(data);
-    } catch {
-      toast({ title: 'AI Error', description: 'Could not get insights', variant: 'destructive' });
-    } finally {
-      setAiLoading(false);
-    }
-  }
 
   function getPaymentStatus(product: SupplierProduct) {
     if (product.payment_status === 'paid') return { label: 'Paid', color: 'bg-success/10 text-success', icon: CheckCircle };
