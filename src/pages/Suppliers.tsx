@@ -213,7 +213,23 @@ export default function SuppliersPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         {isAdmin && (
-
+                          <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSupplyForm(supplier.id)} title="Add supply">
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(supplier)}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(supplier)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpandedId(expandedId === supplier.id ? null : supplier.id)}>
+                          {expandedId === supplier.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    </div>
                     {/* Supply Records */}
                     {expandedId === supplier.id && (
                       <div className="mt-4 border-t pt-4">
