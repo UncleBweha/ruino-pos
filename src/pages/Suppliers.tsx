@@ -33,8 +33,6 @@ export default function SuppliersPage() {
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiInsights, setAiInsights] = useState<any>(null);
 
   const [form, setForm] = useState({ name: '', phone: '', email: '', payment_terms: '30', notes: '' });
   const [supplyForm, setSupplyForm] = useState({
