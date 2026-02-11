@@ -25,6 +25,7 @@ export default function SuppliersPage() {
   const { suppliers, loading, createSupplier, updateSupplier, deleteSupplier, addSupplyRecord, updateSupplyPayment, deleteSupplyRecord } = useSuppliers();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
