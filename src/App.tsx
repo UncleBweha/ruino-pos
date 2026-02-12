@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute requireAdmin><SettingsPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
             <Route path="/reports/full" element={<ProtectedRoute><DailyReportFullPage /></ProtectedRoute>} />
+            <Route path="/reports/monthly" element={<ProtectedRoute><MonthlyReportPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -78,6 +78,9 @@ export default function ReportsPage() {
             <Button size="sm" onClick={() => navigate(`/reports/full?date=${format(selectedDate, 'yyyy-MM-dd')}`)}>
               <FileText className="w-4 h-4 mr-2" /> Full Report
             </Button>
+            <Button size="sm" variant="secondary" onClick={() => navigate(`/reports/monthly?month=${format(selectedDate, 'yyyy-MM')}`)}>
+              <CalendarDays className="w-4 h-4 mr-2" /> Monthly
+            </Button>
           </div>
         </div>
 
