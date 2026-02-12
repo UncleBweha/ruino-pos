@@ -20,6 +20,7 @@ import CustomerProfilePage from "./pages/CustomerProfile";
 import SuppliersPage from "./pages/Suppliers";
 import SupplierProfilePage from "./pages/SupplierProfile";
 import DailyReportFullPage from "./pages/DailyReportFull";
+import MonthlyReportPage from "./pages/MonthlyReport";
 import InvoicesPage from "./pages/Invoices";
 import NotFound from "./pages/NotFound";
 
