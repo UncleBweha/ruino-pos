@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useReports } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Calendar, RefreshCw, Printer, Clock, FileText } from 'lucide-react';
+import { Calendar, RefreshCw, Printer, Clock, FileText, CalendarDays } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -77,6 +77,9 @@ export default function ReportsPage() {
             </Button>
             <Button size="sm" onClick={() => navigate(`/reports/full?date=${format(selectedDate, 'yyyy-MM-dd')}`)}>
               <FileText className="w-4 h-4 mr-2" /> Full Report
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => navigate(`/reports/monthly?month=${format(selectedDate, 'yyyy-MM')}`)}>
+              <CalendarDays className="w-4 h-4 mr-2" /> Monthly
             </Button>
           </div>
         </div>
