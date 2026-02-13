@@ -231,7 +231,7 @@ td:last-child,th:last-child{text-align:right}
 .notes h3{font-size:12px;text-transform:uppercase;color:#999;margin-bottom:8px}
 .notes p{font-size:13px;color:#444}
 .footer{text-align:center;font-size:11px;color:#999;padding-top:20px;border-top:1px solid #eee}
-${logoUrl ? `.logo{max-height:60px;max-width:200px}` : ''}
+${logoUrl ? `.logo{max-height:120px;max-width:300px}` : ''}
 @media print{body{padding:20px}@page{margin:15mm}}
 </style></head><body>
 <div class="header">
