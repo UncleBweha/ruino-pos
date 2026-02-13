@@ -391,6 +391,7 @@ export type Database = {
       receipt_settings: {
         Row: {
           address: string | null
+          building: string | null
           company_name: string
           email: string | null
           footer_text: string | null
@@ -399,9 +400,11 @@ export type Database = {
           phone: string | null
           tax_pin: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address?: string | null
+          building?: string | null
           company_name?: string
           email?: string | null
           footer_text?: string | null
@@ -410,9 +413,11 @@ export type Database = {
           phone?: string | null
           tax_pin?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address?: string | null
+          building?: string | null
           company_name?: string
           email?: string | null
           footer_text?: string | null
@@ -421,6 +426,7 @@ export type Database = {
           phone?: string | null
           tax_pin?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
