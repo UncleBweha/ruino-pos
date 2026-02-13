@@ -264,16 +264,8 @@ export function printReceipt(options: PrintReceiptOptions): void {
   };
 }
 
-export function downloadReceipt(options: PrintReceiptOptions): void {
+export async function downloadReceipt(options: PrintReceiptOptions): Promise<void> {
+  const { generatePDFFromHTML } = await import('@/lib/pdfUtils');
   const html = generateReceiptHTML(options);
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `receipt-${options.sale.receipt_number}.html`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  await generatePDFFromHTML(html, `receipt-${options.sale.receipt_number}.pdf`);
 }

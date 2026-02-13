@@ -103,13 +103,13 @@ export default function SalesPage() {
     });
   }
 
-  function handleDownloadReceipt(sale: Sale, e: React.MouseEvent) {
+  async function handleDownloadReceipt(sale: Sale, e: React.MouseEvent) {
     e.stopPropagation();
-    downloadReceipt({ sale, settings: receiptSettings });
     toast({
-      title: 'Download Started',
-      description: `Downloading receipt ${sale.receipt_number}`,
+      title: 'Generating PDF',
+      description: `Preparing receipt ${sale.receipt_number}...`,
     });
+    await downloadReceipt({ sale, settings: receiptSettings });
   }
 
   function getStatusBadge(status: string) {
