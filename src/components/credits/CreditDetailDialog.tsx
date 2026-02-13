@@ -62,9 +62,9 @@ export function CreditDetailDialog({ credit, open, onOpenChange }: CreditDetailD
     setTimeout(() => setPrinting(false), 1000);
   }
 
-  function handleDownload() {
+  async function handleDownload() {
     if (!sale) return;
-    downloadReceipt({ sale, settings });
+    await downloadReceipt({ sale, settings });
   }
 
   return (

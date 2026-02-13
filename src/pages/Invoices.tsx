@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { format } from 'date-fns';
+import { generatePDFFromHTML } from '@/lib/pdfUtils';
 import {
   Plus, Loader2, FileText, Trash2, Download, Printer,
   ArrowRightLeft, Search, Eye, Upload, X,
@@ -286,17 +287,9 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
     };
   }
 
-  function downloadInvoice(invoice: Invoice) {
+  async function downloadInvoice(invoice: Invoice) {
     const html = generateInvoiceHTML(invoice);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${invoice.invoice_number}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    await generatePDFFromHTML(html, `${invoice.invoice_number}.pdf`);
   }
 
   function renderInvoiceCard(invoice: Invoice) {
