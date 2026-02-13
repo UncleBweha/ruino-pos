@@ -13,7 +13,7 @@ import {
   X,
   User,
   FileBarChart,
-  Bell,
+  
   Search,
   Users,
   Truck,
@@ -82,9 +82,6 @@ export function AppSidebar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground">
-              <Bell className="w-4 h-4" />
-            </Button>
             <Link
               to="/profile"
               className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-muted transition-colors press-effect"
