@@ -117,6 +117,8 @@ export interface ReceiptSettings {
   phone: string | null;
   email: string | null;
   address: string | null;
+  building: string | null;
+  website: string | null;
   tax_pin: string | null;
   logo_url: string | null;
   footer_text: string | null;
