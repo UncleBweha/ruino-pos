@@ -175,6 +175,12 @@ export default function SuppliersPage() {
             <CardContent className="py-12 text-center text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No suppliers found</p>
+              {isAdmin && searchQuery && (
+                <Button className="mt-3" onClick={() => { setForm({ name: searchQuery, phone: '', email: '', payment_terms: '30', notes: '' }); setEditing(null); setShowForm(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add "{searchQuery}" as supplier
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (

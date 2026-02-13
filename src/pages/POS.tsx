@@ -68,6 +68,7 @@ export default function POSPage() {
   const [sellOnBehalf, setSellOnBehalf] = useState(false);
   const [selectedBehalfId, setSelectedBehalfId] = useState<string>('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
 
   // On mobile, only show products when searching
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
@@ -466,26 +467,49 @@ export default function POSPage() {
         <div className="p-4 glass-divider border-t space-y-3 bg-background/40">
           {/* Customer, Tax & Discount - Compact Row */}
           <div className="grid grid-cols-3 gap-2">
-            <div>
+            <div className="relative">
               <Label className="text-xs">Customer {selectedPayment === 'credit' && <span className="text-destructive">*</span>}</Label>
-              <Select
-                value={selectedCustomerId}
-                onValueChange={(v) => {
-                  setSelectedCustomerId(v);
-                  const c = customers.find(c => c.id === v);
-                  if (c) setCustomerName(c.name);
+              <Input
+                value={customerName}
+                onChange={(e) => {
+                  setCustomerName(e.target.value);
+                  setCustomerSearchOpen(true);
+                  if (!e.target.value.trim()) {
+                    setSelectedCustomerId('');
+                  }
                 }}
-              >
-                <SelectTrigger className="h-9 mt-0.5 text-sm">
-                  <SelectValue placeholder="Walk-in" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="walk-in">Walk-in</SelectItem>
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onFocus={() => setCustomerSearchOpen(true)}
+                onBlur={() => setTimeout(() => setCustomerSearchOpen(false), 200)}
+                placeholder="Walk-in"
+                className="h-9 mt-0.5 text-sm"
+                autoComplete="off"
+              />
+              {customerSearchOpen && customerName.trim() && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-md max-h-40 overflow-y-auto">
+                  {customers
+                    .filter(c => c.name.toLowerCase().includes(customerName.toLowerCase()))
+                    .slice(0, 8)
+                    .map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setSelectedCustomerId(c.id);
+                          setCustomerName(c.name);
+                          setCustomerSearchOpen(false);
+                        }}
+                      >
+                        <span className="font-medium">{c.name}</span>
+                        {c.phone && <span className="text-xs text-muted-foreground ml-2">{c.phone}</span>}
+                      </button>
+                    ))}
+                  {customers.filter(c => c.name.toLowerCase().includes(customerName.toLowerCase())).length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">New customer: "{customerName}"</div>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <Label className="text-xs">Tax (%)</Label>

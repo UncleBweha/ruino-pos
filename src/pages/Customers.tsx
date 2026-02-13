@@ -138,6 +138,12 @@ export default function CustomersPage() {
             <CardContent className="py-12 text-center text-muted-foreground">
               <UserCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No customers found</p>
+              {searchQuery && (
+                <Button className="mt-3" onClick={() => { setForm({ name: searchQuery, phone: '', business_name: '', location: '', category: 'retail', notes: '' }); setEditing(null); setShowForm(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add "{searchQuery}" as customer
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
