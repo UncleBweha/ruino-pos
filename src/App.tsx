@@ -46,11 +46,11 @@ const App = () => (
             <Route path="/customers/:id" element={<ProtectedRoute><CustomerProfilePage /></ProtectedRoute>} />
             <Route path="/suppliers" element={<ProtectedRoute requireAdmin><SuppliersPage /></ProtectedRoute>} />
             <Route path="/suppliers/:id" element={<ProtectedRoute requireAdmin><SupplierProfilePage /></ProtectedRoute>} />
-            <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
+            <Route path="/invoices" element={<ProtectedRoute requireAdmin><InvoicesPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireAdmin><SettingsPage /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-            <Route path="/reports/full" element={<ProtectedRoute><DailyReportFullPage /></ProtectedRoute>} />
-            <Route path="/reports/monthly" element={<ProtectedRoute><MonthlyReportPage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute requireAdmin><ReportsPage /></ProtectedRoute>} />
+            <Route path="/reports/full" element={<ProtectedRoute requireAdmin><DailyReportFullPage /></ProtectedRoute>} />
+            <Route path="/reports/monthly" element={<ProtectedRoute requireAdmin><MonthlyReportPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

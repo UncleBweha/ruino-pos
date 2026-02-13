@@ -43,8 +43,6 @@ const cashierNavItems = [
   { path: '/sales', label: 'My Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
   { path: '/customers', label: 'Customers', icon: Users },
-  { path: '/invoices', label: 'Invoices', icon: FileText },
-  { path: '/reports', label: 'Reports', icon: FileBarChart },
 ];
 
 export function AppSidebar() {
