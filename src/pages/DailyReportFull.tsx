@@ -59,9 +59,13 @@ export default function DailyReportFullPage() {
   const reportDate = dateParam ? new Date(dateParam) : new Date();
   const [report, setReport] = useState<FullReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [companyInfo, setCompanyInfo] = useState<{ company_name: string; logo_url: string | null; phone: string | null; address: string | null; email: string | null; tax_pin: string | null }>({ company_name: 'Ruinu General Merchants', logo_url: null, phone: null, address: null, email: null, tax_pin: null });
 
   useEffect(() => {
     fetchFullReport(reportDate);
+    supabase.from('receipt_settings').select('company_name, logo_url, phone, address, email, tax_pin').limit(1).single().then(({ data }) => {
+      if (data) setCompanyInfo(data as any);
+    });
   }, [dateParam]);
 
   async function fetchFullReport(date: Date) {
@@ -252,11 +256,15 @@ export default function DailyReportFullPage() {
       .stat-label{font-size:11px;color:#666;text-transform:uppercase}
       .stat-value{font-size:20px;font-weight:bold;margin-top:4px}
       .green{color:#16a34a} .red{color:#dc2626} .blue{color:#2563eb}
+      .report-logo{max-height:120px;max-width:300px;margin-bottom:8px}
       @media print{body{padding:0}.no-print{display:none}}
     </style></head><body>
       <div style="border-bottom:3px solid #333;padding-bottom:12px;margin-bottom:16px">
-        <h1>📊 Daily Business Report</h1>
+        ${companyInfo.logo_url ? `<img src="${companyInfo.logo_url}" class="report-logo" alt="Logo" />` : ''}
+        <h1>${companyInfo.company_name} — Daily Report</h1>
         <p style="margin:4px 0;color:#666">${dateStr}</p>
+        ${companyInfo.address ? `<p style="margin:2px 0;font-size:12px;color:#666">${companyInfo.address}</p>` : ''}
+        ${companyInfo.phone ? `<p style="margin:2px 0;font-size:12px;color:#666">Tel: ${companyInfo.phone}</p>` : ''}
         <p style="margin:2px 0;font-size:12px;color:#999">Generated: ${format(new Date(), 'dd MMM yyyy, hh:mm a')}</p>
       </div>
 
