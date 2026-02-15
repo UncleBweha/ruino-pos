@@ -2,6 +2,11 @@ import { formatCurrency } from './constants';
 import type { Sale, ReceiptSettings } from '@/types/database';
 import { format } from 'date-fns';
 
+function escapeHtml(str: string): string {
+  const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return str.replace(/[&<>"']/g, (char) => map[char] || char);
+}
+
 interface PrintReceiptOptions {
   sale: Sale;
   settings: ReceiptSettings | null;
@@ -10,12 +15,12 @@ interface PrintReceiptOptions {
 export function generateReceiptHTML(options: PrintReceiptOptions): string {
   const { sale, settings } = options;
 
-  const companyName = settings?.company_name || 'Ruinu General Merchants';
-  const phone = settings?.phone || '';
-  const email = settings?.email || '';
-  const address = settings?.address || '';
-  const taxPin = settings?.tax_pin || '';
-  const footerText = settings?.footer_text || 'Thank you for shopping with us!';
+  const companyName = escapeHtml(settings?.company_name || 'Ruinu General Merchants');
+  const phone = escapeHtml(settings?.phone || '');
+  const email = escapeHtml(settings?.email || '');
+  const address = escapeHtml(settings?.address || '');
+  const taxPin = escapeHtml(settings?.tax_pin || '');
+  const footerText = escapeHtml(settings?.footer_text || 'Thank you for shopping with us!');
 
   const items = sale.sale_items || [];
 
@@ -23,7 +28,7 @@ export function generateReceiptHTML(options: PrintReceiptOptions): string {
     .map(
       (item) => `
         <tr>
-          <td style="text-align: left; padding: 2px 0;">${item.product_name}</td>
+          <td style="text-align: left; padding: 2px 0;">${escapeHtml(item.product_name)}</td>
           <td style="text-align: center; padding: 2px 0;">${item.quantity}</td>
           <td style="text-align: right; padding: 2px 0;">${formatCurrency(item.unit_price)}</td>
           <td style="text-align: right; padding: 2px 0;">${formatCurrency(item.total)}</td>
@@ -162,7 +167,7 @@ export function generateReceiptHTML(options: PrintReceiptOptions): string {
         ${sale.customer_name ? `
         <div>
           <span>Customer:</span>
-          <span>${sale.customer_name}</span>
+          <span>${escapeHtml(sale.customer_name)}</span>
         </div>
         ` : ''}
         <div>
@@ -172,7 +177,7 @@ export function generateReceiptHTML(options: PrintReceiptOptions): string {
         ${sale.sold_on_behalf_name ? `
         <div>
           <span>Sold by:</span>
-          <span>${sale.sold_on_behalf_name}</span>
+          <span>${escapeHtml(sale.sold_on_behalf_name)}</span>
         </div>
         ` : ''}
       </div>
