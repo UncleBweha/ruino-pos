@@ -95,10 +95,6 @@ export default function ProfilePage() {
                 <p className="text-lg font-medium">{profile?.full_name || 'N/A'}</p>
               </div>
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Email</Label>
-                <p className="text-lg font-medium">{profile?.email || 'N/A'}</p>
-              </div>
-              <div className="space-y-2">
                 <Label className="text-muted-foreground">Role</Label>
                 <span className="inline-block text-sm font-medium capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">
                   {role || 'No role'}
