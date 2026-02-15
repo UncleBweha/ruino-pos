@@ -469,7 +469,7 @@ export default function SettingsPage() {
                         <div key={u.id} className="glass-item flex items-center justify-between">
                           <div>
                             <p className="font-medium">{u.full_name}</p>
-                            <p className="text-sm text-muted-foreground">{u.email}</p>
+                            
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-medium capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">
