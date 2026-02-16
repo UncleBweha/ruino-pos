@@ -62,12 +62,14 @@ export function useDashboard() {
           .from('sales')
           .select('total, profit')
           .gte('created_at', startOfDay.toISOString())
-          .neq('status', 'voided'),
+          .neq('status', 'voided')
+          .neq('status', 'credit'),
         supabase
           .from('sales')
           .select('total, profit')
           .gte('created_at', startOfMonth.toISOString())
-          .neq('status', 'voided'),
+          .neq('status', 'voided')
+          .neq('status', 'credit'),
         supabase
           .from('products')
           .select('*', { count: 'exact', head: true }),
@@ -90,12 +92,14 @@ export function useDashboard() {
           .from('sales')
           .select('total, profit, payment_method, created_at')
           .gte('created_at', sixMonthsAgo.toISOString())
-          .neq('status', 'voided'),
+          .neq('status', 'voided')
+          .neq('status', 'credit'),
         supabase
           .from('sales')
           .select('cashier_id, total')
           .gte('created_at', startOfMonth.toISOString())
-          .neq('status', 'voided'),
+          .neq('status', 'voided')
+          .neq('status', 'credit'),
       ]);
 
       const lowStockCount = products?.filter(
