@@ -359,12 +359,12 @@ export default function POSPage() {
         </div>
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[50vh] lg:max-h-none">
+        <div className="flex-1 overflow-y-auto p-3 lg:p-2 space-y-2 lg:space-y-1.5 max-h-[50vh] lg:max-h-none">
           {items.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Cart is empty</p>
-              <p className="text-sm">Tap products to add</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Cart is empty</p>
+              <p className="text-xs">Tap products to add</p>
             </div>
           ) : (
             items.map((item) => {
@@ -372,9 +372,9 @@ export default function POSPage() {
               const isPriceModified = item.unitPrice !== item.product.selling_price;
               
               return (
-                <div key={item.product.id} className="glass-item flex items-center gap-4 border-l-4 border-l-transparent hover:border-l-accent">
+                <div key={item.product.id} className="glass-item flex items-center gap-3 lg:gap-2 lg:p-2.5 border-l-4 border-l-transparent hover:border-l-accent">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-base truncate">{item.product.name}</p>
+                    <p className="font-semibold text-base lg:text-sm truncate">{item.product.name}</p>
                     {isEditing ? (
                       <div className="flex items-center gap-2 mt-2">
                         <Input
@@ -402,16 +402,16 @@ export default function POSPage() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 lg:mt-0.5">
                         <span 
                           className={cn(
-                            "text-base",
+                            "text-base lg:text-sm",
                             isPriceModified && 'text-warning font-medium'
                           )}
                         >
                           {formatCurrency(item.unitPrice)}
                         </span>
-                        <span className="text-base">× {item.quantity}</span>
+                        <span className="text-base lg:text-sm">× {item.quantity}</span>
                         {isPriceModified && (
                           <span className="text-xs line-through">
                             ({formatCurrency(item.product.selling_price)})
@@ -464,7 +464,7 @@ export default function POSPage() {
         </div>
 
         {/* Checkout Section */}
-        <div className="p-4 glass-divider border-t space-y-3 bg-background/40">
+        <div className="p-4 lg:p-3 glass-divider border-t space-y-3 lg:space-y-2 bg-background/40">
           {/* Customer, Tax & Discount - Compact Row */}
           <div className="grid grid-cols-3 gap-2">
             <div className="relative">
@@ -537,7 +537,7 @@ export default function POSPage() {
           </div>
 
           {/* Totals */}
-          <div className="space-y-2 text-sm">
+          <div className="space-y-1.5 lg:space-y-1 text-sm lg:text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
               <span className="currency">{formatCurrency(subtotal)}</span>
@@ -568,14 +568,14 @@ export default function POSPage() {
                 </span>
               </div>
             )}
-            <div className="flex justify-between text-lg font-bold pt-2 border-t">
+            <div className="flex justify-between text-lg lg:text-base font-bold pt-2 lg:pt-1.5 border-t">
               <span>Total</span>
               <span className="currency">{formatCurrency(total)}</span>
             </div>
           </div>
 
           {/* Payment Method */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 lg:gap-1.5">
             {PAYMENT_METHODS.map((method) => {
               const Icon = paymentIcons[method.id];
               return (
@@ -583,12 +583,12 @@ export default function POSPage() {
                   key={method.id}
                   variant={selectedPayment === method.id ? 'default' : 'outline'}
                   className={cn(
-                    'flex flex-col h-16 gap-1',
+                    'flex flex-col h-16 lg:h-12 gap-1',
                     selectedPayment === method.id && 'ring-2 ring-primary ring-offset-2'
                   )}
                   onClick={() => setSelectedPayment(method.id)}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-5 h-5 lg:w-4 lg:h-4" />
                   <span className="text-xs">{method.label}</span>
                 </Button>
               );
@@ -597,7 +597,7 @@ export default function POSPage() {
 
           {/* Checkout Button */}
           <Button
-            className="w-full h-14 text-lg font-bold"
+            className="w-full h-14 lg:h-11 text-lg lg:text-base font-bold"
             disabled={items.length === 0 || checkoutLoading}
             onClick={handleCheckout}
           >
