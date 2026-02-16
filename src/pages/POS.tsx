@@ -285,78 +285,76 @@ export default function POSPage() {
 
       {/* Cart Section */}
       <div className="lg:w-96 xl:w-[420px] glass-divider border-t lg:border-t-0 lg:border-l glass-section flex flex-col lg:min-h-0 lg:h-full">
-        {/* Cart Header */}
-        <div className="p-4 glass-divider border-b flex items-center justify-between">
+        {/* Cart Header with inline sell-on-behalf */}
+        <div className="px-4 py-2.5 glass-divider border-b flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-primary" />
-            <h2 className="font-bold">Cart</h2>
+            <h2 className="font-bold text-sm">Cart</h2>
             <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
               {itemCount}
             </span>
           </div>
-          {items.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearCart}>
-              Clear
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Sell on behalf — compact inline */}
+            <div className="flex items-center gap-1.5">
+              <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
+              <Label className="text-xs cursor-pointer hidden lg:inline" htmlFor="sell-on-behalf">Behalf</Label>
+              <Switch
+                id="sell-on-behalf"
+                checked={sellOnBehalf}
+                onCheckedChange={(checked) => {
+                  setSellOnBehalf(checked);
+                  if (!checked) setSelectedBehalfId('');
+                }}
+                className="scale-90"
+              />
+            </div>
+            {items.length > 0 && (
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={clearCart}>
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Sell on Behalf Toggle */}
-        <div className="px-4 py-3 glass-divider border-b bg-background/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-muted-foreground" />
-              <Label className="text-sm font-medium cursor-pointer" htmlFor="sell-on-behalf">
-                Sell on behalf
-              </Label>
-            </div>
-            <Switch
-              id="sell-on-behalf"
-              checked={sellOnBehalf}
-              onCheckedChange={(checked) => {
-                setSellOnBehalf(checked);
-                if (!checked) setSelectedBehalfId('');
-              }}
-            />
+        {/* Sell on behalf selector — only when toggled on */}
+        {sellOnBehalf && (
+          <div className="px-4 py-2 glass-divider border-b bg-background/30">
+            <Select value={selectedBehalfId} onValueChange={setSelectedBehalfId}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Select person..." />
+              </SelectTrigger>
+              <SelectContent>
+                {activeCasuals.map((casual) => (
+                  <SelectItem key={casual.id} value={casual.id}>
+                    {casual.full_name}
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ({casual.commission_type === 'percentage' 
+                        ? `${casual.commission_rate}%` 
+                        : `${formatCurrency(casual.commission_rate)}/item`})
+                    </span>
+                  </SelectItem>
+                ))}
+                {activeCasuals.length === 0 && (
+                  <div className="px-2 py-2 text-xs text-muted-foreground text-center">
+                    No active casuals. Add in Settings → Casuals.
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
+            {selectedBehalfId && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Commission: {formatCurrency(
+                  calculateCommission(
+                    activeCasuals.find(c => c.id === selectedBehalfId),
+                    total,
+                    itemCount
+                  )
+                )}
+              </p>
+            )}
           </div>
-          {sellOnBehalf && (
-            <div className="mt-2">
-              <Select value={selectedBehalfId} onValueChange={setSelectedBehalfId}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Select person..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeCasuals.map((casual) => (
-                    <SelectItem key={casual.id} value={casual.id}>
-                      {casual.full_name}
-                      <span className="text-xs text-muted-foreground ml-2">
-                        ({casual.commission_type === 'percentage' 
-                          ? `${casual.commission_rate}%` 
-                          : `${formatCurrency(casual.commission_rate)}/item`})
-                      </span>
-                    </SelectItem>
-                  ))}
-                  {activeCasuals.length === 0 && (
-                    <div className="px-2 py-3 text-sm text-muted-foreground text-center">
-                      No active casuals. Add them in Settings → Casuals.
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-              {selectedBehalfId && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Commission: {formatCurrency(
-                    calculateCommission(
-                      activeCasuals.find(c => c.id === selectedBehalfId),
-                      total,
-                      itemCount
-                    )
-                  )}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-3 lg:p-2 space-y-2 lg:space-y-1.5 max-h-[50vh] lg:max-h-none">
