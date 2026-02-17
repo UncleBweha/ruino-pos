@@ -102,18 +102,16 @@ export function useDashboard() {
           .gte('created_at', startOfMonth.toISOString())
           .neq('status', 'voided')
           .neq('status', 'credit'),
-        // Credits paid today — add their sale revenue to today's totals
+        // Credit payments made today — attribute to today's revenue
         supabase
-          .from('credits')
-          .select('sale:sales(total, profit)')
-          .eq('status', 'paid')
-          .gte('paid_at', startOfDay.toISOString()),
-        // Credits paid this month — add their sale revenue to month totals
+          .from('credit_payments')
+          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit))')
+          .gte('created_at', startOfDay.toISOString()),
+        // Credit payments made this month — attribute to month revenue
         supabase
-          .from('credits')
-          .select('sale:sales(total, profit, payment_method, created_at, cashier_id)')
-          .eq('status', 'paid')
-          .gte('paid_at', startOfMonth.toISOString()),
+          .from('credit_payments')
+          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit))')
+          .gte('created_at', startOfMonth.toISOString()),
       ]);
 
       const lowStockCount = products?.filter(
@@ -212,24 +210,26 @@ export function useDashboard() {
         setBestEmployee(null);
       }
 
-      // Sum paid credit revenue for today
-      const todayCreditRevenue = todayPaidCredits?.reduce((sum, c) => {
-        const sale = c.sale as any;
-        return sum + (sale ? Number(sale.total) : 0);
+      // Sum credit payment revenue for today (proportional profit)
+      const todayCreditRevenue = todayPaidCredits?.reduce((sum, cp) => {
+        return sum + Number(cp.amount);
       }, 0) || 0;
-      const todayCreditProfit = todayPaidCredits?.reduce((sum, c) => {
-        const sale = c.sale as any;
-        return sum + (sale ? Number(sale.profit) : 0);
+      const todayCreditProfit = todayPaidCredits?.reduce((sum, cp) => {
+        const credit = cp.credit as any;
+        const saleProfit = credit?.sale ? Number(credit.sale.profit) : 0;
+        const totalOwed = credit ? Number(credit.total_owed) : 1;
+        return sum + (saleProfit * Number(cp.amount) / totalOwed);
       }, 0) || 0;
 
-      // Sum paid credit revenue for this month
-      const monthCreditRevenue = monthPaidCredits?.reduce((sum, c) => {
-        const sale = c.sale as any;
-        return sum + (sale ? Number(sale.total) : 0);
+      // Sum credit payment revenue for this month (proportional profit)
+      const monthCreditRevenue = monthPaidCredits?.reduce((sum, cp) => {
+        return sum + Number(cp.amount);
       }, 0) || 0;
-      const monthCreditProfit = monthPaidCredits?.reduce((sum, c) => {
-        const sale = c.sale as any;
-        return sum + (sale ? Number(sale.profit) : 0);
+      const monthCreditProfit = monthPaidCredits?.reduce((sum, cp) => {
+        const credit = cp.credit as any;
+        const saleProfit = credit?.sale ? Number(credit.sale.profit) : 0;
+        const totalOwed = credit ? Number(credit.total_owed) : 1;
+        return sum + (saleProfit * Number(cp.amount) / totalOwed);
       }, 0) || 0;
 
       setStats({
