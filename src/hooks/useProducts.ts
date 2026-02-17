@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product, Category } from '@/types/database';
+import { cacheProducts, getCachedProducts } from '@/lib/offlineDb';
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -48,7 +49,22 @@ export function useProducts() {
 
       if (error) throw error;
       setProducts(data as Product[]);
+      // Cache products in IndexedDB for offline use
+      cacheProducts(data).catch(console.error);
     } catch (err) {
+      // If offline, load from IndexedDB cache
+      if (!navigator.onLine) {
+        try {
+          const cached = await getCachedProducts();
+          if (cached.length > 0) {
+            setProducts(cached as Product[]);
+            setError(null);
+            return;
+          }
+        } catch {
+          // IndexedDB also failed
+        }
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch products');
     } finally {
       setLoading(false);
