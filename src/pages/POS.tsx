@@ -7,8 +7,11 @@ import { useSettings } from '@/hooks/useSettings';
 import { useCasuals } from '@/hooks/useCasuals';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { queueSale } from '@/lib/offlineDb';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +58,8 @@ export default function POSPage() {
   const { profile } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const isOnline = useOnlineStatus();
+  const { refreshCount } = useOfflineSync();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<'cash' | 'mpesa' | 'credit'>('cash');
@@ -162,29 +167,66 @@ export default function POSPage() {
         }
       }
 
-      const sale = await createSale({
-        items,
-        customerName: customerName || undefined,
-        customerId: selectedCustomerId || undefined,
-        taxRate,
-        discount,
-        paymentMethod: selectedPayment,
-        soldOnBehalfOf,
-        soldOnBehalfName,
-        commissionAmount,
-      });
+      if (!isOnline) {
+        // Queue sale offline
+        const offlineReceipt = `OFF-${Date.now()}`;
+        await queueSale({
+          items: items.map(i => ({
+            productId: i.product.id,
+            productName: i.product.name,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            buyingPrice: i.product.buying_price,
+            total: i.total,
+            profit: i.profit,
+          })),
+          customerName: customerName || undefined,
+          customerId: selectedCustomerId || undefined,
+          taxRate,
+          discount,
+          paymentMethod: selectedPayment,
+          soldOnBehalfOf,
+          soldOnBehalfName,
+          commissionAmount,
+          createdAt: new Date().toISOString(),
+          offlineReceipt,
+        });
 
-      setLastSale(sale);
-      setShowReceipt(true);
-      clearCart();
-      setSellOnBehalf(false);
-      setSelectedBehalfId('');
-      setSelectedCustomerId('');
+        await refreshCount();
+        clearCart();
+        setSellOnBehalf(false);
+        setSelectedBehalfId('');
+        setSelectedCustomerId('');
 
-      toast({
-        title: 'Sale Complete',
-        description: `Receipt: ${sale.receipt_number}`,
-      });
+        toast({
+          title: 'Sale Saved Offline',
+          description: `Will sync when back online (${offlineReceipt})`,
+        });
+      } else {
+        const sale = await createSale({
+          items,
+          customerName: customerName || undefined,
+          customerId: selectedCustomerId || undefined,
+          taxRate,
+          discount,
+          paymentMethod: selectedPayment,
+          soldOnBehalfOf,
+          soldOnBehalfName,
+          commissionAmount,
+        });
+
+        setLastSale(sale);
+        setShowReceipt(true);
+        clearCart();
+        setSellOnBehalf(false);
+        setSelectedBehalfId('');
+        setSelectedCustomerId('');
+
+        toast({
+          title: 'Sale Complete',
+          description: `Receipt: ${sale.receipt_number}`,
+        });
+      }
     } catch (error) {
       toast({
         title: 'Checkout Failed',
