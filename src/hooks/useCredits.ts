@@ -78,13 +78,21 @@ export function useCredits() {
     // Use freshCredit for subsequent operations
     const credit = freshCredit;
 
+    // Log individual payment for revenue attribution
+    await supabase.from('credit_payments').insert({
+      credit_id: creditId,
+      amount: paymentAmount,
+      payment_method: paymentMethod,
+      cashier_id: user.id,
+    });
+
     // Update the associated sale status and payment method when fully paid
     if (isPaid) {
       await supabase
         .from('sales')
         .update({ 
           status: 'completed',
-          payment_method: `credit_${paymentMethod}` // e.g., "credit_cash" or "credit_mpesa"
+          payment_method: `credit_${paymentMethod}`
         })
         .eq('id', credit.sale_id);
     }

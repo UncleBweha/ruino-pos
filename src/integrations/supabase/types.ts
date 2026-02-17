@@ -106,6 +106,41 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_payments: {
+        Row: {
+          amount: number
+          cashier_id: string
+          created_at: string
+          credit_id: string
+          id: string
+          payment_method: string
+        }
+        Insert: {
+          amount: number
+          cashier_id: string
+          created_at?: string
+          credit_id: string
+          id?: string
+          payment_method?: string
+        }
+        Update: {
+          amount?: number
+          cashier_id?: string
+          created_at?: string
+          credit_id?: string
+          id?: string
+          payment_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_payments_credit_id_fkey"
+            columns: ["credit_id"]
+            isOneToOne: false
+            referencedRelation: "credits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credits: {
         Row: {
           amount_paid: number
