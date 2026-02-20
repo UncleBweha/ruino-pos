@@ -16,6 +16,7 @@ export function useCustomers() {
         .order('name');
 
       if (error) throw error;
+      setError(null);
       setCustomers((data || []) as Customer[]);
       cacheCustomers(data || []).catch(console.error);
     } catch (err) {
@@ -30,7 +31,12 @@ export function useCustomers() {
       } catch (cacheErr) {
         console.error('Cache access failed:', cacheErr);
       }
-      setError(err instanceof Error ? err.message : 'Failed to fetch customers');
+
+      if (!navigator.onLine) {
+        setError('Working Offline');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch customers');
+      }
     } finally {
       setLoading(false);
     }

@@ -82,7 +82,12 @@ export function useProducts() {
       } catch (cacheErr) {
         console.error('Cache access failed:', cacheErr);
       }
-      setError(err instanceof Error ? err.message : 'Failed to fetch products');
+
+      if (!navigator.onLine) {
+        setError('Working Offline');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch products');
+      }
     } finally {
       setLoading(false);
     }

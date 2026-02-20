@@ -83,7 +83,12 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
       } catch (cacheErr) {
         console.error('Cache access failed:', cacheErr);
       }
-      setError(err instanceof Error ? err.message : 'Failed to fetch sales');
+
+      if (!navigator.onLine) {
+        setError('Working Offline');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch sales');
+      }
     } finally {
       setLoading(false);
     }

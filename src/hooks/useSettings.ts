@@ -39,6 +39,7 @@ export function useSettings() {
       if (data) {
         setReceiptSettings(data as ReceiptSettings);
         cacheSettings(data).catch(console.error);
+        setError(null);
       }
     } catch (err) {
       console.error('Failed to fetch settings, checking cache...', err);
@@ -52,7 +53,12 @@ export function useSettings() {
       } catch (cacheErr) {
         console.error('Cache access failed:', cacheErr);
       }
-      setError(err instanceof Error ? err.message : 'Failed to fetch settings');
+
+      if (!navigator.onLine) {
+        setError('Working Offline - Using cached settings');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch settings');
+      }
     } finally {
       setLoading(false);
     }
