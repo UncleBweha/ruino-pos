@@ -131,6 +131,8 @@ export interface PendingSale {
   soldOnBehalfName?: string | null;
   commissionAmount?: number;
   createdAt: string;
+  cashierId: string;
+  cashierName?: string;
   // Offline receipt number (temporary)
   offlineReceipt: string;
 }

@@ -40,7 +40,7 @@ export function useOfflineSync() {
         .from('sales')
         .insert({
           receipt_number: receiptNumber,
-          cashier_id: user.id,
+          cashier_id: sale.cashierId || user.id,
           customer_name: sale.customerName || null,
           customer_id: sale.customerId || null,
           subtotal,
@@ -81,7 +81,7 @@ export function useOfflineSync() {
         ops.push(supabase.rpc('update_product_stock', { p_product_id: item.productId, p_quantity_change: -item.quantity }).then());
       }
       if (sale.paymentMethod === 'cash') {
-        ops.push(supabase.from('cash_box').insert({ sale_id: saleData.id, amount: total, transaction_type: 'sale', cashier_id: user.id }).select().then());
+        ops.push(supabase.from('cash_box').insert({ sale_id: saleData.id, amount: total, transaction_type: 'sale', cashier_id: sale.cashierId || user.id }).select().then());
       }
       if (sale.paymentMethod === 'credit' && sale.customerName) {
         ops.push(supabase.from('credits').insert({ sale_id: saleData.id, customer_name: sale.customerName, total_owed: total, amount_paid: 0, balance: total, status: 'pending' }).select().then());

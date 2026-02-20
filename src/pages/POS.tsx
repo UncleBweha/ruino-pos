@@ -190,7 +190,35 @@ export default function POSPage() {
           commissionAmount,
           createdAt: new Date().toISOString(),
           offlineReceipt,
+          cashierId: profile?.user_id || '',
+          cashierName: profile?.full_name || 'Unknown',
         });
+
+        // Trigger receipt dialog for offline sale
+        const tempSale: any = {
+          id: offlineReceipt,
+          receipt_number: offlineReceipt,
+          total,
+          subtotal,
+          tax_rate: taxRate,
+          tax_amount: taxAmount,
+          discount,
+          payment_method: selectedPayment,
+          customer_name: customerName || null,
+          created_at: new Date().toISOString(),
+          sold_on_behalf_name: soldOnBehalfName,
+          cashier: { full_name: profile?.full_name || 'Unknown' },
+          sale_items: items.map(i => ({
+            id: Math.random().toString(),
+            product_name: i.product.name,
+            quantity: i.quantity,
+            unit_price: i.unitPrice,
+            total: i.total
+          }))
+        };
+
+        setLastSale(tempSale as Sale);
+        setShowReceipt(true);
 
         await refreshCount();
         clearCart();
@@ -371,8 +399,8 @@ export default function POSPage() {
                   <SelectItem key={casual.id} value={casual.id}>
                     {casual.full_name}
                     <span className="text-xs text-muted-foreground ml-2">
-                      ({casual.commission_type === 'percentage' 
-                        ? `${casual.commission_rate}%` 
+                      ({casual.commission_type === 'percentage'
+                        ? `${casual.commission_rate}%`
                         : `${formatCurrency(casual.commission_rate)}/item`})
                     </span>
                   </SelectItem>
@@ -410,7 +438,7 @@ export default function POSPage() {
             items.map((item) => {
               const isEditing = editingPriceId === item.product.id;
               const isPriceModified = item.unitPrice !== item.product.selling_price;
-              
+
               return (
                 <div key={item.product.id} className="glass-item flex items-center gap-3 lg:gap-2 lg:p-2.5 border-l-4 border-l-transparent hover:border-l-accent">
                   <div className="flex-1 min-w-0">
@@ -443,7 +471,7 @@ export default function POSPage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 lg:mt-0.5">
-                        <span 
+                        <span
                           className={cn(
                             "text-base lg:text-sm",
                             isPriceModified && 'text-warning font-medium'
