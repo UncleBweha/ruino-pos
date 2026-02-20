@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Sale, CartItem } from '@/types/database';
+import { cacheSales, getCachedSales } from '@/lib/offlineDb';
 
 interface CreateSaleParams {
   items: CartItem[];
@@ -52,7 +53,7 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
       if (salesError) throw salesError;
 
       const cashierIds = [...new Set(salesData?.map(s => s.cashier_id) || [])];
-      
+
       let profilesMap = new Map();
       if (cashierIds.length > 0) {
         const { data: profilesData } = await supabase
@@ -68,7 +69,20 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
       })) || [];
 
       setSales(salesWithCashier as Sale[]);
+      // Cache sales for offline use
+      cacheSales(salesWithCashier).catch(console.error);
     } catch (err) {
+      console.error('Failed to fetch sales, checking cache...', err);
+      try {
+        const cached = await getCachedSales();
+        if (cached && cached.length > 0) {
+          setSales(cached as Sale[]);
+          setError(null);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch sales');
     } finally {
       setLoading(false);
@@ -76,7 +90,22 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
   }, [user, filterDate, searchQuery]);
 
   useEffect(() => {
-    fetchSales();
+    async function init() {
+      // 1. Load from cache immediately
+      try {
+        const cached = await getCachedSales();
+        if (cached && cached.length > 0) {
+          setSales(cached as Sale[]);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Initial sales cache load error:', err);
+      }
+      // 2. Refresh in background
+      await fetchSales();
+    }
+
+    init();
 
     const channel = supabase
       .channel('sales-changes')
@@ -96,11 +125,11 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
 
   async function generateReceiptNumber(): Promise<string> {
     const { data, error } = await supabase.rpc('generate_receipt_number');
-    
+
     if (error) {
       throw new Error('Failed to generate receipt number: ' + error.message);
     }
-    
+
     return data as string;
   }
 

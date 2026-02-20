@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { cacheProfiles, getCachedProfiles } from '@/lib/offlineDb';
 
 interface UserWithRole {
   user_id: string;
@@ -43,15 +44,23 @@ export function useUsers() {
       }));
 
       setUsers(usersWithRoles);
+      cacheProfiles(usersWithRoles).catch(console.error);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching users, checking cache:', error);
+      try {
+        const cached = await getCachedProfiles();
+        if (cached && cached.length > 0) {
+          setUsers(cached as UserWithRole[]);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error('Profile cache access failed:', cacheErr);
+      }
       toast({
         title: 'Error',
         description: 'Failed to load users',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -99,7 +108,21 @@ export function useUsers() {
   }
 
   useEffect(() => {
-    fetchUsers();
+    async function init() {
+      // 1. Load from cache immediately
+      try {
+        const cached = await getCachedProfiles();
+        if (cached && cached.length > 0) {
+          setUsers(cached as UserWithRole[]);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Initial profile cache load error:', err);
+      }
+      // 2. Refresh in background
+      await fetchUsers();
+    }
+    init();
   }, []);
 
   return {

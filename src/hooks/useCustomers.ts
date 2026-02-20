@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Customer } from '@/types/database';
+import { cacheCustomers, getCachedCustomers } from '@/lib/offlineDb';
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -16,7 +17,19 @@ export function useCustomers() {
 
       if (error) throw error;
       setCustomers((data || []) as Customer[]);
+      cacheCustomers(data || []).catch(console.error);
     } catch (err) {
+      console.error('Failed to fetch customers, checking cache...', err);
+      try {
+        const cached = await getCachedCustomers();
+        if (cached && cached.length > 0) {
+          setCustomers(cached as Customer[]);
+          setError(null);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch customers');
     } finally {
       setLoading(false);
@@ -24,7 +37,22 @@ export function useCustomers() {
   }, []);
 
   useEffect(() => {
-    fetchCustomers();
+    async function init() {
+      // 1. Load from cache immediately
+      try {
+        const cached = await getCachedCustomers();
+        if (cached && cached.length > 0) {
+          setCustomers(cached as Customer[]);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Initial customers cache load error:', err);
+      }
+
+      // 2. Fetch fresh data in background
+      await fetchCustomers();
+    }
+    init();
   }, [fetchCustomers]);
 
   async function createCustomer(customer: Omit<Customer, 'id' | 'created_at' | 'updated_at'>): Promise<Customer> {

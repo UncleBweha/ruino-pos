@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Credit } from '@/types/database';
+import { cacheCredits, getCachedCredits } from '@/lib/offlineDb';
 
 export function useCredits() {
   const { user } = useAuth();
@@ -18,7 +19,19 @@ export function useCredits() {
 
       if (error) throw error;
       setCredits(data as Credit[]);
+      cacheCredits(data || []).catch(console.error);
     } catch (err) {
+      console.error('Failed to fetch credits, checking cache...', err);
+      try {
+        const cached = await getCachedCredits();
+        if (cached && cached.length > 0) {
+          setCredits(cached as Credit[]);
+          setError(null);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch credits');
     } finally {
       setLoading(false);
@@ -26,7 +39,22 @@ export function useCredits() {
   }, []);
 
   useEffect(() => {
-    fetchCredits();
+    async function init() {
+      // 1. Load from cache immediately
+      try {
+        const cached = await getCachedCredits();
+        if (cached && cached.length > 0) {
+          setCredits(cached as Credit[]);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Initial credits cache load error:', err);
+      }
+      // 2. Refresh in background
+      await fetchCredits();
+    }
+
+    init();
 
     // Set up realtime subscription
     const channel = supabase
@@ -90,7 +118,7 @@ export function useCredits() {
     if (isPaid) {
       await supabase
         .from('sales')
-        .update({ 
+        .update({
           status: 'completed',
           payment_method: `credit_${paymentMethod}`
         })

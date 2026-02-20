@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Supplier, SupplierProduct } from '@/types/database';
+import { cacheSuppliers, getCachedSuppliers } from '@/lib/offlineDb';
 
 export function useSuppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -16,7 +17,19 @@ export function useSuppliers() {
 
       if (error) throw error;
       setSuppliers((data || []) as unknown as Supplier[]);
+      cacheSuppliers(data || []).catch(console.error);
     } catch (err) {
+      console.error('Failed to fetch suppliers, checking cache...', err);
+      try {
+        const cached = await getCachedSuppliers();
+        if (cached && cached.length > 0) {
+          setSuppliers(cached as unknown as Supplier[]);
+          setError(null);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch suppliers');
     } finally {
       setLoading(false);
@@ -24,7 +37,22 @@ export function useSuppliers() {
   }, []);
 
   useEffect(() => {
-    fetchSuppliers();
+    async function init() {
+      // 1. Load from cache immediately
+      try {
+        const cached = await getCachedSuppliers();
+        if (cached && cached.length > 0) {
+          setSuppliers(cached as unknown as Supplier[]);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Initial suppliers cache load error:', err);
+      }
+
+      // 2. Fetch fresh data in background
+      await fetchSuppliers();
+    }
+    init();
   }, [fetchSuppliers]);
 
   async function createSupplier(supplier: { name: string; phone?: string; email?: string; payment_terms?: number; notes?: string }): Promise<Supplier> {

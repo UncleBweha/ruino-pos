@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product, Category } from '@/types/database';
-import { cacheProducts, getCachedProducts } from '@/lib/offlineDb';
+import { cacheProducts, getCachedProducts, cacheCategories, getCachedCategories } from '@/lib/offlineDb';
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -10,10 +10,29 @@ export function useProducts() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchAll() {
+    async function init() {
+      // 1. Load from cache immediately for instant speed
+      try {
+        const [cachedP, cachedC] = await Promise.all([
+          getCachedProducts(),
+          getCachedCategories()
+        ]);
+        if (cachedP.length > 0) {
+          setProducts(cachedP as Product[]);
+          setLoading(false);
+        }
+        if (cachedC.length > 0) {
+          setCategories(cachedC as Category[]);
+        }
+      } catch (err) {
+        console.error('Initial cache load error:', err);
+      }
+
+      // 2. Fetch fresh data in background
       await Promise.all([fetchProducts(), fetchCategories()]);
     }
-    fetchAll();
+
+    init();
 
     // Set up realtime subscription
     const channel = supabase
@@ -52,18 +71,16 @@ export function useProducts() {
       // Cache products in IndexedDB for offline use
       cacheProducts(data).catch(console.error);
     } catch (err) {
-      // If offline, load from IndexedDB cache
-      if (!navigator.onLine) {
-        try {
-          const cached = await getCachedProducts();
-          if (cached.length > 0) {
-            setProducts(cached as Product[]);
-            setError(null);
-            return;
-          }
-        } catch {
-          // IndexedDB also failed
+      console.error('Failed to fetch products, checking cache...', err);
+      try {
+        const cached = await getCachedProducts();
+        if (cached && cached.length > 0) {
+          setProducts(cached as Product[]);
+          setError(null);
+          return;
         }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
       }
       setError(err instanceof Error ? err.message : 'Failed to fetch products');
     } finally {
@@ -80,8 +97,17 @@ export function useProducts() {
 
       if (error) throw error;
       setCategories(data as Category[]);
+      cacheCategories(data).catch(console.error);
     } catch (err) {
-      console.error('Failed to fetch categories:', err);
+      console.error('Failed to fetch categories, checking cache...', err);
+      try {
+        const cached = await getCachedCategories();
+        if (cached && cached.length > 0) {
+          setCategories(cached as Category[]);
+        }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
+      }
     }
   }
 

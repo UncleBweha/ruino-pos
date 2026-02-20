@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Invoice, InvoiceItem } from '@/types/database';
+import { cacheInvoices, getCachedInvoices } from '@/lib/offlineDb';
 
 interface CreateInvoiceParams {
   type: 'invoice' | 'quotation';
@@ -32,7 +33,19 @@ export function useInvoices() {
 
       if (error) throw error;
       setInvoices((data || []) as unknown as Invoice[]);
+      cacheInvoices(data || []).catch(console.error);
     } catch (err) {
+      console.error('Failed to fetch invoices, checking cache...', err);
+      try {
+        const cached = await getCachedInvoices();
+        if (cached && cached.length > 0) {
+          setInvoices(cached as unknown as Invoice[]);
+          setError(null);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch invoices');
     } finally {
       setLoading(false);
@@ -40,7 +53,22 @@ export function useInvoices() {
   }, []);
 
   useEffect(() => {
-    fetchInvoices();
+    async function init() {
+      // 1. Load from cache immediately
+      try {
+        const cached = await getCachedInvoices();
+        if (cached && cached.length > 0) {
+          setInvoices(cached as unknown as Invoice[]);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Initial invoices cache load error:', err);
+      }
+
+      // 2. Refresh in background
+      await fetchInvoices();
+    }
+    init();
   }, [fetchInvoices]);
 
   async function generateInvoiceNumber(type: string): Promise<string> {

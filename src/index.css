@@ -2,10 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ruinu General Merchants POS - Bento Box Design System
-   Warm cream background, Mustard & Charcoal accents, Glassmorphism cards
-   All colors in HSL format
-*/
+/* 
+ * Ruinu General Merchants POS 
+ * Custom Bento Box Design System
+ * Primary: Deep Charcoal | Accent: Mustard Yellow | Base: Warm Cream
+ */
 
 @layer base {
   :root {
