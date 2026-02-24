@@ -21,6 +21,7 @@ interface MonthlyReportData {
   totalTransactions: number;
   totalItemsSold: number;
   avgTransactionValue: number;
+  paymentBreakdown: Record<string, { sales: number; count: number }>;
   cashSales: number;
   mpesaSales: number;
   creditSales: number;
