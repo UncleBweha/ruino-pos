@@ -59,7 +59,7 @@ export interface Sale {
   discount: number;
   total: number;
   profit: number;
-  payment_method: 'cash' | 'mpesa' | 'credit';
+  payment_method: 'cash' | 'mpesa' | 'till' | 'cheque' | 'credit';
   status: 'completed' | 'voided' | 'credit';
   voided_at: string | null;
   voided_by: string | null;
