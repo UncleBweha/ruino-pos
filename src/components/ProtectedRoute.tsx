@@ -22,7 +22,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  if (!user) {
+  if (!user || !role) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

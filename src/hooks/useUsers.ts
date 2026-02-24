@@ -35,13 +35,15 @@ export function useUsers() {
 
       const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
 
-      const usersWithRoles: UserWithRole[] = (profiles || []).map(profile => ({
-        user_id: profile.user_id,
-        full_name: profile.full_name,
-        email: profile.email,
-        role: roleMap.get(profile.user_id) as 'admin' | 'cashier' | null,
-        created_at: profile.created_at,
-      }));
+      const usersWithRoles: UserWithRole[] = (profiles || [])
+        .map(profile => ({
+          user_id: profile.user_id,
+          full_name: profile.full_name,
+          email: profile.email,
+          role: roleMap.get(profile.user_id) as 'admin' | 'cashier' | null,
+          created_at: profile.created_at,
+        }))
+        .filter(u => u.role !== null); // Only active staff have roles
 
       setUsers(usersWithRoles);
       cacheProfiles(usersWithRoles).catch(console.error);

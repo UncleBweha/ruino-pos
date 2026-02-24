@@ -74,18 +74,39 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Delete the user using admin API
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+    // Instead of deleting the user, we deactivate them by removing their role
+    // and updating their profile, while preserving the auth user for audit trail (sales records)
 
-    if (deleteError) {
+    // 1. Remove user roles
+    const { error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId)
+
+    if (roleError) {
       return new Response(
-        JSON.stringify({ error: deleteError.message }),
+        JSON.stringify({ error: `Failed to remove roles: ${roleError.message}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
 
+    // 2. Update profile name to indicate deactivation (optional but helpful for audit)
+    // First get current profile
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', userId)
+      .single()
+
+    if (profile && !profile.full_name.includes('[DEACTIVATED]')) {
+      await supabaseAdmin
+        .from('profiles')
+        .update({ full_name: `${profile.full_name} [DEACTIVATED]` })
+        .eq('user_id', userId)
+    }
+
     return new Response(
-      JSON.stringify({ success: true, message: 'User deleted successfully' }),
+      JSON.stringify({ success: true, message: 'User deactivated successfully' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
