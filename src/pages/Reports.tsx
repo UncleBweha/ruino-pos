@@ -22,8 +22,9 @@ export default function ReportsPage() {
   const currentHour = new Date().getHours();
   const isAfterClosing = currentHour >= 19; // 7 PM
 
-  const emptyReport = {
+  const emptyReport: DailyReportData = {
     totalSales: 0, totalProfit: 0, totalTransactions: 0, avgTransactionValue: 0,
+    paymentBreakdown: {},
     cashSales: 0, mpesaSales: 0, creditSales: 0, cashCount: 0, mpesaCount: 0, creditCount: 0,
     topProducts: [], bestCashiers: [], hourlySales: [],
     voidedCount: 0, voidedAmount: 0,
