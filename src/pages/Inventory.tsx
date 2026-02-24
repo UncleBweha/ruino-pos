@@ -675,6 +675,13 @@ export default function InventoryPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <PriceListDialog
+        open={showPriceList}
+        onOpenChange={setShowPriceList}
+        products={products}
+        categories={categories}
+      />
     </AppLayout>
   );
 }
