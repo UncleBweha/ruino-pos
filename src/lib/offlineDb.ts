@@ -51,7 +51,7 @@ async function cacheEntity(storeName: string, data: any[] | any): Promise<void> 
   store.clear();
   const items = Array.isArray(data) ? data : [data];
   for (const item of items) {
-    if (item && (item.id || storeName === STORES.settings)) {
+    if (item && (item.id || item.user_id || storeName === STORES.settings)) {
       // settings might not have a stable ID or might use a dummy id
       store.put(item);
     }

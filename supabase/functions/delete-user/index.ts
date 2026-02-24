@@ -22,6 +22,8 @@ Deno.serve(async (req) => {
       }
     })
 
+    console.log('Request received:', req.method, req.url)
+
     // Get the authorization header to verify the requester is an admin
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
@@ -57,9 +59,12 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { userId } = await req.json()
+    const body = await req.json()
+    const { userId } = body
+    console.log('Target userId:', userId)
 
     if (!userId) {
+      console.error('UserId is missing in request body')
       return new Response(
         JSON.stringify({ error: 'User ID is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -92,24 +97,37 @@ Deno.serve(async (req) => {
 
     // 2. Update profile name to indicate deactivation (optional but helpful for audit)
     // First get current profile
-    const { data: profile } = await supabaseAdmin
+    console.log('Fetching profile for user_id:', userId)
+    const { data: profile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('full_name')
       .eq('user_id', userId)
       .single()
 
+    if (profileFetchError) {
+      console.error('Error fetching profile:', profileFetchError)
+    }
+
     if (profile && !profile.full_name.includes('[DEACTIVATED]')) {
-      await supabaseAdmin
+      console.log('Deactivating profile for:', profile.full_name)
+      const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({ full_name: `${profile.full_name} [DEACTIVATED]` })
         .eq('user_id', userId)
+
+      if (updateError) {
+        console.error('Error updating profile:', updateError)
+      }
     }
+
+    console.log('User deactivated successfully')
 
     return new Response(
       JSON.stringify({ success: true, message: 'User deactivated successfully' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
+    console.error('Unexpected error in delete-user:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return new Response(
       JSON.stringify({ error: errorMessage }),

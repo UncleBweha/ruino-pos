@@ -36,12 +36,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useUsers, type UserWithRole } from '@/hooks/useUsers';
 import { CasualManagement } from '@/components/settings/CasualManagement';
 import type { Profile } from '@/types/database';
-
-interface UserWithRole extends Profile {
-  role?: 'admin' | 'cashier';
-}
 
 export default function SettingsPage() {
   const { receiptSettings, loading, updateReceiptSettings } = useSettings();
@@ -66,9 +63,9 @@ export default function SettingsPage() {
   const [receiptSaving, setReceiptSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
 
-  // Cashier management
-  const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [usersLoading, setUsersLoading] = useState(true);
+  // Use the hook for user management
+  const { users, loading: usersLoading, refresh: fetchUsers, deleteUser } = useUsers();
+
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
     email: '',
@@ -95,45 +92,6 @@ export default function SettingsPage() {
       });
     }
   }, [receiptSettings]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      fetchUsers();
-    }
-  }, [isAdmin]);
-
-  async function fetchUsers() {
-    setUsersLoading(true);
-    try {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const usersWithRoles: UserWithRole[] = await Promise.all(
-        (profiles || []).map(async (profile) => {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', profile.user_id)
-            .maybeSingle();
-
-          return {
-            ...profile,
-            role: roleData?.role as 'admin' | 'cashier' | undefined,
-          };
-        })
-      );
-
-      setUsers(usersWithRoles);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setUsersLoading(false);
-    }
-  }
 
   async function handleSaveCompany(e: React.FormEvent) {
     e.preventDefault();
@@ -225,14 +183,13 @@ export default function SettingsPage() {
   }
 
   async function handleDeleteUser(userId: string) {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to deactivate this user? This will revoke their access but preserve their records.')) return;
     try {
-      const { error } = await supabase.functions.invoke('delete-user', { body: { userId } });
-      if (error) throw error;
-      toast({ title: 'User Deleted', description: 'The user has been removed from the system' });
-      fetchUsers();
+      await deleteUser(userId);
+      // fetchUsers is called inside the hook after deletion
     } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to delete user', variant: 'destructive' });
+      // Error is already handled by toast in the hook, but we can add more if needed
+      console.error('Deactivation failed:', error);
     }
   }
 
@@ -466,10 +423,10 @@ export default function SettingsPage() {
                   ) : (
                     <div className="space-y-3">
                       {users.map((u) => (
-                        <div key={u.id} className="glass-item flex items-center justify-between">
+                        <div key={u.user_id} className="glass-item flex items-center justify-between">
                           <div>
                             <p className="font-medium">{u.full_name}</p>
-                            
+
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-medium capitalize px-3 py-1 rounded-full bg-primary/10 text-primary">

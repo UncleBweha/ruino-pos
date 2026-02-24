@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cacheProfiles, getCachedProfiles } from '@/lib/offlineDb';
 
-interface UserWithRole {
+export interface UserWithRole {
+  id: string;
   user_id: string;
   full_name: string;
   email: string | null;
@@ -22,7 +23,7 @@ export function useUsers() {
     try {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, email, created_at')
+        .select('id, user_id, full_name, email, created_at')
         .order('created_at', { ascending: true });
 
       if (profilesError) throw profilesError;
@@ -37,6 +38,7 @@ export function useUsers() {
 
       const usersWithRoles: UserWithRole[] = (profiles || [])
         .map(profile => ({
+          id: profile.id,
           user_id: profile.user_id,
           full_name: profile.full_name,
           email: profile.email,
@@ -60,39 +62,28 @@ export function useUsers() {
       }
       toast({
         title: 'Error',
-        description: 'Failed to load users',
+        description: error instanceof Error ? error.message : 'Failed to load users',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   }
 
   async function deleteUser(userId: string) {
     setDeleting(userId);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
+      const { data, error: functionError } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete user');
+      if (functionError) {
+        throw new Error(functionError.message || 'Failed to delete user');
       }
 
       toast({
-        title: 'User Deleted',
-        description: 'The user has been removed successfully',
+        title: 'User Deactivated',
+        description: 'The user has been deactivated successfully',
       });
 
       // Refresh the list
