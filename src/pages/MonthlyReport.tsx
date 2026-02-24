@@ -110,9 +110,18 @@ export default function MonthlyReportPage() {
       const totalSales = completed.reduce((s, r) => s + Number(r.total), 0);
       const totalProfit = completed.reduce((s, r) => s + Number(r.profit), 0);
 
-      const cashSales = completed.filter(s => s.payment_method === 'cash').reduce((s, r) => s + Number(r.total), 0);
-      const mpesaSales = completed.filter(s => s.payment_method === 'mpesa').reduce((s, r) => s + Number(r.total), 0);
-      const creditSalesAmt = completed.filter(s => s.payment_method === 'credit').reduce((s, r) => s + Number(r.total), 0);
+      // Dynamic payment breakdown
+      const paymentBreakdown: Record<string, { sales: number; count: number }> = {};
+      completed.forEach(s => {
+        const method = s.payment_method;
+        if (!paymentBreakdown[method]) paymentBreakdown[method] = { sales: 0, count: 0 };
+        paymentBreakdown[method].sales += Number(s.total);
+        paymentBreakdown[method].count += 1;
+      });
+
+      const cashSales = paymentBreakdown['cash']?.sales || 0;
+      const mpesaSales = paymentBreakdown['mpesa']?.sales || 0;
+      const creditSalesAmt = paymentBreakdown['credit']?.sales || 0;
 
       const creditGiven = (creditsGiven || []).reduce((s, c) => s + Number(c.total_owed), 0);
       const creditPaid = (creditsPaid || []).reduce((s, c) => s + Number(c.total_owed), 0);
