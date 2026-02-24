@@ -422,7 +422,7 @@ export default function SettingsPage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {users.map((u) => (
+                      {users.filter(u => u.role !== null && !u.full_name.includes('[DEACTIVATED]')).map((u) => (
                         <div key={u.user_id} className="glass-item flex items-center justify-between">
                           <div>
                             <p className="font-medium">{u.full_name}</p>
