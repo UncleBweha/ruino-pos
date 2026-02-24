@@ -451,21 +451,16 @@ export default function MonthlyReportPage() {
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4" /> Payment Breakdown</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground">Cash</p>
-                <p className="font-bold text-lg">{formatCurrency(r.cashSales)}</p>
-                <p className="text-xs text-muted-foreground">{r.cashCount} transactions</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground">M-Pesa</p>
-                <p className="font-bold text-lg text-blue-600">{formatCurrency(r.mpesaSales)}</p>
-                <p className="text-xs text-muted-foreground">{r.mpesaCount} transactions</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground">Credit</p>
-                <p className="font-bold text-lg text-destructive">{formatCurrency(r.creditSales)}</p>
-                <p className="text-xs text-muted-foreground">{r.creditCount} transactions</p>
-              </div>
+              {Object.entries(r.paymentBreakdown || {}).map(([method, info]) => {
+                const label = PAYMENT_METHODS.find(m => m.id === method)?.label || method.charAt(0).toUpperCase() + method.slice(1);
+                return (
+                  <div key={method} className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="font-bold text-lg">{formatCurrency(info.sales)}</p>
+                    <p className="text-xs text-muted-foreground">{info.count} transactions</p>
+                  </div>
+                );
+              })}
               <div className="p-3 rounded-lg bg-muted/50">
                 <p className="text-xs text-muted-foreground">Avg Transaction</p>
                 <p className="font-bold text-lg">{formatCurrency(r.avgTransactionValue)}</p>
