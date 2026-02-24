@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { useReports } from '@/hooks/useReports';
+import { useReports, type DailyReportData } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
 import { Calendar, RefreshCw, Printer, Clock, FileText, CalendarDays } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
