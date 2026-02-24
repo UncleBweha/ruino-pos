@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { generatePDFFromHTML, printHTML } from '@/lib/pdfUtils';
 import {
@@ -303,9 +303,10 @@ export default function MonthlyReportPage() {
 
       <h2>💳 Payment Breakdown</h2>
       <div class="grid">
-        <div class="stat"><div class="stat-label">Cash</div><div class="stat-value">${formatCurrency(r.cashSales)}</div><div style="font-size:11px;color:#666">${r.cashCount} transactions</div></div>
-        <div class="stat"><div class="stat-label">M-Pesa</div><div class="stat-value blue">${formatCurrency(r.mpesaSales)}</div><div style="font-size:11px;color:#666">${r.mpesaCount} transactions</div></div>
-        <div class="stat"><div class="stat-label">Credit</div><div class="stat-value red">${formatCurrency(r.creditSales)}</div><div style="font-size:11px;color:#666">${r.creditCount} transactions</div></div>
+        ${Object.entries(r.paymentBreakdown || {}).map(([method, info]) => {
+          const label = PAYMENT_METHODS.find(m => m.id === method)?.label || method.charAt(0).toUpperCase() + method.slice(1);
+          return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${formatCurrency(info.sales)}</div><div style="font-size:11px;color:#666">${info.count} transactions</div></div>`;
+        }).join('')}
         <div class="stat"><div class="stat-label">Avg Transaction</div><div class="stat-value">${formatCurrency(r.avgTransactionValue)}</div></div>
       </div>
 
