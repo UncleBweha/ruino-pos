@@ -19,7 +19,9 @@ export function formatNumber(num: number): string {
 // Payment methods
 export const PAYMENT_METHODS = [
   { id: 'cash', label: 'Cash', icon: 'Banknote' },
-  { id: 'mpesa', label: 'M-Pesa', icon: 'Smartphone' },
+  { id: 'mpesa', label: 'Mpesa Paybill', icon: 'Smartphone' },
+  { id: 'till', label: 'Till', icon: 'Smartphone' },
+  { id: 'cheque', label: 'Cheque', icon: 'FileText' },
   { id: 'credit', label: 'Credit', icon: 'CreditCard' },
 ] as const;
 

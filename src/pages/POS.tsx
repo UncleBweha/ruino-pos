@@ -11,7 +11,7 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { queueSale } from '@/lib/offlineDb';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,7 +62,7 @@ export default function POSPage() {
   const { refreshCount } = useOfflineSync();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState<'cash' | 'mpesa' | 'credit'>('cash');
+  const [selectedPayment, setSelectedPayment] = useState<'cash' | 'mpesa' | 'till' | 'cheque' | 'credit'>('cash');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
@@ -78,9 +78,11 @@ export default function POSPage() {
   // On mobile, only show products when searching
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
 
-  const paymentIcons = {
+  const paymentIcons: Record<string, any> = {
     cash: Banknote,
     mpesa: Smartphone,
+    till: Smartphone,
+    cheque: FileText,
     credit: CreditCard,
   };
 
@@ -643,21 +645,21 @@ export default function POSPage() {
           </div>
 
           {/* Payment Method */}
-          <div className="grid grid-cols-3 gap-2 lg:gap-1.5">
+          <div className="grid grid-cols-5 gap-1.5">
             {PAYMENT_METHODS.map((method) => {
-              const Icon = paymentIcons[method.id];
+              const Icon = paymentIcons[method.id] || Banknote;
               return (
                 <Button
                   key={method.id}
                   variant={selectedPayment === method.id ? 'default' : 'outline'}
                   className={cn(
-                    'flex flex-col h-16 lg:h-12 gap-1',
+                    'flex flex-col h-14 lg:h-12 gap-0.5 px-1',
                     selectedPayment === method.id && 'ring-2 ring-primary ring-offset-2'
                   )}
                   onClick={() => setSelectedPayment(method.id)}
                 >
-                  <Icon className="w-5 h-5 lg:w-4 lg:h-4" />
-                  <span className="text-xs">{method.label}</span>
+                  <Icon className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                  <span className="text-[10px] lg:text-[9px] leading-tight">{method.label}</span>
                 </Button>
               );
             })}

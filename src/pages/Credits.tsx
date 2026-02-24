@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
 import { formatCurrency, CREDIT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
+import type { PaymentMethod } from '@/lib/constants';
 import {
   CreditCard,
   CheckCircle,
@@ -50,7 +51,7 @@ export default function CreditsPage() {
   const [detailCredit, setDetailCredit] = useState<Credit | null>(null);
   const [actionType, setActionType] = useState<'pay' | 'return' | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mpesa'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mpesa' | 'till' | 'cheque'>('cash');
   const [actionLoading, setActionLoading] = useState(false);
 
   function openPayDialog(credit: Credit) {
@@ -84,7 +85,7 @@ export default function CreditsPage() {
         await markAsPaid(selectedCredit.id, amount, paymentMethod);
         toast({
           title: 'Payment Recorded',
-          description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name} via ${paymentMethod === 'cash' ? 'Cash' : 'M-Pesa'}`,
+          description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name} via ${PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label || paymentMethod}`,
         });
       } else if (actionType === 'return') {
         await markAsReturned(selectedCredit.id);
@@ -325,23 +326,17 @@ export default function CreditsPage() {
                 <label className="text-sm font-medium mb-2 block">Payment Method</label>
                 <RadioGroup
                   value={paymentMethod}
-                  onValueChange={(v) => setPaymentMethod(v as 'cash' | 'mpesa')}
-                  className="flex gap-4"
+                  onValueChange={(v) => setPaymentMethod(v as 'cash' | 'mpesa' | 'till' | 'cheque')}
+                  className="flex flex-wrap gap-4"
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cash" id="pay-cash" />
-                    <Label htmlFor="pay-cash" className="flex items-center gap-2 cursor-pointer">
-                      <Banknote className="w-4 h-4" />
-                      Cash
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="mpesa" id="pay-mpesa" />
-                    <Label htmlFor="pay-mpesa" className="flex items-center gap-2 cursor-pointer">
-                      <Smartphone className="w-4 h-4" />
-                      M-Pesa
-                    </Label>
-                  </div>
+                  {PAYMENT_METHODS.filter(m => m.id !== 'credit').map((method) => (
+                    <div key={method.id} className="flex items-center space-x-2">
+                      <RadioGroupItem value={method.id} id={`pay-${method.id}`} />
+                      <Label htmlFor={`pay-${method.id}`} className="flex items-center gap-2 cursor-pointer">
+                        {method.label}
+                      </Label>
+                    </div>
+                  ))}
                 </RadioGroup>
               </div>
             </div>

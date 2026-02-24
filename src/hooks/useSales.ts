@@ -10,7 +10,7 @@ interface CreateSaleParams {
   customerId?: string;
   taxRate: number;
   discount: number;
-  paymentMethod: 'cash' | 'mpesa' | 'credit';
+  paymentMethod: 'cash' | 'mpesa' | 'till' | 'cheque' | 'credit';
   soldOnBehalfOf?: string | null;
   soldOnBehalfName?: string | null;
   commissionAmount?: number;
@@ -209,12 +209,14 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
       );
     }
 
-    if (paymentMethod === 'cash') {
+    // Record in cash box for all non-credit payments
+    if (paymentMethod !== 'credit') {
       parallelOps.push(
         supabase.from('cash_box').insert({
           sale_id: saleId,
           amount: total,
           transaction_type: 'sale',
+          description: `${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)} sale`,
           cashier_id: user.id,
         }).select().then()
       );

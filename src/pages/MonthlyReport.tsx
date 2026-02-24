@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { generatePDFFromHTML, printHTML } from '@/lib/pdfUtils';
 import {
@@ -21,6 +21,7 @@ interface MonthlyReportData {
   totalTransactions: number;
   totalItemsSold: number;
   avgTransactionValue: number;
+  paymentBreakdown: Record<string, { sales: number; count: number }>;
   cashSales: number;
   mpesaSales: number;
   creditSales: number;
@@ -109,9 +110,18 @@ export default function MonthlyReportPage() {
       const totalSales = completed.reduce((s, r) => s + Number(r.total), 0);
       const totalProfit = completed.reduce((s, r) => s + Number(r.profit), 0);
 
-      const cashSales = completed.filter(s => s.payment_method === 'cash').reduce((s, r) => s + Number(r.total), 0);
-      const mpesaSales = completed.filter(s => s.payment_method === 'mpesa').reduce((s, r) => s + Number(r.total), 0);
-      const creditSalesAmt = completed.filter(s => s.payment_method === 'credit').reduce((s, r) => s + Number(r.total), 0);
+      // Dynamic payment breakdown
+      const paymentBreakdown: Record<string, { sales: number; count: number }> = {};
+      completed.forEach(s => {
+        const method = s.payment_method;
+        if (!paymentBreakdown[method]) paymentBreakdown[method] = { sales: 0, count: 0 };
+        paymentBreakdown[method].sales += Number(s.total);
+        paymentBreakdown[method].count += 1;
+      });
+
+      const cashSales = paymentBreakdown['cash']?.sales || 0;
+      const mpesaSales = paymentBreakdown['mpesa']?.sales || 0;
+      const creditSalesAmt = paymentBreakdown['credit']?.sales || 0;
 
       const creditGiven = (creditsGiven || []).reduce((s, c) => s + Number(c.total_owed), 0);
       const creditPaid = (creditsPaid || []).reduce((s, c) => s + Number(c.total_owed), 0);
@@ -197,10 +207,11 @@ export default function MonthlyReportPage() {
         month,
         totalSales, totalProfit, totalTransactions: completed.length, totalItemsSold,
         avgTransactionValue: completed.length > 0 ? totalSales / completed.length : 0,
+        paymentBreakdown,
         cashSales, mpesaSales, creditSales: creditSalesAmt,
-        cashCount: completed.filter(s => s.payment_method === 'cash').length,
-        mpesaCount: completed.filter(s => s.payment_method === 'mpesa').length,
-        creditCount: completed.filter(s => s.payment_method === 'credit').length,
+        cashCount: paymentBreakdown['cash']?.count || 0,
+        mpesaCount: paymentBreakdown['mpesa']?.count || 0,
+        creditCount: paymentBreakdown['credit']?.count || 0,
         creditGiven, creditGivenCount: (creditsGiven || []).length,
         creditPaid, creditPaidCount: (creditsPaid || []).length,
         pendingCredits,
@@ -292,9 +303,10 @@ export default function MonthlyReportPage() {
 
       <h2>💳 Payment Breakdown</h2>
       <div class="grid">
-        <div class="stat"><div class="stat-label">Cash</div><div class="stat-value">${formatCurrency(r.cashSales)}</div><div style="font-size:11px;color:#666">${r.cashCount} transactions</div></div>
-        <div class="stat"><div class="stat-label">M-Pesa</div><div class="stat-value blue">${formatCurrency(r.mpesaSales)}</div><div style="font-size:11px;color:#666">${r.mpesaCount} transactions</div></div>
-        <div class="stat"><div class="stat-label">Credit</div><div class="stat-value red">${formatCurrency(r.creditSales)}</div><div style="font-size:11px;color:#666">${r.creditCount} transactions</div></div>
+        ${Object.entries(r.paymentBreakdown || {}).map(([method, info]) => {
+          const label = PAYMENT_METHODS.find(m => m.id === method)?.label || method.charAt(0).toUpperCase() + method.slice(1);
+          return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${formatCurrency(info.sales)}</div><div style="font-size:11px;color:#666">${info.count} transactions</div></div>`;
+        }).join('')}
         <div class="stat"><div class="stat-label">Avg Transaction</div><div class="stat-value">${formatCurrency(r.avgTransactionValue)}</div></div>
       </div>
 
@@ -439,21 +451,16 @@ export default function MonthlyReportPage() {
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4" /> Payment Breakdown</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground">Cash</p>
-                <p className="font-bold text-lg">{formatCurrency(r.cashSales)}</p>
-                <p className="text-xs text-muted-foreground">{r.cashCount} transactions</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground">M-Pesa</p>
-                <p className="font-bold text-lg text-blue-600">{formatCurrency(r.mpesaSales)}</p>
-                <p className="text-xs text-muted-foreground">{r.mpesaCount} transactions</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground">Credit</p>
-                <p className="font-bold text-lg text-destructive">{formatCurrency(r.creditSales)}</p>
-                <p className="text-xs text-muted-foreground">{r.creditCount} transactions</p>
-              </div>
+              {Object.entries(r.paymentBreakdown || {}).map(([method, info]) => {
+                const label = PAYMENT_METHODS.find(m => m.id === method)?.label || method.charAt(0).toUpperCase() + method.slice(1);
+                return (
+                  <div key={method} className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="font-bold text-lg">{formatCurrency(info.sales)}</p>
+                    <p className="text-xs text-muted-foreground">{info.count} transactions</p>
+                  </div>
+                );
+              })}
               <div className="p-3 rounded-lg bg-muted/50">
                 <p className="text-xs text-muted-foreground">Avg Transaction</p>
                 <p className="font-bold text-lg">{formatCurrency(r.avgTransactionValue)}</p>

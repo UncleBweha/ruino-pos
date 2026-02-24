@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { DailyReportData } from '@/hooks/useReports';
+import { PAYMENT_METHODS } from '@/lib/constants';
 
 interface Props {
   report: DailyReportData;
@@ -11,17 +12,26 @@ const COLORS = [
   'hsl(var(--primary))',
   'hsl(var(--accent))',
   'hsl(var(--warning))',
+  'hsl(var(--info))',
+  'hsl(var(--muted-foreground))',
 ];
 
 const formatCurrency = (n: number) =>
   `KSh ${n.toLocaleString('en-KE', { minimumFractionDigits: 0 })}`;
 
+const METHOD_LABELS: Record<string, string> = {};
+PAYMENT_METHODS.forEach(m => { METHOD_LABELS[m.id] = m.label; });
+
 export function ReportPaymentBreakdown({ report, loading }: Props) {
-  const data = [
-    { name: 'Cash', value: report.cashSales, count: report.cashCount },
-    { name: 'M-Pesa', value: report.mpesaSales, count: report.mpesaCount },
-    { name: 'Credit', value: report.creditSales, count: report.creditCount },
-  ].filter(d => d.value > 0);
+  const breakdown = report.paymentBreakdown || {};
+
+  const data = Object.entries(breakdown)
+    .map(([method, info]) => ({
+      name: METHOD_LABELS[method] || method.charAt(0).toUpperCase() + method.slice(1),
+      value: info.sales,
+      count: info.count,
+    }))
+    .filter(d => d.value > 0);
 
   if (loading) {
     return (
@@ -74,15 +84,11 @@ export function ReportPaymentBreakdown({ report, loading }: Props) {
         )}
 
         {/* Summary row */}
-        <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t">
-          {[
-            { label: 'Cash', amount: report.cashSales, count: report.cashCount },
-            { label: 'M-Pesa', amount: report.mpesaSales, count: report.mpesaCount },
-            { label: 'Credit', amount: report.creditSales, count: report.creditCount },
-          ].map(item => (
-            <div key={item.label} className="text-center">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className="font-semibold text-sm currency">{formatCurrency(item.amount)}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 pt-4 border-t">
+          {data.map(item => (
+            <div key={item.name} className="text-center">
+              <p className="text-xs text-muted-foreground">{item.name}</p>
+              <p className="font-semibold text-sm currency">{formatCurrency(item.value)}</p>
               <p className="text-xs text-muted-foreground">{item.count} txns</p>
             </div>
           ))}

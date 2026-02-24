@@ -18,6 +18,8 @@ const COLORS = [
   'hsl(var(--accent))',
   'hsl(var(--muted-foreground))',
   'hsl(var(--info))',
+  'hsl(var(--warning))',
+  'hsl(var(--success))',
 ];
 
 export function PaymentMethodChart({ data, loading }: PaymentMethodChartProps) {

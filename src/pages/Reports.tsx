@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { useReports } from '@/hooks/useReports';
+import { useReports, type DailyReportData } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
 import { Calendar, RefreshCw, Printer, Clock, FileText, CalendarDays } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -22,8 +22,9 @@ export default function ReportsPage() {
   const currentHour = new Date().getHours();
   const isAfterClosing = currentHour >= 19; // 7 PM
 
-  const emptyReport = {
+  const emptyReport: DailyReportData = {
     totalSales: 0, totalProfit: 0, totalTransactions: 0, avgTransactionValue: 0,
+    paymentBreakdown: {},
     cashSales: 0, mpesaSales: 0, creditSales: 0, cashCount: 0, mpesaCount: 0, creditCount: 0,
     topProducts: [], bestCashiers: [], hourlySales: [],
     voidedCount: 0, voidedAmount: 0,

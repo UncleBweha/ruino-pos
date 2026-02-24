@@ -78,7 +78,7 @@ export function useCredits() {
     };
   }, [fetchCredits]);
 
-  async function markAsPaid(creditId: string, amountPaid?: number, paymentMethod: 'cash' | 'mpesa' = 'cash'): Promise<void> {
+  async function markAsPaid(creditId: string, amountPaid?: number, paymentMethod: 'cash' | 'mpesa' | 'till' | 'cheque' = 'cash'): Promise<void> {
     if (!user) throw new Error('User not authenticated');
 
     // Fetch the latest credit data from DB to avoid stale state issues
@@ -130,16 +130,14 @@ export function useCredits() {
         .eq('id', credit.sale_id);
     }
 
-    // Add to cash box only for cash payments
-    if (paymentMethod === 'cash') {
-      await supabase.from('cash_box').insert({
-        sale_id: credit.sale_id,
-        amount: paymentAmount,
-        transaction_type: 'credit_payment',
-        description: `Credit payment from ${credit.customer_name}`,
-        cashier_id: user.id,
-      });
-    }
+    // Add to cash box for all payment methods (money received)
+    await supabase.from('cash_box').insert({
+      sale_id: credit.sale_id,
+      amount: paymentAmount,
+      transaction_type: 'credit_payment',
+      description: `Credit payment from ${credit.customer_name} via ${paymentMethod}`,
+      cashier_id: user.id,
+    });
   }
 
   async function markAsReturned(creditId: string): Promise<void> {
