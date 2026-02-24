@@ -126,7 +126,7 @@ export interface PendingSale {
   customerId?: string;
   taxRate: number;
   discount: number;
-  paymentMethod: 'cash' | 'mpesa' | 'credit';
+  paymentMethod: 'cash' | 'mpesa' | 'till' | 'cheque' | 'credit';
   soldOnBehalfOf?: string | null;
   soldOnBehalfName?: string | null;
   commissionAmount?: number;
