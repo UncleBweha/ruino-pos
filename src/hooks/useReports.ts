@@ -8,7 +8,9 @@ export interface DailyReportData {
   totalProfit: number;
   totalTransactions: number;
   avgTransactionValue: number;
-  // Payment breakdown
+  // Payment breakdown - dynamic
+  paymentBreakdown: Record<string, { sales: number; count: number }>;
+  // Legacy fields for backward compat
   cashSales: number;
   mpesaSales: number;
   creditSales: number;
@@ -84,13 +86,21 @@ export function useReports() {
       const totalTransactions = completedSales.length;
       const avgTransactionValue = totalTransactions > 0 ? totalSales / totalTransactions : 0;
 
-      // Payment breakdown
-      const cashSales = completedSales.filter(s => s.payment_method === 'cash').reduce((sum, s) => sum + Number(s.total), 0);
-      const mpesaSales = completedSales.filter(s => s.payment_method === 'mpesa').reduce((sum, s) => sum + Number(s.total), 0);
-      const creditSales = completedSales.filter(s => s.payment_method === 'credit').reduce((sum, s) => sum + Number(s.total), 0);
-      const cashCount = completedSales.filter(s => s.payment_method === 'cash').length;
-      const mpesaCount = completedSales.filter(s => s.payment_method === 'mpesa').length;
-      const creditCount = completedSales.filter(s => s.payment_method === 'credit').length;
+      // Payment breakdown — dynamic
+      const paymentBreakdown: Record<string, { sales: number; count: number }> = {};
+      completedSales.forEach(s => {
+        const method = s.payment_method;
+        if (!paymentBreakdown[method]) paymentBreakdown[method] = { sales: 0, count: 0 };
+        paymentBreakdown[method].sales += Number(s.total);
+        paymentBreakdown[method].count += 1;
+      });
+
+      const cashSales = paymentBreakdown['cash']?.sales || 0;
+      const mpesaSales = paymentBreakdown['mpesa']?.sales || 0;
+      const creditSales = paymentBreakdown['credit']?.sales || 0;
+      const cashCount = paymentBreakdown['cash']?.count || 0;
+      const mpesaCount = paymentBreakdown['mpesa']?.count || 0;
+      const creditCount = paymentBreakdown['credit']?.count || 0;
 
       // Top products
       const productMap = new Map<string, { product_name: string; total_quantity: number; total_revenue: number; total_profit: number }>();
@@ -157,6 +167,7 @@ export function useReports() {
 
       setReport({
         totalSales, totalProfit, totalTransactions, avgTransactionValue,
+        paymentBreakdown,
         cashSales, mpesaSales, creditSales, cashCount, mpesaCount, creditCount,
         topProducts, bestCashiers, hourlySales,
         voidedCount, voidedAmount,
