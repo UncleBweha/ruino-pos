@@ -13,6 +13,7 @@ import {
   X,
   Check,
   ChevronsUpDown,
+  List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { PriceListDialog } from '@/components/inventory/PriceListDialog';
 
 interface ProductFormData {
   sku: string;
@@ -105,6 +107,7 @@ export default function InventoryPage() {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [restockQuantity, setRestockQuantity] = useState(0);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
+  const [showPriceList, setShowPriceList] = useState(false);
 
   async function handleRestock() {
     if (!selectedProductId || restockQuantity <= 0) {
@@ -231,12 +234,18 @@ export default function InventoryPage() {
               {products.length} products • {lowStockProducts.length} low stock
             </p>
           </div>
-          {isAdmin && (
-            <Button onClick={openAddForm}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPriceList(true)}>
+              <List className="w-4 h-4 mr-2" />
+              Price List
             </Button>
-          )}
+            {isAdmin && (
+              <Button onClick={openAddForm}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Low Stock Alert */}
@@ -666,6 +675,13 @@ export default function InventoryPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <PriceListDialog
+        open={showPriceList}
+        onOpenChange={setShowPriceList}
+        products={products}
+        categories={categories}
+      />
     </AppLayout>
   );
 }
