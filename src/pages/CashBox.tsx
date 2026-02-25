@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCashBox } from '@/hooks/useCashBox';
 import { formatCurrency } from '@/lib/constants';
-import { Wallet, Calendar, ArrowUpRight, Loader2, Banknote, Smartphone, CreditCard, FileText } from 'lucide-react';
+import { Wallet, Calendar, ArrowUpRight, Loader2, Banknote, Smartphone, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -17,7 +17,6 @@ const PAYMENT_SECTIONS = [
   { key: 'mpesa', label: 'Mpesa Paybill', icon: Smartphone, colorClass: 'text-blue-500', bgClass: 'bg-blue-500/10' },
   { key: 'till', label: 'Till', icon: Smartphone, colorClass: 'text-violet-500', bgClass: 'bg-violet-500/10' },
   { key: 'cheque', label: 'Cheque', icon: FileText, colorClass: 'text-amber-500', bgClass: 'bg-amber-500/10' },
-  { key: 'credit_payment', label: 'Credit Payments', icon: CreditCard, colorClass: 'text-primary', bgClass: 'bg-primary/10' },
 ] as const;
 
 function getPaymentKey(tx: CashBox): string {
@@ -133,20 +132,10 @@ export default function CashBoxPage() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : displayTransactions.length === 0 ? (
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center text-muted-foreground">
-                <Wallet className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>No cash transactions for this day</p>
-              </div>
-            </CardContent>
-          </Card>
         ) : (
           <div className="space-y-4">
             {PAYMENT_SECTIONS.map((section) => {
               const group = groups[section.key];
-              if (!group || group.transactions.length === 0) return null;
               const Icon = section.icon;
 
               return (
@@ -172,7 +161,9 @@ export default function CashBoxPage() {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <CardContent className="pt-0 space-y-2">
-                        {group.transactions.map((tx) => (
+                        {group.transactions.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-4">No transactions</p>
+                        ) : group.transactions.map((tx) => (
                           <div
                             key={tx.id}
                             className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/40"
