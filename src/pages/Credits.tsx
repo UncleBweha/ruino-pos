@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Banknote,
   Smartphone,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
@@ -43,6 +45,7 @@ export default function CreditsPage() {
     loading,
     markAsPaid,
     markAsReturned,
+    partialReturn,
   } = useCredits();
   const { toast } = useToast();
 
@@ -53,6 +56,7 @@ export default function CreditsPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mpesa' | 'till' | 'cheque'>('cash');
   const [actionLoading, setActionLoading] = useState(false);
+  const [returnItemIds, setReturnItemIds] = useState<string[]>([]);
 
   function openPayDialog(credit: Credit) {
     setSelectedCredit(credit);
@@ -64,12 +68,16 @@ export default function CreditsPage() {
   function openReturnDialog(credit: Credit) {
     setSelectedCredit(credit);
     setActionType('return');
+    // Pre-select all items
+    const allItemIds = credit.sale?.sale_items?.map((i) => i.id) || [];
+    setReturnItemIds(allItemIds);
   }
 
   function closeDialog() {
     setSelectedCredit(null);
     setActionType(null);
     setPaymentAmount('');
+    setReturnItemIds([]);
   }
 
   async function handleAction() {
@@ -88,11 +96,27 @@ export default function CreditsPage() {
           description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name} via ${PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label || paymentMethod}`,
         });
       } else if (actionType === 'return') {
-        await markAsReturned(selectedCredit.id);
-        toast({
-          title: 'Items Returned',
-          description: `Credit for ${selectedCredit.customer_name} has been cancelled`,
-        });
+        if (returnItemIds.length === 0) {
+          throw new Error('Select at least one item to return');
+        }
+        const allItems = selectedCredit.sale?.sale_items || [];
+        const isFullReturn = returnItemIds.length === allItems.length;
+
+        if (isFullReturn) {
+          await markAsReturned(selectedCredit.id);
+          toast({
+            title: 'All Items Returned',
+            description: `Credit for ${selectedCredit.customer_name} has been cancelled`,
+          });
+        } else {
+          await partialReturn(selectedCredit.id, returnItemIds);
+          const returnedItems = allItems.filter((i) => returnItemIds.includes(i.id));
+          const returnedTotal = returnedItems.reduce((sum, i) => sum + i.total, 0);
+          toast({
+            title: 'Items Returned',
+            description: `${returnedItems.length} item(s) worth ${formatCurrency(returnedTotal)} returned. Remaining balance updated.`,
+          });
+        }
       }
       closeDialog();
     } catch (error) {
@@ -345,12 +369,72 @@ export default function CreditsPage() {
           {actionType === 'return' && selectedCredit && (
             <div className="space-y-4">
               <p className="text-muted-foreground">
-                Are you sure the items have been returned by{' '}
-                <strong>{selectedCredit.customer_name}</strong>?
+                Select items to return for{' '}
+                <strong>{selectedCredit.customer_name}</strong>:
               </p>
-              <p className="text-sm text-muted-foreground">
-                This will cancel the credit and return items to inventory.
-              </p>
+
+              {/* Item selection */}
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {(selectedCredit.sale?.sale_items || []).map((item) => {
+                  const isSelected = returnItemIds.includes(item.id);
+                  return (
+                    <label
+                      key={item.id}
+                      className={cn(
+                        'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors',
+                        isSelected ? 'border-destructive/50 bg-destructive/5' : 'border-border hover:bg-muted/50'
+                      )}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          setReturnItemIds((prev) =>
+                            checked
+                              ? [...prev, item.id]
+                              : prev.filter((id) => id !== item.id)
+                          );
+                        }}
+                      />
+                      <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.product_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.quantity} × {formatCurrency(item.unit_price)}
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold currency">{formatCurrency(item.total)}</p>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {/* Return summary */}
+              {(() => {
+                const allItems = selectedCredit.sale?.sale_items || [];
+                const returnItems = allItems.filter((i) => returnItemIds.includes(i.id));
+                const returnTotal = returnItems.reduce((sum, i) => sum + i.total, 0);
+                const keepItems = allItems.filter((i) => !returnItemIds.includes(i.id));
+                const keepTotal = keepItems.reduce((sum, i) => sum + i.total, 0);
+                const isFullReturn = returnItemIds.length === allItems.length;
+
+                return (
+                  <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Returning ({returnItems.length} items)</span>
+                      <span className="font-semibold text-destructive currency">{formatCurrency(returnTotal)}</span>
+                    </div>
+                    {!isFullReturn && keepItems.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Remaining on credit ({keepItems.length} items)</span>
+                        <span className="font-semibold currency">{formatCurrency(keepTotal)}</span>
+                      </div>
+                    )}
+                    {isFullReturn && (
+                      <p className="text-xs text-destructive mt-1">All items returned — credit will be cancelled</p>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
