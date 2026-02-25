@@ -180,6 +180,86 @@ export function useCredits() {
     }
   }
 
+  /**
+   * Partially return selected items from a credit.
+   * - Returned items go back to inventory.
+   * - Credit total_owed and balance are reduced by returned items' value.
+   * - If remaining balance <= 0, the credit is fully resolved.
+   */
+  async function partialReturn(creditId: string, returnItemIds: string[]): Promise<void> {
+    if (!user) throw new Error('User not authenticated');
+    if (returnItemIds.length === 0) throw new Error('No items selected for return');
+
+    // Fetch fresh credit
+    const { data: freshCredit, error: fetchError } = await supabase
+      .from('credits')
+      .select('*, sale:sales(*, sale_items(*))')
+      .eq('id', creditId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+    if (!freshCredit) throw new Error('Credit not found');
+
+    const allItems = freshCredit.sale?.sale_items || [];
+    const returnItems = allItems.filter((i: any) => returnItemIds.includes(i.id));
+    const keepItems = allItems.filter((i: any) => !returnItemIds.includes(i.id));
+
+    if (returnItems.length === 0) throw new Error('No matching items found');
+
+    // If returning ALL items, use the full return flow
+    if (keepItems.length === 0) {
+      await markAsReturned(creditId);
+      return;
+    }
+
+    const returnedTotal = returnItems.reduce((sum: number, i: any) => sum + i.total, 0);
+    const returnedProfit = returnItems.reduce((sum: number, i: any) => sum + i.profit, 0);
+
+    // 1. Restore returned items to inventory
+    for (const item of returnItems) {
+      const { error: stockError } = await supabase.rpc('update_product_stock', {
+        p_product_id: item.product_id,
+        p_quantity_change: item.quantity,
+      });
+      if (stockError) console.error('Stock restore error:', stockError);
+    }
+
+    // 2. Reduce credit amounts
+    const newTotalOwed = freshCredit.total_owed - returnedTotal;
+    const newBalance = Math.max(0, newTotalOwed - freshCredit.amount_paid);
+    const isPaid = newBalance <= 0;
+
+    await supabase
+      .from('credits')
+      .update({
+        total_owed: newTotalOwed,
+        balance: newBalance,
+        status: isPaid ? 'paid' : 'pending',
+        paid_at: isPaid ? new Date().toISOString() : null,
+      })
+      .eq('id', creditId);
+
+    // 3. Adjust the sale totals
+    const newSaleTotal = freshCredit.sale.total - returnedTotal;
+    const newSaleProfit = freshCredit.sale.profit - returnedProfit;
+    const newSubtotal = freshCredit.sale.subtotal - returnedTotal;
+
+    await supabase
+      .from('sales')
+      .update({
+        total: newSaleTotal,
+        subtotal: newSubtotal,
+        profit: newSaleProfit,
+        ...(isPaid ? { status: 'completed' } : {}),
+      })
+      .eq('id', freshCredit.sale_id);
+
+    // 4. Delete the returned sale items
+    for (const item of returnItems) {
+      await supabase.from('sale_items').delete().eq('id', item.id);
+    }
+  }
+
   const pendingCredits = credits.filter((c) => c.status === 'pending');
   const totalPendingAmount = pendingCredits.reduce((sum, c) => sum + c.balance, 0);
 
@@ -191,6 +271,7 @@ export function useCredits() {
     error,
     markAsPaid,
     markAsReturned,
+    partialReturn,
     refresh: fetchCredits,
   };
 }
