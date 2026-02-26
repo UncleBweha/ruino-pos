@@ -14,6 +14,7 @@ import {
   Check,
   ChevronsUpDown,
   List,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +61,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { PriceListDialog } from '@/components/inventory/PriceListDialog';
+import { BulkExcelImport } from '@/components/inventory/BulkExcelImport';
 
 interface ProductFormData {
   sku: string;
@@ -108,6 +110,7 @@ export default function InventoryPage() {
   const [restockQuantity, setRestockQuantity] = useState(0);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
   const [showPriceList, setShowPriceList] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   async function handleRestock() {
     if (!selectedProductId || restockQuantity <= 0) {
@@ -240,10 +243,16 @@ export default function InventoryPage() {
               Price List
             </Button>
             {isAdmin && (
-              <Button onClick={openAddForm}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </Button>
+              <>
+                <Button variant="outline" onClick={() => setShowBulkImport(true)}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Import
+                </Button>
+                <Button onClick={openAddForm}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -681,6 +690,13 @@ export default function InventoryPage() {
         onOpenChange={setShowPriceList}
         products={products}
         categories={categories}
+      />
+
+      <BulkExcelImport
+        open={showBulkImport}
+        onOpenChange={setShowBulkImport}
+        categories={categories}
+        onSuccess={refresh}
       />
     </AppLayout>
   );
