@@ -165,9 +165,10 @@ export function BulkExcelImport({
 
     try {
       // Apply default category to all products
+      const effectiveCategory = defaultCategory && defaultCategory !== 'none' ? defaultCategory : null;
       const productsToInsert = parsedProducts.map((p) => ({
         ...p,
-        category_id: defaultCategory || null,
+        category_id: effectiveCategory,
       }));
 
       const { error } = await supabase.from('products').insert(productsToInsert);
@@ -278,7 +279,7 @@ export function BulkExcelImport({
                 <SelectValue placeholder="No category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No category</SelectItem>
+                <SelectItem value="none">No category</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}

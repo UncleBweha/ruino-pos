@@ -25,25 +25,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let initialSessionHandled = false;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip the INITIAL_SESSION event if we already handled it via getSession
+      if (event === 'INITIAL_SESSION' && initialSessionHandled) return;
+
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // Fetch profile and role
+        // Use setTimeout to avoid Supabase deadlock
         setTimeout(async () => {
           await fetchUserData(session.user.id);
         }, 0);
       } else {
         setProfile(null);
         setRole(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     // Then get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      initialSessionHandled = true;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
