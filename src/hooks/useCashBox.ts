@@ -13,13 +13,19 @@ export function useCashBox() {
       // Fetch transactions
       const { data: txData, error: txError } = await supabase
         .from('cash_box')
-        .select('*')
+        .select('*, sale:sales!cash_box_sale_id_fkey(status)')
         .order('created_at', { ascending: false });
 
       if (txError) throw txError;
 
+      // Filter out transactions linked to voided sales
+      const validTxData = txData.filter((tx: any) => {
+        if (!tx.sale_id) return true; // non-sale entries (e.g. credit payments) always show
+        return tx.sale?.status !== 'voided';
+      });
+
       // Get unique cashier IDs
-      const cashierIds = [...new Set(txData.map((t) => t.cashier_id))];
+      const cashierIds = [...new Set(validTxData.map((t: any) => t.cashier_id))];
 
       // Fetch profiles for those cashiers
       const { data: profiles } = await supabase
@@ -30,11 +36,14 @@ export function useCashBox() {
       // Map profiles by user_id
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
 
-      // Attach cashier info to transactions
-      const transactionsWithCashier = txData.map((tx) => ({
-        ...tx,
-        cashier: profileMap.get(tx.cashier_id) || null,
-      }));
+      // Attach cashier info to transactions (strip the joined sale object)
+      const transactionsWithCashier = validTxData.map((tx: any) => {
+        const { sale, ...rest } = tx;
+        return {
+          ...rest,
+          cashier: profileMap.get(tx.cashier_id) || null,
+        };
+      });
 
       setTransactions(transactionsWithCashier as CashBox[]);
       cacheCashBox(transactionsWithCashier).catch(console.error);
