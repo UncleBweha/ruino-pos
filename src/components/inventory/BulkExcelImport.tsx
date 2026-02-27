@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, Loader2, FileSpreadsheet, AlertCircle, Trash2, X } from 'lucide-react';
+import { Upload, Loader2, FileSpreadsheet, AlertCircle, Trash2, X, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
