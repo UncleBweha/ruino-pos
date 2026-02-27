@@ -220,7 +220,28 @@ export function BulkExcelImport({
         <div className="space-y-4">
           {/* Format info */}
           <div className="glass-item rounded-lg p-4 space-y-2">
-            <p className="text-sm font-medium">Required Columns</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Required Columns</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const wb = XLSX.utils.book_new();
+                  const ws = XLSX.utils.aoa_to_sheet([
+                    ['SKU', 'Product Name', 'Quantity', 'Buying Price', 'Selling Price', 'Low Stock Alert'],
+                    ['SKU001', 'Rice 5kg', 100, 450, 550, 10],
+                    ['SKU002', 'Sugar 2kg', 50, 180, 220, 15],
+                  ]);
+                  ws['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
+                  XLSX.utils.book_append_sheet(wb, ws, 'Products');
+                  XLSX.writeFile(wb, 'product_import_template.xlsx');
+                }}
+              >
+                <Download className="w-4 h-4 mr-1" />
+                Download Template
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
               Your Excel file should have these column headers (case-insensitive):
             </p>
