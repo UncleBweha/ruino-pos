@@ -83,7 +83,7 @@ export function BulkExcelImport({
           name: header.findIndex((h: string) => h.includes('name') || h.includes('product')),
           quantity: header.findIndex((h: string) => h.includes('qty') || h.includes('quantity') || h.includes('stock')),
           buying_price: header.findIndex((h: string) => h.includes('buy') || h.includes('cost')),
-          selling_price: header.findIndex((h: string) => h.includes('sell') || h.includes('price')),
+          selling_price: header.findIndex((h: string) => h.includes('sell') || (h.includes('price') && !h.includes('buy'))),
           low_stock_alert: header.findIndex((h: string) => h.includes('alert') || h.includes('low') || h.includes('reorder')),
         };
 
