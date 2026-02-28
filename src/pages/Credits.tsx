@@ -56,7 +56,7 @@ export default function CreditsPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mpesa' | 'till' | 'cheque'>('cash');
   const [actionLoading, setActionLoading] = useState(false);
-  const [returnItemIds, setReturnItemIds] = useState<string[]>([]);
+  const [returnQuantities, setReturnQuantities] = useState<Record<string, number>>({});
 
   function openPayDialog(credit: Credit) {
     setSelectedCredit(credit);
@@ -68,16 +68,19 @@ export default function CreditsPage() {
   function openReturnDialog(credit: Credit) {
     setSelectedCredit(credit);
     setActionType('return');
-    // Pre-select all items
-    const allItemIds = credit.sale?.sale_items?.map((i) => i.id) || [];
-    setReturnItemIds(allItemIds);
+    // Pre-select all items with their full quantities
+    const quantities: Record<string, number> = {};
+    (credit.sale?.sale_items || []).forEach((item) => {
+      quantities[item.id] = item.quantity;
+    });
+    setReturnQuantities(quantities);
   }
 
   function closeDialog() {
     setSelectedCredit(null);
     setActionType(null);
     setPaymentAmount('');
-    setReturnItemIds([]);
+    setReturnQuantities({});
   }
 
   async function handleAction() {
@@ -96,11 +99,20 @@ export default function CreditsPage() {
           description: `${formatCurrency(amount)} received from ${selectedCredit.customer_name} via ${PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label || paymentMethod}`,
         });
       } else if (actionType === 'return') {
-        if (returnItemIds.length === 0) {
+        // Filter to items with qty > 0
+        const itemsToReturn = Object.entries(returnQuantities)
+          .filter(([, qty]) => qty > 0)
+          .map(([id, qty]) => ({ id, quantity: qty }));
+
+        if (itemsToReturn.length === 0) {
           throw new Error('Select at least one item to return');
         }
+
         const allItems = selectedCredit.sale?.sale_items || [];
-        const isFullReturn = returnItemIds.length === allItems.length;
+        const isFullReturn = itemsToReturn.every((rt) => {
+          const orig = allItems.find((i) => i.id === rt.id);
+          return orig && rt.quantity >= orig.quantity;
+        }) && itemsToReturn.length === allItems.length;
 
         if (isFullReturn) {
           await markAsReturned(selectedCredit.id);
@@ -109,12 +121,14 @@ export default function CreditsPage() {
             description: `Credit for ${selectedCredit.customer_name} has been cancelled`,
           });
         } else {
-          await partialReturn(selectedCredit.id, returnItemIds);
-          const returnedItems = allItems.filter((i) => returnItemIds.includes(i.id));
-          const returnedTotal = returnedItems.reduce((sum, i) => sum + i.total, 0);
+          await partialReturn(selectedCredit.id, itemsToReturn);
+          const returnedTotal = itemsToReturn.reduce((sum, rt) => {
+            const orig = allItems.find((i) => i.id === rt.id);
+            return sum + (orig ? orig.unit_price * rt.quantity : 0);
+          }, 0);
           toast({
             title: 'Items Returned',
-            description: `${returnedItems.length} item(s) worth ${formatCurrency(returnedTotal)} returned. Remaining balance updated.`,
+            description: `${itemsToReturn.length} item(s) worth ${formatCurrency(returnedTotal)} returned. Remaining balance updated.`,
           });
         }
       }
@@ -376,23 +390,23 @@ export default function CreditsPage() {
               {/* Item selection */}
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {(selectedCredit.sale?.sale_items || []).map((item) => {
-                  const isSelected = returnItemIds.includes(item.id);
+                  const returnQty = returnQuantities[item.id] || 0;
+                  const isSelected = returnQty > 0;
                   return (
-                    <label
+                    <div
                       key={item.id}
                       className={cn(
-                        'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors',
-                        isSelected ? 'border-destructive/50 bg-destructive/5' : 'border-border hover:bg-muted/50'
+                        'flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                        isSelected ? 'border-destructive/50 bg-destructive/5' : 'border-border'
                       )}
                     >
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={(checked) => {
-                          setReturnItemIds((prev) =>
-                            checked
-                              ? [...prev, item.id]
-                              : prev.filter((id) => id !== item.id)
-                          );
+                          setReturnQuantities((prev) => ({
+                            ...prev,
+                            [item.id]: checked ? item.quantity : 0,
+                          }));
                         }}
                       />
                       <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -402,8 +416,44 @@ export default function CreditsPage() {
                           {item.quantity} × {formatCurrency(item.unit_price)}
                         </p>
                       </div>
-                      <p className="text-sm font-semibold currency">{formatCurrency(item.total)}</p>
-                    </label>
+                      {item.quantity > 1 && isSelected && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() =>
+                              setReturnQuantities((prev) => ({
+                                ...prev,
+                                [item.id]: Math.max(1, (prev[item.id] || 1) - 1),
+                              }))
+                            }
+                          >
+                            -
+                          </Button>
+                          <span className="text-sm font-medium w-6 text-center">{returnQty}</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() =>
+                              setReturnQuantities((prev) => ({
+                                ...prev,
+                                [item.id]: Math.min(item.quantity, (prev[item.id] || 0) + 1),
+                              }))
+                            }
+                          >
+                            +
+                          </Button>
+                          <span className="text-xs text-muted-foreground">/ {item.quantity}</span>
+                        </div>
+                      )}
+                      <p className="text-sm font-semibold currency">
+                        {formatCurrency(item.unit_price * returnQty)}
+                      </p>
+                    </div>
                   );
                 })}
               </div>
@@ -411,21 +461,26 @@ export default function CreditsPage() {
               {/* Return summary */}
               {(() => {
                 const allItems = selectedCredit.sale?.sale_items || [];
-                const returnItems = allItems.filter((i) => returnItemIds.includes(i.id));
-                const returnTotal = returnItems.reduce((sum, i) => sum + i.total, 0);
-                const keepItems = allItems.filter((i) => !returnItemIds.includes(i.id));
-                const keepTotal = keepItems.reduce((sum, i) => sum + i.total, 0);
-                const isFullReturn = returnItemIds.length === allItems.length;
+                const returnTotal = allItems.reduce((sum, i) => {
+                  const qty = returnQuantities[i.id] || 0;
+                  return sum + i.unit_price * qty;
+                }, 0);
+                const totalItemsReturning = Object.values(returnQuantities).filter((q) => q > 0).length;
+                const isFullReturn = allItems.every((i) => (returnQuantities[i.id] || 0) >= i.quantity);
+                const keepTotal = allItems.reduce((sum, i) => {
+                  const keepQty = i.quantity - (returnQuantities[i.id] || 0);
+                  return sum + i.unit_price * Math.max(0, keepQty);
+                }, 0);
 
                 return (
                   <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Returning ({returnItems.length} items)</span>
+                      <span className="text-muted-foreground">Returning ({totalItemsReturning} items)</span>
                       <span className="font-semibold text-destructive currency">{formatCurrency(returnTotal)}</span>
                     </div>
-                    {!isFullReturn && keepItems.length > 0 && (
+                    {!isFullReturn && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Remaining on credit ({keepItems.length} items)</span>
+                        <span className="text-muted-foreground">Remaining on credit</span>
                         <span className="font-semibold currency">{formatCurrency(keepTotal)}</span>
                       </div>
                     )}
