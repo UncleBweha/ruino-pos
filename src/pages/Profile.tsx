@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCasuals } from '@/hooks/useCasuals';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Loader2, Eye, EyeOff, UserCheck, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/constants';
 
 export default function ProfilePage() {
   const { profile, role } = useAuth();
