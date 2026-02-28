@@ -46,6 +46,7 @@ interface ParsedProduct {
   selling_price: number;
   low_stock_alert: number;
   category_id: string | null;
+  category_name: string | null;
 }
 
 export function BulkExcelImport({
