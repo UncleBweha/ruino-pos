@@ -228,28 +228,28 @@ export default function InventoryPage() {
 
   return (
     <AppLayout>
-      <div className="p-4 lg:p-6 space-y-6">
+      <div className="p-4 lg:p-6 space-y-6 overflow-x-hidden">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Inventory</h1>
             <p className="text-muted-foreground">
               {products.length} products • {lowStockProducts.length} low stock
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowPriceList(true)}>
-              <List className="w-4 h-4 mr-2" />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowPriceList(true)}>
+              <List className="w-4 h-4 mr-1" />
               Price List
             </Button>
             {isAdmin && (
               <>
-                <Button variant="outline" onClick={() => setShowBulkImport(true)}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Bulk Import
+                <Button variant="outline" size="sm" onClick={() => setShowBulkImport(true)}>
+                  <Upload className="w-4 h-4 mr-1" />
+                  Import
                 </Button>
-                <Button onClick={openAddForm}>
-                  <Plus className="w-4 h-4 mr-2" />
+                <Button size="sm" onClick={openAddForm}>
+                  <Plus className="w-4 h-4 mr-1" />
                   Add Product
                 </Button>
               </>
