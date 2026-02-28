@@ -180,6 +180,61 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Active Casuals Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCheck className="w-5 h-5" />
+              Active Casuals
+            </CardTitle>
+            <CardDescription>Workers available for sales attribution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {casualsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : activeCasuals.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <UserCheck className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">No active casuals</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {activeCasuals.map((casual) => (
+                  <div
+                    key={casual.id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-accent-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">{casual.full_name}</p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        {casual.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {casual.phone}
+                          </span>
+                        )}
+                        <span>
+                          {casual.commission_type === 'percentage'
+                            ? `${casual.commission_rate}%`
+                            : `${formatCurrency(casual.commission_rate)}/item`}
+                        </span>
+                      </div>
+                    </div>
+                    <Badge variant="default" className="text-2xs rounded-full">
+                      Active
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
