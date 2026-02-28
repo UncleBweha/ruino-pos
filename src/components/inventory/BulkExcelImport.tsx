@@ -115,15 +115,47 @@ export function BulkExcelImport({
           return;
         }
 
-        // Detect columns from header
-        const header = rows[0].map((h: any) => String(h).toLowerCase().trim());
+        // Detect columns from header with robust matching
+        const header = rows[0].map((h: any) => String(h ?? '').toLowerCase().trim());
+        
+        // Helper: find column index with priority keywords, excluding already-used indices
+        function findCol(tests: ((h: string) => boolean)[], exclude: number[] = []): number {
+          for (const test of tests) {
+            const idx = header.findIndex((h: string, i: number) => !exclude.includes(i) && test(h));
+            if (idx !== -1) return idx;
+          }
+          return -1;
+        }
+
+        const skuCol = findCol([
+          h => h === 'sku',
+          h => h.includes('sku') || h.includes('code'),
+        ]);
+        const nameCol = findCol([
+          h => h.includes('product name') || h.includes('product_name'),
+          h => h.includes('name') || h.includes('product'),
+        ], [skuCol]);
+        const qtyCol = findCol([
+          h => h.includes('qty') || h.includes('quantity') || h.includes('stock'),
+        ]);
+        const buyCol = findCol([
+          h => h.includes('buying') || h.includes('buy') || h.includes('cost'),
+        ]);
+        const sellCol = findCol([
+          h => h.includes('selling') || h.includes('sell'),
+          h => h.includes('price') && !h.includes('buy') && !h.includes('cost'),
+        ], [buyCol]);
+        const alertCol = findCol([
+          h => h.includes('alert') || h.includes('low') || h.includes('reorder'),
+        ]);
+
         const colMap = {
-          sku: header.findIndex((h: string) => h.includes('sku') || h.includes('code')),
-          name: header.findIndex((h: string) => h.includes('name') || h.includes('product')),
-          quantity: header.findIndex((h: string) => h.includes('qty') || h.includes('quantity') || h.includes('stock')),
-          buying_price: header.findIndex((h: string) => h.includes('buy') || h.includes('cost')),
-          selling_price: header.findIndex((h: string) => h.includes('sell') || (h.includes('price') && !h.includes('buy'))),
-          low_stock_alert: header.findIndex((h: string) => h.includes('alert') || h.includes('low') || h.includes('reorder')),
+          sku: skuCol,
+          name: nameCol,
+          quantity: qtyCol,
+          buying_price: buyCol,
+          selling_price: sellCol,
+          low_stock_alert: alertCol,
         };
 
         if (colMap.sku === -1 || colMap.name === -1) {
