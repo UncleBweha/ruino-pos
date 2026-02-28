@@ -168,6 +168,13 @@ export function BulkExcelImport({
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    filePickerInProgressRef.current = false;
+
+    if (filePickerResetTimerRef.current) {
+      window.clearTimeout(filePickerResetTimerRef.current);
+      filePickerResetTimerRef.current = null;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -175,6 +182,14 @@ export function BulkExcelImport({
     setParseErrors([]);
     setParsedProducts([]);
     parseExcel(file);
+  }
+
+  function handleDialogOpenChange(isOpen: boolean) {
+    if (!isOpen && filePickerInProgressRef.current) {
+      return;
+    }
+
+    handleClose(isOpen);
   }
 
   function removeProduct(index: number) {
