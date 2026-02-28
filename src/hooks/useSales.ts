@@ -148,12 +148,12 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
     const total = subtotal + taxAmount - discount;
     const profit = items.reduce((sum, item) => sum + item.profit, 0);
 
-    const receiptNumber = await generateReceiptNumber();
-    const status = paymentMethod === 'credit' ? 'credit' : 'completed';
-
     if (paymentMethod === 'credit' && !customerName?.trim()) {
       throw new Error('Customer name is required for credit sales');
     }
+
+    const receiptNumber = await generateReceiptNumber();
+    const status = paymentMethod === 'credit' ? 'credit' : 'completed';
 
     const { data: saleData, error: saleError } = await supabase
       .from('sales')
@@ -192,14 +192,17 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
       profit: item.profit,
     }));
 
-    const { error: itemsError } = await supabase
-      .from('sale_items')
-      .insert(saleItems);
-
-    if (itemsError) throw itemsError;
-
+    // Run ALL remaining operations in parallel: items insert, stock updates, cash box, credit
     const parallelOps: PromiseLike<any>[] = [];
 
+    // Insert sale items
+    parallelOps.push(
+      supabase.from('sale_items').insert(saleItems).then(({ error }) => {
+        if (error) throw error;
+      })
+    );
+
+    // Stock updates
     for (const item of items) {
       parallelOps.push(
         supabase.rpc('update_product_stock', {
@@ -209,7 +212,7 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
       );
     }
 
-    // Record in cash box for all non-credit payments
+    // Cash box for non-credit
     if (paymentMethod !== 'credit') {
       parallelOps.push(
         supabase.from('cash_box').insert({
@@ -218,10 +221,11 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
           transaction_type: 'sale',
           description: `${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)} sale`,
           cashier_id: user.id,
-        }).select().then()
+        }).then()
       );
     }
 
+    // Credit record
     if (paymentMethod === 'credit') {
       parallelOps.push(
         supabase.from('credits').insert({
@@ -231,21 +235,24 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
           amount_paid: 0,
           balance: total,
           status: 'pending',
-        }).select().then()
+        }).then()
       );
     }
 
     await Promise.all(parallelOps);
 
-    const { data: completeSale, error: fetchError } = await supabase
-      .from('sales')
-      .select('*, sale_items(*)')
-      .eq('id', saleId)
-      .single();
+    // Build the sale object locally instead of re-fetching
+    const completeSale: Sale = {
+      ...saleData,
+      sale_items: saleItems.map((si, idx) => ({
+        ...si,
+        id: `temp-${idx}`,
+        created_at: saleData.created_at,
+      })),
+      cashier: { user_id: user.id, full_name: '' },
+    } as Sale;
 
-    if (fetchError) throw fetchError;
-
-    return completeSale as Sale;
+    return completeSale;
   }
 
   async function voidSale(saleId: string): Promise<void> {
