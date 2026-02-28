@@ -29,8 +29,8 @@ export default defineConfig(({ mode }) => ({
         orientation: 'any',
         start_url: '/',
         icons: [
-          { src: '/pwa-512.svg', sizes: '512x512', type: 'image/svg+xml' },
-          { src: '/pwa-512.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'maskable' },
+          { src: '/app-icon.png', sizes: '512x512', type: 'image/png' },
+          { src: '/app-icon.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
