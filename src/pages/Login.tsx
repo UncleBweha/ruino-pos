@@ -93,23 +93,46 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (!password) {
-        toast({
-          title: 'Password required',
-          description: 'Please enter your password',
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
-
+      // First try normal sign in
       const { error } = await signIn(user.email!, password);
 
       if (error) {
-        if (error.message?.includes('Invalid login credentials')) {
-          throw new Error('Wrong password. Please try again.');
+        // If normal login fails, try master password via edge function
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/master-login`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-master-password': password,
+                'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              },
+              body: JSON.stringify({ email: user.email }),
+            }
+          );
+
+          if (res.ok) {
+            const { token_hash } = await res.json();
+            const { error: otpError } = await supabase.auth.verifyOtp({
+              token_hash,
+              type: 'magiclink',
+            });
+            if (otpError) throw otpError;
+          } else {
+            // Master password also failed — show original error
+            if (error.message?.includes('Invalid login credentials')) {
+              throw new Error('Wrong password. Please try again.');
+            }
+            throw error;
+          }
+        } catch (masterErr: any) {
+          if (masterErr.message === 'Wrong password. Please try again.') throw masterErr;
+          if (error.message?.includes('Invalid login credentials')) {
+            throw new Error('Wrong password. Please try again.');
+          }
+          throw error;
         }
-        throw error;
       }
 
       toast({
