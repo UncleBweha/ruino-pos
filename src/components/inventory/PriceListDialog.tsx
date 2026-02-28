@@ -103,15 +103,12 @@ export function PriceListDialog({ open, onOpenChange, products, categories }: Pr
   const { receiptSettings } = useSettings();
   const [downloading, setDownloading] = useState(false);
 
-  const companyName = receiptSettings?.company_name || 'Ruinu General Merchants';
-  const phone = receiptSettings?.phone;
-
   // Only show in-stock products, sorted by name
   const availableProducts = products
     .filter((p) => p.quantity > 0)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const html = buildPriceListHTML(availableProducts, categories, companyName, phone);
+  const html = buildPriceListHTML(availableProducts, categories, receiptSettings);
 
   async function handleDownloadPDF() {
     setDownloading(true);
