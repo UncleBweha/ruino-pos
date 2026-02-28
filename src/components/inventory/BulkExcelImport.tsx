@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, Loader2, FileSpreadsheet, AlertCircle, Trash2, X, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
@@ -56,11 +56,50 @@ export function BulkExcelImport({
 }: BulkExcelImportProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const filePickerInProgressRef = useRef(false);
+  const filePickerResetTimerRef = useRef<number | null>(null);
   const [fileName, setFileName] = useState('');
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
   const [defaultCategory, setDefaultCategory] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    return () => {
+      if (filePickerResetTimerRef.current) {
+        window.clearTimeout(filePickerResetTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openFilePicker() {
+    filePickerInProgressRef.current = true;
+
+    if (filePickerResetTimerRef.current) {
+      window.clearTimeout(filePickerResetTimerRef.current);
+      filePickerResetTimerRef.current = null;
+    }
+
+    const clearFilePickerLock = () => {
+      filePickerInProgressRef.current = false;
+
+      if (filePickerResetTimerRef.current) {
+        window.clearTimeout(filePickerResetTimerRef.current);
+        filePickerResetTimerRef.current = null;
+      }
+    };
+
+    window.addEventListener(
+      'focus',
+      () => {
+        window.setTimeout(clearFilePickerLock, 0);
+      },
+      { once: true }
+    );
+
+    filePickerResetTimerRef.current = window.setTimeout(clearFilePickerLock, 10000);
+    fileInputRef.current?.click();
+  }
 
   function parseExcel(file: File) {
     const reader = new FileReader();
@@ -144,6 +183,13 @@ export function BulkExcelImport({
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    filePickerInProgressRef.current = false;
+
+    if (filePickerResetTimerRef.current) {
+      window.clearTimeout(filePickerResetTimerRef.current);
+      filePickerResetTimerRef.current = null;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -151,6 +197,14 @@ export function BulkExcelImport({
     setParseErrors([]);
     setParsedProducts([]);
     parseExcel(file);
+  }
+
+  function handleDialogOpenChange(isOpen: boolean) {
+    if (!isOpen && filePickerInProgressRef.current) {
+      return;
+    }
+
+    handleClose(isOpen);
   }
 
   function removeProduct(index: number) {
@@ -205,7 +259,7 @@ export function BulkExcelImport({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -269,7 +323,7 @@ export function BulkExcelImport({
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openFilePicker}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {fileName || 'Choose Excel file'}
