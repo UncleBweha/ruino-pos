@@ -56,11 +56,35 @@ export function BulkExcelImport({
 }: BulkExcelImportProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const filePickerInProgressRef = useRef(false);
+  const filePickerResetTimerRef = useRef<number | null>(null);
   const [fileName, setFileName] = useState('');
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
   const [defaultCategory, setDefaultCategory] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    return () => {
+      if (filePickerResetTimerRef.current) {
+        window.clearTimeout(filePickerResetTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openFilePicker() {
+    filePickerInProgressRef.current = true;
+
+    if (filePickerResetTimerRef.current) {
+      window.clearTimeout(filePickerResetTimerRef.current);
+    }
+
+    filePickerResetTimerRef.current = window.setTimeout(() => {
+      filePickerInProgressRef.current = false;
+    }, 1500);
+
+    fileInputRef.current?.click();
+  }
 
   function parseExcel(file: File) {
     const reader = new FileReader();
