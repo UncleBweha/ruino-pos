@@ -133,66 +133,59 @@ export default function CashBoxPage() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {PAYMENT_SECTIONS.map((section) => {
               const group = groups[section.key];
               const Icon = section.icon;
 
               return (
-                <Collapsible key={section.key} defaultOpen>
-                  <Card>
-                    <CollapsibleTrigger className="w-full text-left">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', section.bgClass)}>
-                              <Icon className={cn('w-5 h-5', section.colorClass)} />
-                            </div>
+                <Collapsible key={section.key}>
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between w-full px-4 py-3 rounded-lg bg-card border hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', section.bgClass)}>
+                          <Icon className={cn('w-4 h-4', section.colorClass)} />
+                        </div>
+                        <span className="font-medium text-sm">{section.label}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {group.transactions.length} txn{group.transactions.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <span className={cn('text-lg font-bold currency', section.colorClass)}>
+                        {formatCurrency(group.total)}
+                      </span>
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="mt-1 ml-4 mr-1 border-l-2 border-muted pl-4 space-y-1 py-2">
+                      {group.transactions.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-2">No transactions</p>
+                      ) : group.transactions.map((tx) => (
+                        <div
+                          key={tx.id}
+                          className="flex items-center justify-between py-1.5 px-3 rounded-md bg-muted/30"
+                        >
+                          <div className="flex items-center gap-2">
+                            <ArrowUpRight className={cn('w-3.5 h-3.5', section.colorClass)} />
                             <div>
-                              <CardTitle className="text-base">{section.label}</CardTitle>
-                              <p className="text-xs text-muted-foreground">{group.transactions.length} transaction{group.transactions.length !== 1 ? 's' : ''}</p>
+                              <p className="text-sm font-medium capitalize">
+                                {tx.transaction_type.replace('_', ' ')}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(tx.created_at), 'HH:mm')}
+                                {tx.cashier?.full_name && (
+                                  <span className="ml-1">• {tx.cashier.full_name}</span>
+                                )}
+                              </p>
                             </div>
                           </div>
-                          <p className={cn('text-xl font-bold currency', section.colorClass)}>
-                            {formatCurrency(group.total)}
+                          <p className="font-semibold text-sm currency">
+                            +{formatCurrency(tx.amount)}
                           </p>
                         </div>
-                      </CardHeader>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <CardContent className="pt-0 space-y-2">
-                        {group.transactions.length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center py-4">No transactions</p>
-                        ) : group.transactions.map((tx) => (
-                          <div
-                            key={tx.id}
-                            className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/40"
-                          >
-                            <div className="flex items-center gap-3">
-                              <ArrowUpRight className={cn('w-4 h-4', section.colorClass)} />
-                              <div>
-                                <p className="text-sm font-medium capitalize">
-                                  {tx.transaction_type.replace('_', ' ')}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {format(new Date(tx.created_at), 'HH:mm')}
-                                  {tx.cashier?.full_name && (
-                                    <span className="ml-2">• {tx.cashier.full_name}</span>
-                                  )}
-                                </p>
-                                {tx.description && (
-                                  <p className="text-xs text-muted-foreground mt-0.5">{tx.description}</p>
-                                )}
-                              </div>
-                            </div>
-                            <p className="font-semibold text-sm currency">
-                              +{formatCurrency(tx.amount)}
-                            </p>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </CollapsibleContent>
-                  </Card>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
                 </Collapsible>
               );
             })}
