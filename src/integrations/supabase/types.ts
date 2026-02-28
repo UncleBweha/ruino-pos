@@ -470,7 +470,7 @@ export type Database = {
           buying_price: number
           created_at: string
           id: string
-          product_id: string
+          product_id: string | null
           product_name: string
           profit: number
           quantity: number
@@ -482,7 +482,7 @@ export type Database = {
           buying_price: number
           created_at?: string
           id?: string
-          product_id: string
+          product_id?: string | null
           product_name: string
           profit: number
           quantity: number
@@ -494,7 +494,7 @@ export type Database = {
           buying_price?: number
           created_at?: string
           id?: string
-          product_id?: string
+          product_id?: string | null
           product_name?: string
           profit?: number
           quantity?: number
