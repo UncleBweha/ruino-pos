@@ -242,7 +242,7 @@ export default function MonthlyReportPage() {
     `).join('');
 
     const empRows = r.bestEmployees.map((e, i) => `
-      <tr><td style="padding:6px 8px;border-bottom:1px solid #eee">${i === 0 ? '🏆 ' : ''}${e.name}</td>
+      <tr><td style="padding:6px 8px;border-bottom:1px solid #eee">${e.name}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">${e.type}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">${e.transactions}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">${formatCurrency(e.sales)}</td>
@@ -254,7 +254,7 @@ export default function MonthlyReportPage() {
       <td style="padding:6px 8px;border-bottom:1px solid #eee">${s.product}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">${s.qty}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">${formatCurrency(s.amount)}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">${s.status === 'paid' ? '✅ Paid' : '⏳ Unpaid'}</td></tr>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">${s.status === 'paid' ? 'Paid' : 'Unpaid'}</td></tr>
     `).join('');
 
     const dailyRows = r.dailySales.filter(d => d.transactions > 0).map(d => `
@@ -287,7 +287,7 @@ export default function MonthlyReportPage() {
         <p style="margin:2px 0;font-size:12px;color:#999">Generated: ${format(new Date(), 'dd MMM yyyy, hh:mm a')}</p>
       </div>
 
-      <h2>💰 Sales Summary</h2>
+      <h2>Sales Summary</h2>
       <div class="grid">
         <div class="stat"><div class="stat-label">Total Sales</div><div class="stat-value">${formatCurrency(r.totalSales)}</div></div>
         <div class="stat"><div class="stat-label">Profit</div><div class="stat-value green">${formatCurrency(r.totalProfit)}</div></div>
@@ -301,7 +301,7 @@ export default function MonthlyReportPage() {
           ${r.bestDay ? `<div style="font-size:11px;color:#666">${formatCurrency(r.bestDay.sales)}</div>` : ''}</div>
       </div>
 
-      <h2>💳 Payment Breakdown</h2>
+      <h2>Payment Breakdown</h2>
       <div class="grid">
         ${Object.entries(r.paymentBreakdown || {}).map(([method, info]) => {
           const label = PAYMENT_METHODS.find(m => m.id === method)?.label || method.charAt(0).toUpperCase() + method.slice(1);
@@ -310,7 +310,7 @@ export default function MonthlyReportPage() {
         <div class="stat"><div class="stat-label">Avg Transaction</div><div class="stat-value">${formatCurrency(r.avgTransactionValue)}</div></div>
       </div>
 
-      <h2>📋 Credit Activity</h2>
+      <h2>Credit Activity</h2>
       <div class="grid">
         <div class="stat"><div class="stat-label">Credit Given</div><div class="stat-value red">${formatCurrency(r.creditGiven)}</div><div style="font-size:11px;color:#666">${r.creditGivenCount} records</div></div>
         <div class="stat"><div class="stat-label">Credit Paid</div><div class="stat-value green">${formatCurrency(r.creditPaid)}</div><div style="font-size:11px;color:#666">${r.creditPaidCount} payments</div></div>
@@ -318,18 +318,18 @@ export default function MonthlyReportPage() {
         <div class="stat"><div class="stat-label">Voided Sales</div><div class="stat-value">${r.voidedCount} (${formatCurrency(r.voidedAmount)})</div></div>
       </div>
 
-      ${r.bestCustomer ? `<h2>⭐ Best Customer</h2><div class="stat" style="display:inline-block;padding:12px 24px"><div class="stat-label">Top Buyer</div><div class="stat-value">${r.bestCustomer.name}</div><div style="font-size:12px;color:#666">${formatCurrency(r.bestCustomer.spent)} across ${r.bestCustomer.transactions} transactions</div></div>` : ''}
+      ${r.bestCustomer ? `<h2>Best Customer</h2><div class="stat" style="display:inline-block;padding:12px 24px"><div class="stat-label">Top Buyer</div><div class="stat-value">${r.bestCustomer.name}</div><div style="font-size:12px;color:#666">${formatCurrency(r.bestCustomer.spent)} across ${r.bestCustomer.transactions} transactions</div></div>` : ''}
 
-      <h2>👥 Employee Performance</h2>
+      <h2>Employee Performance</h2>
       <table><thead><tr><th>Name</th><th style="text-align:center">Role</th><th style="text-align:center">Transactions</th><th style="text-align:right">Sales</th><th style="text-align:right">Profit</th></tr></thead>
       <tbody>${empRows || '<tr><td colspan="5" style="padding:12px;text-align:center;color:#999">No sales recorded</td></tr>'}</tbody></table>
 
-      <h2>📦 Top Products</h2>
+      <h2>Top Products</h2>
       <table><thead><tr><th>Product</th><th style="text-align:center">Qty Sold</th><th style="text-align:right">Revenue</th><th style="text-align:right">Profit</th></tr></thead>
       <tbody>${productRows || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#999">No products sold</td></tr>'}</tbody></table>
 
       ${r.suppliedProducts.length > 0 ? `
-      <h2>🚚 Supplier Deliveries</h2>
+      <h2>Supplier Deliveries</h2>
       <div class="grid" style="grid-template-columns:repeat(2,1fr)">
         <div class="stat"><div class="stat-label">Total Supplied</div><div class="stat-value">${formatCurrency(r.totalSuppliedAmount)}</div></div>
         <div class="stat"><div class="stat-label">Owed to Suppliers</div><div class="stat-value red">${formatCurrency(r.totalOwedToSuppliers)}</div></div>
@@ -337,7 +337,7 @@ export default function MonthlyReportPage() {
       <table><thead><tr><th>Supplier</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th><th style="text-align:center">Status</th></tr></thead>
       <tbody>${supplyRows}</tbody></table>` : ''}
 
-      <h2>📅 Daily Breakdown</h2>
+      <h2>Daily Breakdown</h2>
       <table><thead><tr><th>Date</th><th style="text-align:center">Transactions</th><th style="text-align:right">Sales</th><th style="text-align:right">Profit</th></tr></thead>
       <tbody>${dailyRows || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#999">No data</td></tr>'}</tbody></table>
     </body></html>`;
