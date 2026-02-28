@@ -46,6 +46,7 @@ interface ParsedProduct {
   selling_price: number;
   low_stock_alert: number;
   category_id: string | null;
+  category_name: string | null;
 }
 
 export function BulkExcelImport({
@@ -148,6 +149,10 @@ export function BulkExcelImport({
         const alertCol = findCol([
           h => h.includes('alert') || h.includes('low') || h.includes('reorder'),
         ]);
+        const catCol = findCol([
+          h => h === 'category',
+          h => h.includes('category') || h.includes('cat'),
+        ]);
 
         const colMap = {
           sku: skuCol,
@@ -156,6 +161,7 @@ export function BulkExcelImport({
           buying_price: buyCol,
           selling_price: sellCol,
           low_stock_alert: alertCol,
+          category: catCol,
         };
 
         if (colMap.sku === -1 || colMap.name === -1) {
@@ -191,6 +197,8 @@ export function BulkExcelImport({
             continue;
           }
 
+          const categoryRaw = colMap.category >= 0 ? String(row[colMap.category] ?? '').trim() : '';
+
           products.push({
             sku,
             name,
@@ -198,7 +206,8 @@ export function BulkExcelImport({
             buying_price,
             selling_price,
             low_stock_alert,
-            category_id: defaultCategory || null,
+            category_id: null,
+            category_name: categoryRaw || null,
           });
         }
 
@@ -250,20 +259,57 @@ export function BulkExcelImport({
     setParseErrors([]);
 
     try {
-      // Apply default category to all products
-      const effectiveCategory = defaultCategory && defaultCategory !== 'none' ? defaultCategory : null;
+      // 1. Collect unique category names from the spreadsheet
+      const uniqueCatNames = new Set<string>();
+      for (const p of parsedProducts) {
+        if (p.category_name) uniqueCatNames.add(p.category_name.toLowerCase());
+      }
+
+      // 2. Resolve category names → IDs (match existing or create new)
+      const catNameToId = new Map<string, string>();
+      // Map existing categories
+      for (const cat of categories) {
+        catNameToId.set(cat.name.toLowerCase(), cat.id);
+      }
+
+      // Find names that need to be created
+      const toCreate: string[] = [];
+      for (const name of uniqueCatNames) {
+        if (!catNameToId.has(name)) toCreate.push(name);
+      }
+
+      if (toCreate.length > 0) {
+        const { data: newCats, error: catErr } = await supabase
+          .from('categories')
+          .insert(toCreate.map((n) => ({ name: n.charAt(0).toUpperCase() + n.slice(1) })))
+          .select();
+        if (catErr) throw catErr;
+        for (const c of newCats || []) {
+          catNameToId.set(c.name.toLowerCase(), c.id);
+        }
+      }
+
+      // 3. Build final products with resolved category_id
+      const effectiveDefault = defaultCategory && defaultCategory !== 'none' ? defaultCategory : null;
       const productsToInsert = parsedProducts.map((p) => ({
-        ...p,
-        category_id: effectiveCategory,
+        sku: p.sku,
+        name: p.name,
+        quantity: p.quantity,
+        buying_price: p.buying_price,
+        selling_price: p.selling_price,
+        low_stock_alert: p.low_stock_alert,
+        category_id: p.category_name
+          ? catNameToId.get(p.category_name.toLowerCase()) || effectiveDefault
+          : effectiveDefault,
       }));
 
       const { error } = await supabase.from('products').insert(productsToInsert);
-
       if (error) throw error;
 
+      const newCatCount = toCreate.length;
       toast({
         title: 'Products Imported',
-        description: `Successfully imported ${productsToInsert.length} products`,
+        description: `Successfully imported ${productsToInsert.length} products${newCatCount > 0 ? ` and created ${newCatCount} new categories` : ''}`,
       });
 
       handleClose(false);
@@ -315,11 +361,12 @@ export function BulkExcelImport({
                 onClick={() => {
                   const wb = XLSX.utils.book_new();
                   const ws = XLSX.utils.aoa_to_sheet([
-                    ['SKU', 'Product Name', 'Quantity', 'Buying Price', 'Selling Price', 'Low Stock Alert'],
-                    ['SKU001', 'Rice 5kg', 100, 450, 550, 10],
-                    ['SKU002', 'Sugar 2kg', 50, 180, 220, 15],
+                    ['SKU', 'Product Name', 'Category', 'Quantity', 'Buying Price', 'Selling Price', 'Low Stock Alert'],
+                    ['SKU001', 'Rice 5kg', 'Grains', 100, 450, 550, 10],
+                    ['SKU002', 'Sugar 2kg', 'Sweeteners', 50, 180, 220, 15],
+                    ['SKU003', 'Bread', 'Bakery', 30, 40, 55, 5],
                   ]);
-                  ws['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
+                  ws['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
                   XLSX.utils.book_append_sheet(wb, ws, 'Products');
                   XLSX.writeFile(wb, 'product_import_template.xlsx');
                 }}
@@ -332,7 +379,7 @@ export function BulkExcelImport({
               Your Excel file should have these column headers (case-insensitive):
             </p>
             <div className="flex flex-wrap gap-2 mt-1">
-              {['SKU / Code', 'Name / Product', 'Qty / Quantity', 'Buying / Cost', 'Selling / Price', 'Alert / Reorder (optional)'].map((col) => (
+              {['SKU / Code', 'Name / Product', 'Category (optional)', 'Qty / Quantity', 'Buying / Cost', 'Selling / Price', 'Alert / Reorder (optional)'].map((col) => (
                 <span key={col} className="text-xs bg-muted px-2 py-1 rounded">
                   {col}
                 </span>
@@ -424,6 +471,7 @@ export function BulkExcelImport({
                     <TableRow>
                       <TableHead>SKU</TableHead>
                       <TableHead>Name</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Buying</TableHead>
                       <TableHead className="text-right">Selling</TableHead>
@@ -436,6 +484,7 @@ export function BulkExcelImport({
                       <TableRow key={i}>
                         <TableCell className="font-mono text-sm">{p.sku}</TableCell>
                         <TableCell>{p.name}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{p.category_name || '—'}</TableCell>
                         <TableCell className="text-right">{p.quantity}</TableCell>
                         <TableCell className="text-right">{p.buying_price}</TableCell>
                         <TableCell className="text-right">{p.selling_price}</TableCell>
