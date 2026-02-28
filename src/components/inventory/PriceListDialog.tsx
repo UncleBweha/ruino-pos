@@ -5,7 +5,7 @@ import { Printer, Download, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/constants';
 import { useSettings } from '@/hooks/useSettings';
 import { generatePDFFromHTML, printHTML } from '@/lib/pdfUtils';
-import type { Product, Category } from '@/types/database';
+import type { Product, Category, ReceiptSettings } from '@/types/database';
 
 interface PriceListDialogProps {
   open: boolean;
@@ -69,6 +69,14 @@ function buildPriceListHTML(
     }
   }
 
+  const contactParts: string[] = [];
+  if (address) contactParts.push(address);
+  if (building) contactParts.push(building);
+  if (phone) contactParts.push(`Tel: ${phone}`);
+  if (email) contactParts.push(email);
+  if (website) contactParts.push(website);
+  if (taxPin) contactParts.push(`PIN: ${taxPin}`);
+
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
   body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:30px;color:#1f2937;}
@@ -77,9 +85,10 @@ function buildPriceListHTML(
   th:last-child{text-align:right;}
 </style></head><body>
   <div style="text-align:center;margin-bottom:20px;">
+    ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" style="max-height:120px;max-width:300px;margin:0 auto 12px;display:block;" />` : ''}
     <h1 style="margin:0;font-size:22px;">${companyName}</h1>
-    ${phone ? `<p style="margin:4px 0;color:#6b7280;font-size:13px;">${phone}</p>` : ''}
-    <h2 style="margin:12px 0 4px;font-size:16px;font-weight:600;">Product Price List</h2>
+    ${contactParts.length > 0 ? `<p style="margin:6px 0;color:#6b7280;font-size:12px;line-height:1.6;">${contactParts.join(' &bull; ')}</p>` : ''}
+    <h2 style="margin:14px 0 4px;font-size:16px;font-weight:600;">Product Price List</h2>
     <p style="margin:0;color:#9ca3af;font-size:12px;">Updated: ${now}</p>
   </div>
   <table>
