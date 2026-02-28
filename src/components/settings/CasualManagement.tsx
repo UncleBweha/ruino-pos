@@ -35,7 +35,7 @@ import { formatCurrency } from '@/lib/constants';
 import type { Casual } from '@/types/database';
 
 export function CasualManagement() {
-  const { casuals, loading, createCasual, updateCasual, deleteCasual } = useCasuals();
+  const { casuals, activeCasuals, loading, createCasual, updateCasual, deleteCasual } = useCasuals();
   const { toast } = useToast();
 
   const [showAdd, setShowAdd] = useState(false);
@@ -226,15 +226,15 @@ export function CasualManagement() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : casuals.length === 0 ? (
+          ) : activeCasuals.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <User className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>No casual workers added yet</p>
+              <p>No active casual workers</p>
               <p className="text-sm">Add casual profiles for sales attribution</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {casuals.map((casual) => (
+              {activeCasuals.map((casual) => (
                 <div
                   key={casual.id}
                   className="glass-item flex items-center justify-between p-4"
