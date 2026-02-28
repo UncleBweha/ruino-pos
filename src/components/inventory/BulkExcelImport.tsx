@@ -77,12 +77,27 @@ export function BulkExcelImport({
 
     if (filePickerResetTimerRef.current) {
       window.clearTimeout(filePickerResetTimerRef.current);
+      filePickerResetTimerRef.current = null;
     }
 
-    filePickerResetTimerRef.current = window.setTimeout(() => {
+    const clearFilePickerLock = () => {
       filePickerInProgressRef.current = false;
-    }, 1500);
 
+      if (filePickerResetTimerRef.current) {
+        window.clearTimeout(filePickerResetTimerRef.current);
+        filePickerResetTimerRef.current = null;
+      }
+    };
+
+    window.addEventListener(
+      'focus',
+      () => {
+        window.setTimeout(clearFilePickerLock, 0);
+      },
+      { once: true }
+    );
+
+    filePickerResetTimerRef.current = window.setTimeout(clearFilePickerLock, 10000);
     fileInputRef.current?.click();
   }
 
