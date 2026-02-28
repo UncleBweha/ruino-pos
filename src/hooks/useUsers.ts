@@ -45,7 +45,7 @@ export function useUsers() {
           role: roleMap.get(profile.user_id) as 'admin' | 'cashier' | null,
           created_at: profile.created_at,
         }))
-        .filter(u => u.role !== null); // Only active staff have roles
+        .filter(u => u.role !== null && !u.full_name.includes('[DEACTIVATED]'));
 
       setUsers(usersWithRoles);
       cacheProfiles(usersWithRoles).catch(console.error);

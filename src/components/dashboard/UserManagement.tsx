@@ -89,9 +89,9 @@ export function UserManagement() {
           });
         });
 
-        // Build summary for casuals
+        // Build summary for casuals (active only)
         const casualMap = new Map<string, AccountSummary>();
-        casuals.forEach(c => {
+        casuals.filter(c => c.status === 'active').forEach(c => {
           casualMap.set(c.id, {
             id: c.id,
             name: c.full_name,
