@@ -17,9 +17,16 @@ interface PriceListDialogProps {
 function buildPriceListHTML(
   products: Product[],
   categories: Category[],
-  companyName: string,
-  phone?: string | null,
+  settings: ReceiptSettings | null,
 ) {
+  const companyName = settings?.company_name || 'Ruinu General Merchants';
+  const phone = settings?.phone;
+  const email = settings?.email;
+  const address = settings?.address;
+  const building = settings?.building;
+  const website = settings?.website;
+  const taxPin = settings?.tax_pin;
+  const logoUrl = settings?.logo_url;
   // Group products by category
   const grouped = new Map<string, Product[]>();
   const uncategorized: Product[] = [];
