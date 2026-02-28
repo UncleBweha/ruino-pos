@@ -308,7 +308,7 @@ export function BulkExcelImport({
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openFilePicker}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {fileName || 'Choose Excel file'}
