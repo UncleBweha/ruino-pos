@@ -186,9 +186,9 @@ export function useCredits() {
    * - Credit total_owed and balance are reduced by returned items' value.
    * - If remaining balance <= 0, the credit is fully resolved.
    */
-  async function partialReturn(creditId: string, returnItemIds: string[]): Promise<void> {
+  async function partialReturn(creditId: string, returnItems: { id: string; quantity: number }[]): Promise<void> {
     if (!user) throw new Error('User not authenticated');
-    if (returnItemIds.length === 0) throw new Error('No items selected for return');
+    if (returnItems.length === 0) throw new Error('No items selected for return');
 
     // Fetch fresh credit
     const { data: freshCredit, error: fetchError } = await supabase
@@ -201,30 +201,61 @@ export function useCredits() {
     if (!freshCredit) throw new Error('Credit not found');
 
     const allItems = freshCredit.sale?.sale_items || [];
-    const returnItems = allItems.filter((i: any) => returnItemIds.includes(i.id));
-    const keepItems = allItems.filter((i: any) => !returnItemIds.includes(i.id));
 
-    if (returnItems.length === 0) throw new Error('No matching items found');
+    // Check if this is effectively a full return
+    const isFullReturn = returnItems.every((rt) => {
+      const orig = allItems.find((i: any) => i.id === rt.id);
+      return orig && rt.quantity >= orig.quantity;
+    }) && returnItems.length === allItems.length;
 
-    // If returning ALL items, use the full return flow
-    if (keepItems.length === 0) {
+    if (isFullReturn) {
       await markAsReturned(creditId);
       return;
     }
 
-    const returnedTotal = returnItems.reduce((sum: number, i: any) => sum + i.total, 0);
-    const returnedProfit = returnItems.reduce((sum: number, i: any) => sum + i.profit, 0);
+    let returnedTotal = 0;
+    let returnedProfit = 0;
 
-    // 1. Restore returned items to inventory
-    for (const item of returnItems) {
-      const { error: stockError } = await supabase.rpc('update_product_stock', {
-        p_product_id: item.product_id,
-        p_quantity_change: item.quantity,
-      });
-      if (stockError) console.error('Stock restore error:', stockError);
+    // Process each return item
+    for (const rt of returnItems) {
+      const orig = allItems.find((i: any) => i.id === rt.id);
+      if (!orig) continue;
+
+      const qtyToReturn = Math.min(rt.quantity, orig.quantity);
+      const itemReturnTotal = orig.unit_price * qtyToReturn;
+      const itemReturnProfit = (orig.profit / orig.quantity) * qtyToReturn;
+      returnedTotal += itemReturnTotal;
+      returnedProfit += itemReturnProfit;
+
+      // Restore stock
+      if (orig.product_id) {
+        const { error: stockError } = await supabase.rpc('update_product_stock', {
+          p_product_id: orig.product_id,
+          p_quantity_change: qtyToReturn,
+        });
+        if (stockError) console.error('Stock restore error:', stockError);
+      }
+
+      if (qtyToReturn >= orig.quantity) {
+        // Fully returning this item — delete it
+        await supabase.from('sale_items').delete().eq('id', orig.id);
+      } else {
+        // Partially returning — update quantity and totals
+        const newQty = orig.quantity - qtyToReturn;
+        const newTotal = orig.unit_price * newQty;
+        const newProfit = (orig.profit / orig.quantity) * newQty;
+        await supabase
+          .from('sale_items')
+          .update({
+            quantity: newQty,
+            total: newTotal,
+            profit: newProfit,
+          })
+          .eq('id', orig.id);
+      }
     }
 
-    // 2. Reduce credit amounts
+    // Update credit amounts
     const newTotalOwed = freshCredit.total_owed - returnedTotal;
     const newBalance = Math.max(0, newTotalOwed - freshCredit.amount_paid);
     const isPaid = newBalance <= 0;
@@ -239,7 +270,7 @@ export function useCredits() {
       })
       .eq('id', creditId);
 
-    // 3. Adjust the sale totals
+    // Adjust the sale totals
     const newSaleTotal = freshCredit.sale.total - returnedTotal;
     const newSaleProfit = freshCredit.sale.profit - returnedProfit;
     const newSubtotal = freshCredit.sale.subtotal - returnedTotal;
@@ -253,11 +284,6 @@ export function useCredits() {
         ...(isPaid ? { status: 'completed' } : {}),
       })
       .eq('id', freshCredit.sale_id);
-
-    // 4. Delete the returned sale items
-    for (const item of returnItems) {
-      await supabase.from('sale_items').delete().eq('id', item.id);
-    }
   }
 
   const pendingCredits = credits.filter((c) => c.status === 'pending');
