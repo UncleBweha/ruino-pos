@@ -15,6 +15,7 @@ import { formatCurrency } from '@/lib/constants';
 export default function ProfilePage() {
   const { profile, role } = useAuth();
   const { toast } = useToast();
+  const { activeCasuals, loading: casualsLoading } = useCasuals();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
