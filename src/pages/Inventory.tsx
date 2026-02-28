@@ -326,7 +326,55 @@ export default function InventoryPage() {
                 <p>No products found</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              {/* Mobile card layout */}
+              <div className="block sm:hidden divide-y divide-border">
+                {filteredProducts.map((product) => {
+                  const profit = product.selling_price - product.buying_price;
+                  const margin = product.buying_price > 0
+                    ? (profit / product.buying_price) * 100
+                    : 0;
+                  const isLowStock = product.quantity <= product.low_stock_alert;
+
+                  return (
+                    <div key={product.id} className="p-3 space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{product.name}</p>
+                          <p className="text-xs text-muted-foreground font-mono">{product.sku}</p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className={cn(
+                            'text-sm font-medium px-2 py-0.5 rounded-full',
+                            isLowStock ? 'bg-warning/10 text-warning' : 'bg-muted'
+                          )}>
+                            {product.quantity} pcs
+                          </span>
+                          {isAdmin && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditForm(product)}>
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                        {product.category?.name && (
+                          <span className="text-muted-foreground text-xs">{product.category.name}</span>
+                        )}
+                        {isAdmin && (
+                          <span className="text-muted-foreground">Buy: {formatCurrency(product.buying_price)}</span>
+                        )}
+                        <span className="font-medium">Sell: {formatCurrency(product.selling_price)}</span>
+                        {isAdmin && (
+                          <span className="text-success text-xs">+{formatCurrency(profit)} ({margin.toFixed(0)}%)</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop table layout */}
+              <div className="hidden sm:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
