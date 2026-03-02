@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product, Category } from '@/types/database';
 import { cacheProducts, getCachedProducts, cacheCategories, getCachedCategories } from '@/lib/offlineDb';
