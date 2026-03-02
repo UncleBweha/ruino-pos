@@ -117,35 +117,54 @@ export function useProducts() {
   }
 
   async function addProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) {
+    if (!navigator.onLine) {
+      const tempId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const localProduct = { ...product, id: tempId, created_at: now, updated_at: now } as Product;
+      setProducts(prev => [...prev, localProduct]);
+      addCachedProduct(localProduct).catch(console.error);
+      await queueOp({ type: 'create_product', payload: product, createdAt: now, tempId });
+      return localProduct;
+    }
     const { data, error } = await supabase
       .from('products')
       .insert(product)
       .select()
       .single();
-
     if (error) throw error;
     return data;
   }
 
   async function updateProduct(id: string, updates: Partial<Product>) {
+    if (!navigator.onLine) {
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
+      await queueOp({ type: 'update_entity', payload: { table: 'products', id, updates }, createdAt: new Date().toISOString(), tempId: id });
+      return { id, ...updates };
+    }
     const { data, error } = await supabase
       .from('products')
       .update(updates)
       .eq('id', id)
       .select()
       .single();
-
     if (error) throw error;
     return data;
   }
 
   async function addCategory(name: string) {
+    if (!navigator.onLine) {
+      const tempId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const localCat = { id: tempId, name, created_at: now } as Category;
+      setCategories(prev => [...prev, localCat]);
+      await queueOp({ type: 'create_category', payload: { name }, createdAt: now, tempId });
+      return localCat;
+    }
     const { data, error } = await supabase
       .from('categories')
       .insert({ name })
       .select()
       .single();
-
     if (error) throw error;
     setCategories((prev) => [...prev, data as Category]);
     return data;
