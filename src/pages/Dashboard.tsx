@@ -13,6 +13,7 @@ import { LowStockCard } from '@/components/dashboard/LowStockCard';
 import { SalesSummaryCard } from '@/components/dashboard/SalesSummaryCard';
 import { UserManagement } from '@/components/dashboard/UserManagement';
 import { MonthlySalesDialog } from '@/components/dashboard/MonthlySalesDialog';
+import { SyncStatusCard } from '@/components/dashboard/SyncStatusCard';
 
 export default function DashboardPage() {
   const { profile } = useAuth();
@@ -65,9 +66,10 @@ export default function DashboardPage() {
           <LowStockCard products={lowStockProducts} />
         </div>
 
-        {/* User Management */}
+        {/* User Management + Sync Status */}
         <div className="grid lg:grid-cols-3 gap-5">
           <UserManagement />
+          <SyncStatusCard />
         </div>
       </div>
 

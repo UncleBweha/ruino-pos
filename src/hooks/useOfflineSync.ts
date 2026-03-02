@@ -5,6 +5,7 @@ import {
   getPendingOps, removePendingOp, getPendingOpsCount,
   type PendingSale, type PendingOp,
 } from '@/lib/offlineDb';
+import { getSyncMeta, recordSuccessfulSync, addSyncError, type SyncMeta } from '@/lib/syncMeta';
 import { useOnlineStatus } from './useOnlineStatus';
 import { useToast } from './use-toast';
 
@@ -13,6 +14,7 @@ export function useOfflineSync() {
   const { toast } = useToast();
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  const [syncMeta, setSyncMetaState] = useState<SyncMeta>(getSyncMeta());
   const syncingRef = useRef(false);
 
   const refreshCount = useCallback(async () => {
@@ -22,6 +24,7 @@ export function useOfflineSync() {
         getPendingOpsCount(),
       ]);
       setPendingCount(salesCount + opsCount);
+      setSyncMetaState(getSyncMeta());
     } catch {
       // IndexedDB may fail silently
     }
@@ -95,6 +98,11 @@ export function useOfflineSync() {
       return true;
     } catch (err) {
       console.error('Sync sale failed:', err);
+      addSyncError({
+        type: 'sale',
+        message: err instanceof Error ? err.message : 'Sale sync failed',
+        payload: { receipt: sale.offlineReceipt },
+      });
       return false;
     }
   }, []);
@@ -132,6 +140,18 @@ export function useOfflineSync() {
           if (error) throw error;
           break;
         }
+        case 'update_entity': {
+          const { table, id, updates } = op.payload;
+          const { error } = await supabase.from(table).update(updates).eq('id', id);
+          if (error) throw error;
+          break;
+        }
+        case 'delete_entity': {
+          const { table, id: entityId } = op.payload;
+          const { error } = await supabase.from(table).delete().eq('id', entityId);
+          if (error) throw error;
+          break;
+        }
         default:
           console.warn('Unknown pending op type:', op.type);
           return false;
@@ -139,6 +159,11 @@ export function useOfflineSync() {
       return true;
     } catch (err) {
       console.error(`Sync op (${op.type}) failed:`, err);
+      addSyncError({
+        type: op.type,
+        message: err instanceof Error ? err.message : `${op.type} sync failed`,
+        payload: { tempId: op.tempId },
+      });
       return false;
     }
   }, []);
@@ -151,7 +176,7 @@ export function useOfflineSync() {
     let totalSynced = 0;
 
     try {
-      // 1. Sync pending operations first (customers/casuals/suppliers might be referenced by sales)
+      // 1. Sync pending operations first (entities before sales)
       const pendingOps = await getPendingOps();
       for (const op of pendingOps) {
         const ok = await syncOp(op);
@@ -172,13 +197,18 @@ export function useOfflineSync() {
       }
 
       if (totalSynced > 0) {
+        recordSuccessfulSync(totalSynced);
         toast({
           title: 'Offline Data Synced',
-          description: `${totalSynced} offline operation${totalSynced > 1 ? 's' : ''} synced successfully`,
+          description: `${totalSynced} item${totalSynced > 1 ? 's' : ''} synced successfully`,
         });
       }
     } catch (err) {
       console.error('Sync all failed:', err);
+      addSyncError({
+        type: 'sync_all',
+        message: err instanceof Error ? err.message : 'Bulk sync failed',
+      });
     } finally {
       syncingRef.current = false;
       setSyncing(false);
@@ -193,10 +223,22 @@ export function useOfflineSync() {
     }
   }, [isOnline, syncAll]);
 
+  // Periodic retry when online with pending items (every 30s)
+  useEffect(() => {
+    if (!isOnline) return;
+    const interval = setInterval(async () => {
+      const [sc, oc] = await Promise.all([getPendingSalesCount(), getPendingOpsCount()]);
+      if (sc + oc > 0) {
+        syncAll();
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [isOnline, syncAll]);
+
   // Refresh count on mount
   useEffect(() => {
     refreshCount();
   }, [refreshCount]);
 
-  return { pendingCount, syncing, syncAll, refreshCount, isOnline };
+  return { pendingCount, syncing, syncAll, refreshCount, isOnline, syncMeta };
 }
