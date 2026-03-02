@@ -18,6 +18,15 @@ export function useCasuals() {
 
   const fetchCasuals = useCallback(async () => {
     try {
+      if (!navigator.onLine) {
+        const cached = await getCachedCasuals();
+        if (cached && cached.length > 0) {
+          setCasuals(cached as Casual[]);
+        }
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('casuals')
         .select('*')
