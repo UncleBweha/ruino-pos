@@ -247,6 +247,7 @@ export default function POSPage() {
           soldOnBehalfOf,
           soldOnBehalfName,
           commissionAmount,
+          saleDate: saleDate || undefined,
         });
 
         setLastSale(sale);
@@ -255,6 +256,7 @@ export default function POSPage() {
         setSellOnBehalf(false);
         setSelectedBehalfId('');
         setSelectedCustomerId('');
+        setSaleDate(undefined);
 
         toast({
           title: 'Sale Complete',
@@ -391,6 +393,35 @@ export default function POSPage() {
               </Button>
             )}
           </div>
+        </div>
+
+        {/* Backdate sale picker */}
+        <div className="px-4 py-2 glass-divider border-b">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={saleDate ? "default" : "outline"} size="sm" className="w-full h-8 text-xs justify-start">
+                <CalendarIcon className="w-3.5 h-3.5 mr-2" />
+                {saleDate ? format(saleDate, 'MMM dd, yyyy') : 'Today (tap to backdate)'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={saleDate}
+                onSelect={(d) => setSaleDate(d || undefined)}
+                disabled={(date) => date > new Date()}
+                initialFocus
+                className="pointer-events-auto"
+              />
+              {saleDate && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => setSaleDate(undefined)}>
+                    Reset to today
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Sell on behalf selector — only when toggled on */}
