@@ -1,0 +1,2 @@
+UPDATE sales SET created_at = '2026-01-14T09:28:56+00' WHERE id = '9406e894-d56c-42e5-b652-2ffa840a0698';
+UPDATE sales SET created_at = '2026-01-14T09:32:33+00' WHERE id = '8ec88538-64fc-4ab9-85ec-4d44d48a6a30';
