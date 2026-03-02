@@ -11,11 +11,13 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { queueSale } from '@/lib/offlineDb';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -28,7 +30,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Sale, Casual } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function POSPage() {
