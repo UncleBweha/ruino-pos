@@ -77,6 +77,7 @@ export default function POSPage() {
   const [selectedBehalfId, setSelectedBehalfId] = useState<string>('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
+  const [saleDate, setSaleDate] = useState<Date | undefined>(undefined);
 
   // On mobile, only show products when searching
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
