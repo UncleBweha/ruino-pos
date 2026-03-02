@@ -35,7 +35,7 @@ import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function POSPage() {
-  const { products, loading: productsLoading, searchProducts } = useProducts();
+  const { products, loading: productsLoading, searchProducts, localDecrementStock } = useProducts();
   const {
     items,
     discount,
