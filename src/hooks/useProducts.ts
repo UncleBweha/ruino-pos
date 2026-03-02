@@ -105,6 +105,14 @@ export function useProducts() {
 
   async function fetchCategories() {
     try {
+      if (!navigator.onLine) {
+        const cached = await getCachedCategories();
+        if (cached && cached.length > 0) {
+          setCategories(cached as Category[]);
+        }
+        return;
+      }
+
       const { data, error } = await supabase
         .from('categories')
         .select('*')

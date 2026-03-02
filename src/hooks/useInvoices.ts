@@ -26,6 +26,16 @@ export function useInvoices() {
 
   const fetchInvoices = useCallback(async () => {
     try {
+      if (!navigator.onLine) {
+        const cached = await getCachedInvoices();
+        if (cached && cached.length > 0) {
+          setInvoices(cached as unknown as Invoice[]);
+          setError(null);
+        }
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('invoices')
         .select('*, invoice_items(*)')
@@ -36,7 +46,6 @@ export function useInvoices() {
       cacheInvoices(data || []).catch(console.error);
     } catch (err) {
       console.error('Failed to fetch invoices, checking cache...', err);
-      // If we already have data (from cache init), don't show error unless cache lookup fails too
       try {
         const cached = await getCachedInvoices();
         if (cached && cached.length > 0) {
@@ -48,9 +57,8 @@ export function useInvoices() {
         console.error('Cache access failed:', cacheErr);
       }
 
-      // Fallback: if we are offline and have no cache, or if fetch failed for other reasons
       if (!navigator.onLine) {
-        setError('Working Offline - Showing cached data');
+        setError('Working Offline');
       } else {
         setError(err instanceof Error ? err.message : 'Failed to fetch invoices');
       }

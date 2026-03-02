@@ -12,6 +12,16 @@ export function useCredits() {
 
   const fetchCredits = useCallback(async () => {
     try {
+      if (!navigator.onLine) {
+        const cached = await getCachedCredits();
+        if (cached && cached.length > 0) {
+          setCredits(cached as Credit[]);
+          setError(null);
+        }
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('credits')
         .select('*, sale:sales(*, sale_items(*))')
