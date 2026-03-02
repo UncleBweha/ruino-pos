@@ -9,7 +9,7 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import { queueSale } from '@/lib/offlineDb';
+import { queueSale, decrementCachedStock } from '@/lib/offlineDb';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
 import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
