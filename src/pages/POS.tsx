@@ -226,6 +226,11 @@ export default function POSPage() {
         setLastSale(tempSale as Sale);
         setShowReceipt(true);
 
+        // Decrement local cached stock so POS reflects accurate quantities
+        await Promise.all(
+          items.map(i => decrementCachedStock(i.product.id, i.quantity))
+        );
+
         await refreshCount();
         clearCart();
         setSellOnBehalf(false);
