@@ -61,6 +61,17 @@ export function useProducts() {
 
   async function fetchProducts() {
     try {
+      if (!navigator.onLine) {
+        // Offline: load from cache directly
+        const cached = await getCachedProducts();
+        if (cached && cached.length > 0) {
+          setProducts(cached as Product[]);
+          setError('Working Offline');
+        }
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('products')
         .select('*, category:categories(*)')
@@ -68,7 +79,6 @@ export function useProducts() {
 
       if (error) throw error;
       setProducts(data as Product[]);
-      // Cache products in IndexedDB for offline use
       cacheProducts(data).catch(console.error);
     } catch (err) {
       console.error('Failed to fetch products, checking cache...', err);
