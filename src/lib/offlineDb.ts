@@ -1,10 +1,10 @@
 /**
  * IndexedDB-based offline storage for POS operations.
- * Caches products locally and queues sales for sync when back online.
+ * Caches products locally, queues sales and entity operations for sync when back online.
  */
 
 const DB_NAME = 'ruinu-pos-offline';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 const STORES = {
   products: 'products',
@@ -19,6 +19,7 @@ const STORES = {
   profiles: 'profiles',
   pendingSales: 'pending_sales',
   casuals: 'casuals',
+  pendingOps: 'pending_ops',
 } as const;
 
 function openDb(): Promise<IDBDatabase> {
@@ -28,7 +29,7 @@ function openDb(): Promise<IDBDatabase> {
       const db = req.result;
       Object.values(STORES).forEach(storeName => {
         if (!db.objectStoreNames.contains(storeName)) {
-          if (storeName === STORES.pendingSales) {
+          if (storeName === STORES.pendingSales || storeName === STORES.pendingOps) {
             db.createObjectStore(storeName, { keyPath: 'offlineId', autoIncrement: true });
           } else {
             db.createObjectStore(storeName, { keyPath: 'id' });
@@ -53,7 +54,6 @@ async function cacheEntity(storeName: string, data: any[] | any): Promise<void> 
   const items = Array.isArray(data) ? data : [data];
   for (const item of items) {
     if (item && (item.id || item.user_id || storeName === STORES.settings)) {
-      // settings might not have a stable ID or might use a dummy id
       store.put(item);
     }
   }
@@ -75,22 +75,38 @@ async function getCachedEntity(storeName: string): Promise<any[]> {
   });
 }
 
+// ── Add a single item to a cached store (without clearing) ──
+
+async function addToCachedEntity(storeName: string, item: any): Promise<void> {
+  const db = await openDb();
+  const tx = db.transaction(storeName, 'readwrite');
+  const store = tx.objectStore(storeName);
+  store.put(item);
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 // ── Specialized exports ──
 
 export const cacheProducts = (data: any[]) => cacheEntity(STORES.products, data);
 export const getCachedProducts = () => getCachedEntity(STORES.products);
+export const addCachedProduct = (item: any) => addToCachedEntity(STORES.products, item);
 
 export const cacheCategories = (data: any[]) => cacheEntity(STORES.categories, data);
 export const getCachedCategories = () => getCachedEntity(STORES.categories);
 
 export const cacheCustomers = (data: any[]) => cacheEntity(STORES.customers, data);
 export const getCachedCustomers = () => getCachedEntity(STORES.customers);
+export const addCachedCustomer = (item: any) => addToCachedEntity(STORES.customers, item);
 
 export const cacheInvoices = (data: any[]) => cacheEntity(STORES.invoices, data);
 export const getCachedInvoices = () => getCachedEntity(STORES.invoices);
 
 export const cacheSuppliers = (data: any[]) => cacheEntity(STORES.suppliers, data);
 export const getCachedSuppliers = () => getCachedEntity(STORES.suppliers);
+export const addCachedSupplier = (item: any) => addToCachedEntity(STORES.suppliers, item);
 
 export const cacheSettings = (data: any) => cacheEntity(STORES.settings, data);
 export async function getCachedSettings(): Promise<any | null> {
@@ -112,6 +128,7 @@ export const getCachedProfiles = () => getCachedEntity(STORES.profiles);
 
 export const cacheCasuals = (data: any[]) => cacheEntity(STORES.casuals, data);
 export const getCachedCasuals = () => getCachedEntity(STORES.casuals);
+export const addCachedCasual = (item: any) => addToCachedEntity(STORES.casuals, item);
 
 // ── Local stock helpers (for offline stock tracking) ──
 
@@ -200,6 +217,63 @@ export async function getPendingSalesCount(): Promise<number> {
   const db = await openDb();
   const tx = db.transaction(STORES.pendingSales, 'readonly');
   const store = tx.objectStore(STORES.pendingSales);
+  const req = store.count();
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ── Pending operations queue (generic offline creates) ──
+
+export type PendingOpType = 'create_customer' | 'create_supplier' | 'create_casual' | 'add_stock';
+
+export interface PendingOp {
+  offlineId?: number;
+  type: PendingOpType;
+  payload: any;
+  createdAt: string;
+  /** Temporary local ID assigned to the entity */
+  tempId: string;
+}
+
+export async function queueOp(op: Omit<PendingOp, 'offlineId'>): Promise<number> {
+  const db = await openDb();
+  const tx = db.transaction(STORES.pendingOps, 'readwrite');
+  const store = tx.objectStore(STORES.pendingOps);
+  const req = store.add(op);
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result as number);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function getPendingOps(): Promise<PendingOp[]> {
+  const db = await openDb();
+  const tx = db.transaction(STORES.pendingOps, 'readonly');
+  const store = tx.objectStore(STORES.pendingOps);
+  const req = store.getAll();
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function removePendingOp(offlineId: number): Promise<void> {
+  const db = await openDb();
+  const tx = db.transaction(STORES.pendingOps, 'readwrite');
+  const store = tx.objectStore(STORES.pendingOps);
+  store.delete(offlineId);
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function getPendingOpsCount(): Promise<number> {
+  const db = await openDb();
+  const tx = db.transaction(STORES.pendingOps, 'readonly');
+  const store = tx.objectStore(STORES.pendingOps);
   const req = store.count();
   return new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);

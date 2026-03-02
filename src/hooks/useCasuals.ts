@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { cacheCasuals, getCachedCasuals } from '@/lib/offlineDb';
+import { cacheCasuals, getCachedCasuals, addCachedCasual, queueOp } from '@/lib/offlineDb';
 import type { Casual } from '@/types/database';
 
 interface CreateCasualParams {
@@ -44,7 +44,6 @@ export function useCasuals() {
 
   useEffect(() => {
     async function init() {
-      // 1. Load from cache immediately
       try {
         const cached = await getCachedCasuals();
         if (cached && cached.length > 0) {
@@ -54,8 +53,6 @@ export function useCasuals() {
       } catch (err) {
         console.error('Initial casuals cache load error:', err);
       }
-
-      // 2. Fetch fresh data in background
       await fetchCasuals();
     }
     init();
@@ -64,6 +61,34 @@ export function useCasuals() {
   const activeCasuals = casuals.filter(c => c.status === 'active');
 
   async function createCasual(params: CreateCasualParams) {
+    if (!navigator.onLine) {
+      const tempId = `offline-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const now = new Date().toISOString();
+      const localCasual: Casual = {
+        id: tempId,
+        full_name: params.full_name,
+        phone: params.phone || null,
+        commission_rate: params.commission_rate,
+        commission_type: params.commission_type,
+        status: 'active',
+        created_by: 'offline',
+        created_at: now,
+        updated_at: now,
+      };
+
+      setCasuals(prev => [...prev, localCasual]);
+      await addCachedCasual(localCasual);
+      await queueOp({
+        type: 'create_casual',
+        payload: params,
+        createdAt: now,
+        tempId,
+      });
+
+      toast({ title: 'Casual Added (Offline)', description: `${params.full_name} saved locally` });
+      return localCasual;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 

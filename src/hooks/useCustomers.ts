@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Customer } from '@/types/database';
-import { cacheCustomers, getCachedCustomers } from '@/lib/offlineDb';
+import { cacheCustomers, getCachedCustomers, addCachedCustomer, queueOp } from '@/lib/offlineDb';
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -44,7 +44,6 @@ export function useCustomers() {
 
   useEffect(() => {
     async function init() {
-      // 1. Load from cache immediately
       try {
         const cached = await getCachedCustomers();
         if (cached && cached.length > 0) {
@@ -54,14 +53,36 @@ export function useCustomers() {
       } catch (err) {
         console.error('Initial customers cache load error:', err);
       }
-
-      // 2. Fetch fresh data in background
       await fetchCustomers();
     }
     init();
   }, [fetchCustomers]);
 
   async function createCustomer(customer: Omit<Customer, 'id' | 'created_at' | 'updated_at'>): Promise<Customer> {
+    if (!navigator.onLine) {
+      // Create locally with temp ID
+      const tempId = `offline-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const now = new Date().toISOString();
+      const localCustomer: Customer = {
+        id: tempId,
+        ...customer,
+        created_at: now,
+        updated_at: now,
+      };
+
+      // Add to local state + cache + queue
+      setCustomers(prev => [...prev, localCustomer]);
+      await addCachedCustomer(localCustomer);
+      await queueOp({
+        type: 'create_customer',
+        payload: customer,
+        createdAt: now,
+        tempId,
+      });
+
+      return localCustomer;
+    }
+
     const { data, error } = await supabase
       .from('customers')
       .insert(customer)

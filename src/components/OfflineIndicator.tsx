@@ -26,7 +26,7 @@ export function OfflineIndicator() {
 
       <span>
         {isOnline
-          ? `${pendingCount} sale${pendingCount !== 1 ? 's' : ''} pending sync`
+          ? `${pendingCount} item${pendingCount !== 1 ? 's' : ''} pending sync`
           : 'Offline mode'}
       </span>
 
