@@ -226,7 +226,7 @@ export async function getPendingSalesCount(): Promise<number> {
 
 // ── Pending operations queue (generic offline creates) ──
 
-export type PendingOpType = 'create_customer' | 'create_supplier' | 'create_casual' | 'add_stock' | 'update_entity' | 'delete_entity';
+export type PendingOpType = 'create_customer' | 'create_supplier' | 'create_casual' | 'create_product' | 'create_category' | 'add_stock' | 'update_entity' | 'delete_entity';
 
 export interface PendingOp {
   offlineId?: number;

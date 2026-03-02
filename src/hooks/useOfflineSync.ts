@@ -140,6 +140,16 @@ export function useOfflineSync() {
           if (error) throw error;
           break;
         }
+        case 'create_product': {
+          const { error } = await supabase.from('products').insert(op.payload);
+          if (error) throw error;
+          break;
+        }
+        case 'create_category': {
+          const { error } = await supabase.from('categories').insert(op.payload);
+          if (error) throw error;
+          break;
+        }
         case 'update_entity': {
           const { table, id, updates } = op.payload;
           const { error } = await supabase.from(table).update(updates).eq('id', id);
