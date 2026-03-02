@@ -29,6 +29,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { addCachedProduct, queueOp } from '@/lib/offlineDb';
 import type { Category } from '@/types/database';
 
 interface BulkExcelImportProps {
