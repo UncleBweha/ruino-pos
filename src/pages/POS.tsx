@@ -11,11 +11,13 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { queueSale } from '@/lib/offlineDb';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -28,6 +30,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Sale, Casual } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -74,6 +77,7 @@ export default function POSPage() {
   const [selectedBehalfId, setSelectedBehalfId] = useState<string>('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
+  const [saleDate, setSaleDate] = useState<Date | undefined>(undefined);
 
   // On mobile, only show products when searching
   const filteredProducts = searchQuery ? searchProducts(searchQuery) : (isMobile ? [] : products);
@@ -243,6 +247,7 @@ export default function POSPage() {
           soldOnBehalfOf,
           soldOnBehalfName,
           commissionAmount,
+          saleDate: saleDate || undefined,
         });
 
         setLastSale(sale);
@@ -251,6 +256,7 @@ export default function POSPage() {
         setSellOnBehalf(false);
         setSelectedBehalfId('');
         setSelectedCustomerId('');
+        setSaleDate(undefined);
 
         toast({
           title: 'Sale Complete',
@@ -387,6 +393,35 @@ export default function POSPage() {
               </Button>
             )}
           </div>
+        </div>
+
+        {/* Backdate sale picker */}
+        <div className="px-4 py-2 glass-divider border-b">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={saleDate ? "default" : "outline"} size="sm" className="w-full h-8 text-xs justify-start">
+                <CalendarIcon className="w-3.5 h-3.5 mr-2" />
+                {saleDate ? format(saleDate, 'MMM dd, yyyy') : 'Today (tap to backdate)'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={saleDate}
+                onSelect={(d) => setSaleDate(d || undefined)}
+                disabled={(date) => date > new Date()}
+                initialFocus
+                className="pointer-events-auto"
+              />
+              {saleDate && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => setSaleDate(undefined)}>
+                    Reset to today
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Sell on behalf selector — only when toggled on */}

@@ -14,6 +14,7 @@ interface CreateSaleParams {
   soldOnBehalfOf?: string | null;
   soldOnBehalfName?: string | null;
   commissionAmount?: number;
+  saleDate?: Date;
 }
 
 export function useSales(filterDate?: Date | null, searchQuery?: string) {
@@ -141,7 +142,7 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
   async function createSale(params: CreateSaleParams): Promise<Sale> {
     if (!user) throw new Error('User not authenticated');
 
-    const { items, customerName, customerId, taxRate, discount, paymentMethod, soldOnBehalfOf, soldOnBehalfName, commissionAmount } = params;
+    const { items, customerName, customerId, taxRate, discount, paymentMethod, soldOnBehalfOf, soldOnBehalfName, commissionAmount, saleDate } = params;
 
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = subtotal * (taxRate / 100);
@@ -173,6 +174,7 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
         sold_on_behalf_of: soldOnBehalfOf || null,
         sold_on_behalf_name: soldOnBehalfName || null,
         commission_amount: commissionAmount || 0,
+        ...(saleDate ? { created_at: saleDate.toISOString() } : {}),
       })
       .select()
       .single();
