@@ -53,7 +53,7 @@ export function OfflineIndicator() {
   return (
     <div
       className={cn(
-        'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full shadow-lg text-sm font-medium transition-all duration-500',
+        'fixed bottom-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-xs font-medium transition-all duration-500',
         !isOnline && 'bg-destructive text-destructive-foreground',
         isOnline && syncing && 'bg-warning/90 text-warning-foreground',
         isOnline && hasPending && !syncing && 'bg-warning/90 text-warning-foreground',
@@ -61,21 +61,21 @@ export function OfflineIndicator() {
         fading ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0',
       )}
     >
-      {!isOnline && <WifiOff className="w-4 h-4" />}
-      {isOnline && syncing && <Loader2 className="w-4 h-4 animate-spin" />}
-      {isOnline && hasPending && !syncing && <CloudUpload className="w-4 h-4" />}
-      {isSynced && <CheckCircle2 className="w-4 h-4" />}
+      {!isOnline && <WifiOff className="w-3 h-3" />}
+      {isOnline && syncing && <Loader2 className="w-3 h-3 animate-spin" />}
+      {isOnline && hasPending && !syncing && <CloudUpload className="w-3 h-3" />}
+      {isSynced && <CheckCircle2 className="w-3 h-3" />}
 
       <span>
-        {!isOnline && 'Offline mode — changes saved locally'}
-        {isOnline && syncing && `Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}…`}
-        {isOnline && hasPending && !syncing && `${pendingCount} item${pendingCount !== 1 ? 's' : ''} pending sync`}
-        {isSynced && 'All changes synced ✓'}
+        {!isOnline && 'Offline'}
+        {isOnline && syncing && `Syncing ${pendingCount}…`}
+        {isOnline && hasPending && !syncing && `${pendingCount} pending`}
+        {isSynced && 'Synced ✓'}
       </span>
 
       <span
         className={cn(
-          'w-2.5 h-2.5 rounded-full ml-1 shrink-0 border border-background/30',
+          'w-2 h-2 rounded-full shrink-0 border border-background/30',
           isOnline ? 'bg-primary-foreground' : 'bg-destructive-foreground',
         )}
       />
@@ -84,11 +84,10 @@ export function OfflineIndicator() {
         <Button
           variant="secondary"
           size="sm"
-          className="h-7 text-xs ml-1"
+          className="h-5 text-[10px] px-2 ml-0.5"
           onClick={syncAll}
         >
-          <CloudUpload className="w-3 h-3 mr-1" />
-          Sync Now
+          Sync
         </Button>
       )}
     </div>
