@@ -227,6 +227,9 @@ export default function POSPage() {
         setShowReceipt(true);
 
         // Decrement local cached stock so POS reflects accurate quantities
+        for (const i of items) {
+          localDecrementStock(i.product.id, i.quantity);
+        }
         await Promise.all(
           items.map(i => decrementCachedStock(i.product.id, i.quantity))
         );
