@@ -9,7 +9,7 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import { queueSale } from '@/lib/offlineDb';
+import { queueSale, decrementCachedStock } from '@/lib/offlineDb';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
 import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function POSPage() {
-  const { products, loading: productsLoading, searchProducts } = useProducts();
+  const { products, loading: productsLoading, searchProducts, localDecrementStock } = useProducts();
   const {
     items,
     discount,
@@ -225,6 +225,14 @@ export default function POSPage() {
 
         setLastSale(tempSale as Sale);
         setShowReceipt(true);
+
+        // Decrement local cached stock so POS reflects accurate quantities
+        for (const i of items) {
+          localDecrementStock(i.product.id, i.quantity);
+        }
+        await Promise.all(
+          items.map(i => decrementCachedStock(i.product.id, i.quantity))
+        );
 
         await refreshCount();
         clearCart();

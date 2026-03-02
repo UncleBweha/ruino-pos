@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product, Category } from '@/types/database';
 import { cacheProducts, getCachedProducts, cacheCategories, getCachedCategories } from '@/lib/offlineDb';
@@ -177,6 +177,17 @@ export function useProducts() {
     );
   }
 
+  // Locally decrement stock in memory (for offline sales)
+  const localDecrementStock = useCallback((productId: string, quantity: number) => {
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === productId
+          ? { ...p, quantity: Math.max(0, p.quantity - quantity) }
+          : p
+      )
+    );
+  }, []);
+
   return {
     products,
     categories,
@@ -189,6 +200,7 @@ export function useProducts() {
     decrementStock,
     incrementStock,
     searchProducts,
+    localDecrementStock,
     refresh: fetchProducts,
   };
 }

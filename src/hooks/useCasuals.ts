@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { cacheCasuals, getCachedCasuals } from '@/lib/offlineDb';
 import type { Casual } from '@/types/database';
 
 interface CreateCasualParams {
@@ -24,15 +25,40 @@ export function useCasuals() {
 
       if (error) throw error;
       setCasuals((data || []) as Casual[]);
+      cacheCasuals(data || []).catch(console.error);
     } catch (error) {
-      console.error('Error fetching casuals:', error);
+      console.error('Failed to fetch casuals, checking cache...', error);
+      try {
+        const cached = await getCachedCasuals();
+        if (cached && cached.length > 0) {
+          setCasuals(cached as Casual[]);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error('Cache access failed:', cacheErr);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchCasuals();
+    async function init() {
+      // 1. Load from cache immediately
+      try {
+        const cached = await getCachedCasuals();
+        if (cached && cached.length > 0) {
+          setCasuals(cached as Casual[]);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Initial casuals cache load error:', err);
+      }
+
+      // 2. Fetch fresh data in background
+      await fetchCasuals();
+    }
+    init();
   }, [fetchCasuals]);
 
   const activeCasuals = casuals.filter(c => c.status === 'active');
