@@ -177,6 +177,17 @@ export function useProducts() {
     );
   }
 
+  // Locally decrement stock in memory (for offline sales)
+  const localDecrementStock = useCallback((productId: string, quantity: number) => {
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === productId
+          ? { ...p, quantity: Math.max(0, p.quantity - quantity) }
+          : p
+      )
+    );
+  }, []);
+
   return {
     products,
     categories,
@@ -189,6 +200,7 @@ export function useProducts() {
     decrementStock,
     incrementStock,
     searchProducts,
+    localDecrementStock,
     refresh: fetchProducts,
   };
 }
