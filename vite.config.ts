@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['robots.txt'],
       manifest: {
         name: 'Ruinu POS - General Merchants',
