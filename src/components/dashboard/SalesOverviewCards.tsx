@@ -77,11 +77,6 @@ export function SalesOverviewCards({ stats, loading, bestEmployee, onMonthSalesC
       onClick: () => navigate('/credits'),
     },
     {
-      title: "Today's Cash",
-      value: formatCurrency(stats.todayCash),
-      icon: Wallet,
-    },
-    {
       title: 'Best Employee',
       value: bestEmployee?.name || '—',
       subValue: bestEmployee ? formatCurrency(bestEmployee.totalSales) : undefined,
