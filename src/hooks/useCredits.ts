@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Credit } from '@/types/database';
-import { cacheCredits, getCachedCredits } from '@/lib/offlineDb';
+import { cacheCredits, getCachedCredits, queueOp } from '@/lib/offlineDb';
 
 export function useCredits() {
   const { user } = useAuth();
@@ -80,6 +80,53 @@ export function useCredits() {
 
   async function markAsPaid(creditId: string, amountPaid?: number, paymentMethod: 'cash' | 'mpesa' | 'till' | 'cheque' = 'cash'): Promise<void> {
     if (!user) throw new Error('User not authenticated');
+
+    if (!navigator.onLine) {
+      // Offline: update local state and queue for sync
+      const credit = credits.find(c => c.id === creditId);
+      if (!credit) throw new Error('Credit not found');
+
+      const paymentAmount = amountPaid || credit.balance;
+      const newAmountPaid = credit.amount_paid + paymentAmount;
+      const newBalance = credit.total_owed - newAmountPaid;
+      const isPaid = newBalance <= 0;
+
+      // Update local state
+      setCredits(prev => prev.map(c => c.id === creditId ? {
+        ...c,
+        amount_paid: newAmountPaid,
+        balance: Math.max(0, newBalance),
+        status: isPaid ? 'paid' : 'pending',
+        paid_at: isPaid ? new Date().toISOString() : null,
+      } : c));
+
+      // Update cache
+      const updatedCredits = credits.map(c => c.id === creditId ? {
+        ...c,
+        amount_paid: newAmountPaid,
+        balance: Math.max(0, newBalance),
+        status: isPaid ? 'paid' : 'pending',
+        paid_at: isPaid ? new Date().toISOString() : null,
+      } : c);
+      await cacheCredits(updatedCredits).catch(console.error);
+
+      await queueOp({
+        type: 'credit_payment',
+        payload: {
+          creditId,
+          amountPaid: paymentAmount,
+          paymentMethod,
+          cashierId: user.id,
+          saleId: credit.sale_id,
+          customerName: credit.customer_name,
+          isPaid,
+        },
+        createdAt: new Date().toISOString(),
+        tempId: `cp-${Date.now()}`,
+      });
+
+      return;
+    }
 
     // Fetch the latest credit data from DB to avoid stale state issues
     const { data: freshCredit, error: fetchError } = await supabase

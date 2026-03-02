@@ -10,6 +10,16 @@ export function useCustomers() {
 
   const fetchCustomers = useCallback(async () => {
     try {
+      if (!navigator.onLine) {
+        const cached = await getCachedCustomers();
+        if (cached && cached.length > 0) {
+          setCustomers(cached as Customer[]);
+          setError(null);
+        }
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('customers')
         .select('*')
