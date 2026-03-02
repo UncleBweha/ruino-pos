@@ -29,6 +29,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { addCachedProduct, queueOp } from '@/lib/offlineDb';
 import type { Category } from '@/types/database';
 
 interface BulkExcelImportProps {
@@ -259,20 +260,48 @@ export function BulkExcelImport({
     setParseErrors([]);
 
     try {
-      // 1. Collect unique category names from the spreadsheet
+      if (!navigator.onLine) {
+        // Offline: queue each product for sync
+        const now = new Date().toISOString();
+        const effectiveDefault = defaultCategory && defaultCategory !== 'none' ? defaultCategory : null;
+
+        for (const p of parsedProducts) {
+          const tempId = crypto.randomUUID();
+          const productData = {
+            sku: p.sku,
+            name: p.name,
+            quantity: p.quantity,
+            buying_price: p.buying_price,
+            selling_price: p.selling_price,
+            low_stock_alert: p.low_stock_alert,
+            category_id: effectiveDefault,
+          };
+          const localProduct = { ...productData, id: tempId, created_at: now, updated_at: now };
+          await addCachedProduct(localProduct);
+          await queueOp({ type: 'create_product', payload: productData, createdAt: now, tempId });
+        }
+
+        toast({
+          title: 'Products Saved Offline',
+          description: `${parsedProducts.length} products queued for sync when back online`,
+        });
+
+        handleClose(false);
+        onSuccess();
+        return;
+      }
+
+      // Online: original logic
       const uniqueCatNames = new Set<string>();
       for (const p of parsedProducts) {
         if (p.category_name) uniqueCatNames.add(p.category_name.toLowerCase());
       }
 
-      // 2. Resolve category names → IDs (match existing or create new)
       const catNameToId = new Map<string, string>();
-      // Map existing categories
       for (const cat of categories) {
         catNameToId.set(cat.name.toLowerCase(), cat.id);
       }
 
-      // Find names that need to be created
       const toCreate: string[] = [];
       for (const name of uniqueCatNames) {
         if (!catNameToId.has(name)) toCreate.push(name);
@@ -289,7 +318,6 @@ export function BulkExcelImport({
         }
       }
 
-      // 3. Build final products with resolved category_id
       const effectiveDefault = defaultCategory && defaultCategory !== 'none' ? defaultCategory : null;
       const productsToInsert = parsedProducts.map((p) => ({
         sku: p.sku,
