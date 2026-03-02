@@ -227,7 +227,7 @@ export function generateReceiptHTML(options: PrintReceiptOptions): string {
       <div class="footer">
         <p>${footerText}</p>
         <p style="margin-top: 8px; font-size: 9px;">
-          ${format(new Date(), 'dd/MM/yyyy HH:mm:ss')}
+          ${format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm:ss')}
         </p>
       </div>
     </body>
