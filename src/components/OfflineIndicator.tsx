@@ -10,8 +10,7 @@ export function OfflineIndicator() {
   const isSynced = isOnline && pendingCount === 0 && !syncing;
   const hasPending = pendingCount > 0;
 
-  // Show brief "all synced" confirmation, then hide
-  // Always show when offline or has pending items
+  // Don't show anything if fully synced and never synced before
   if (isSynced && !syncMeta.lastSyncTime) return null;
 
   return (
@@ -21,7 +20,7 @@ export function OfflineIndicator() {
         !isOnline && 'bg-destructive text-destructive-foreground',
         isOnline && syncing && 'bg-warning/90 text-warning-foreground',
         isOnline && hasPending && !syncing && 'bg-warning/90 text-warning-foreground',
-        isSynced && 'bg-emerald-600 text-white animate-in fade-in duration-300',
+        isSynced && 'bg-primary text-primary-foreground animate-in fade-in duration-300',
       )}
     >
       {/* Status icon */}
@@ -41,12 +40,12 @@ export function OfflineIndicator() {
       {/* Connection dot */}
       <span
         className={cn(
-          'w-2.5 h-2.5 rounded-full ml-1 shrink-0',
-          isOnline ? 'bg-emerald-400' : 'bg-red-400',
+          'w-2.5 h-2.5 rounded-full ml-1 shrink-0 border border-background/30',
+          isOnline ? 'bg-primary-foreground' : 'bg-destructive-foreground',
         )}
       />
 
-      {/* Manual sync button (only when pending + online + not syncing) */}
+      {/* Manual sync button */}
       {hasPending && isOnline && !syncing && (
         <Button
           variant="secondary"
