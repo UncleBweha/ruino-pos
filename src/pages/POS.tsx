@@ -33,7 +33,6 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { printReceipt, downloadReceipt } from '@/lib/printReceipt';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function POSPage() {
   const { products, loading: productsLoading, searchProducts } = useProducts();
