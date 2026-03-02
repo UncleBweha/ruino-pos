@@ -56,47 +56,24 @@ export function PWAInstallPrompt() {
   );
 }
 
-// ── Update Prompt ──
+// ── Update (auto-update mode — no prompt needed) ──
 
 export function PWAUpdatePrompt() {
-  const [needRefresh, setNeedRefresh] = useState(false);
-  const [updateSW, setUpdateSW] = useState<((reloadPage?: boolean) => Promise<void>) | null>(null);
-
   useEffect(() => {
-    const update = registerSW({
-      onNeedRefresh() {
-        setNeedRefresh(true);
+    registerSW({
+      onRegistered(registration) {
+        // Check for updates every 60 seconds
+        if (registration) {
+          setInterval(() => {
+            registration.update();
+          }, 60 * 1000);
+        }
       },
       onOfflineReady() {
-        // App is ready to work offline — no action needed
+        // App is ready to work offline
       },
     });
-    setUpdateSW(() => update);
   }, []);
 
-  if (!needRefresh) return null;
-
-  const handleUpdate = () => {
-    updateSW?.(true);
-  };
-
-  return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-accent text-accent-foreground max-w-sm w-[calc(100%-2rem)] animate-in slide-in-from-top duration-300 border border-border/50">
-      <RefreshCw className="w-5 h-5 shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold">Update Available</p>
-        <p className="text-xs opacity-80">A new version is ready to install</p>
-      </div>
-      <Button
-        size="sm"
-        className="h-8 text-xs shrink-0"
-        onClick={handleUpdate}
-      >
-        Update
-      </Button>
-      <button onClick={() => setNeedRefresh(false)} className="opacity-60 hover:opacity-100">
-        <X className="w-4 h-4" />
-      </button>
-    </div>
-  );
+  return null;
 }
