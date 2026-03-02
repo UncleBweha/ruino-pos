@@ -162,6 +162,97 @@ export function useOfflineSync() {
           if (error) throw error;
           break;
         }
+        case 'create_invoice': {
+          const p = op.payload;
+          const subtotal = p.items.reduce((sum: number, item: any) => sum + item.quantity * item.unit_price, 0);
+          const taxAmount = subtotal * (p.tax_rate / 100);
+          const total = subtotal + taxAmount;
+
+          const { data: invoiceNumber, error: numError } = await supabase.rpc('generate_invoice_number', { doc_type: p.type });
+          if (numError) throw numError;
+
+          const { data: invoiceData, error: invError } = await supabase
+            .from('invoices')
+            .insert({
+              invoice_number: invoiceNumber,
+              type: p.type,
+              customer_name: p.customer_name,
+              customer_phone: p.customer_phone || null,
+              customer_address: p.customer_address || null,
+              customer_id: p.customer_id || null,
+              subtotal,
+              tax_rate: p.tax_rate,
+              tax_amount: taxAmount,
+              total,
+              payment_terms: p.payment_terms || null,
+              notes: p.notes || null,
+              created_by: p.created_by || user.id,
+              converted_from: p.converted_from || null,
+              logo_url: p.logo_url || null,
+            })
+            .select()
+            .single();
+          if (invError) throw invError;
+
+          const invoiceItems = p.items.map((item: any) => ({
+            invoice_id: invoiceData.id,
+            product_name: item.product_name,
+            description: item.description || null,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total: item.quantity * item.unit_price,
+          }));
+
+          const { error: itemsError } = await supabase.from('invoice_items').insert(invoiceItems);
+          if (itemsError) throw itemsError;
+          break;
+        }
+        case 'credit_payment': {
+          const cp = op.payload;
+          // Fetch fresh credit
+          const { data: freshCredit, error: fcError } = await supabase
+            .from('credits')
+            .select('*')
+            .eq('id', cp.creditId)
+            .maybeSingle();
+          if (fcError) throw fcError;
+          if (!freshCredit) throw new Error('Credit not found during sync');
+
+          const paymentAmount = cp.amountPaid;
+          const newAmountPaid = freshCredit.amount_paid + paymentAmount;
+          const newBalance = freshCredit.total_owed - newAmountPaid;
+          const isPaid = newBalance <= 0;
+
+          await supabase.from('credits').update({
+            amount_paid: newAmountPaid,
+            balance: Math.max(0, newBalance),
+            status: isPaid ? 'paid' : 'pending',
+            paid_at: isPaid ? new Date().toISOString() : null,
+          }).eq('id', cp.creditId);
+
+          await supabase.from('credit_payments').insert({
+            credit_id: cp.creditId,
+            amount: paymentAmount,
+            payment_method: cp.paymentMethod,
+            cashier_id: cp.cashierId,
+          });
+
+          if (isPaid) {
+            await supabase.from('sales').update({
+              status: 'completed',
+              payment_method: `credit_${cp.paymentMethod}`,
+            }).eq('id', cp.saleId);
+          }
+
+          await supabase.from('cash_box').insert({
+            sale_id: cp.saleId,
+            amount: paymentAmount,
+            transaction_type: 'credit_payment',
+            description: `Credit payment from ${cp.customerName} via ${cp.paymentMethod}`,
+            cashier_id: cp.cashierId,
+          });
+          break;
+        }
         default:
           console.warn('Unknown pending op type:', op.type);
           return false;

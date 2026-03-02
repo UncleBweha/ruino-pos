@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Invoice, InvoiceItem } from '@/types/database';
-import { cacheInvoices, getCachedInvoices } from '@/lib/offlineDb';
+import { cacheInvoices, getCachedInvoices, queueOp } from '@/lib/offlineDb';
 
 interface CreateInvoiceParams {
   type: 'invoice' | 'quotation';
@@ -91,6 +91,60 @@ export function useInvoices() {
     const subtotal = params.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
     const taxAmount = subtotal * (params.tax_rate / 100);
     const total = subtotal + taxAmount;
+
+    if (!navigator.onLine) {
+      // Offline: create locally and queue for sync
+      const tempId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const prefix = params.type === 'quotation' ? 'QT-OFF-' : 'INV-OFF-';
+      const invoiceNumber = `${prefix}${Date.now()}`;
+
+      const localInvoice: any = {
+        id: tempId,
+        invoice_number: invoiceNumber,
+        type: params.type,
+        customer_name: params.customer_name,
+        customer_phone: params.customer_phone || null,
+        customer_address: params.customer_address || null,
+        customer_id: params.customer_id || null,
+        subtotal,
+        tax_rate: params.tax_rate,
+        tax_amount: taxAmount,
+        total,
+        payment_status: 'unpaid',
+        payment_terms: params.payment_terms || null,
+        notes: params.notes || null,
+        created_by: user.id,
+        converted_from: params.converted_from || null,
+        logo_url: params.logo_url || null,
+        created_at: now,
+        updated_at: now,
+        invoice_items: params.items.map((item, i) => ({
+          id: `${tempId}-item-${i}`,
+          invoice_id: tempId,
+          product_name: item.product_name,
+          description: item.description || null,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total: item.quantity * item.unit_price,
+          created_at: now,
+        })),
+      };
+
+      setInvoices(prev => [localInvoice, ...prev]);
+      // Update cache
+      const cached = await getCachedInvoices().catch(() => []);
+      await cacheInvoices([localInvoice, ...cached]).catch(console.error);
+
+      await queueOp({
+        type: 'create_invoice',
+        payload: { ...params, created_by: user.id },
+        createdAt: now,
+        tempId,
+      });
+
+      return localInvoice as Invoice;
+    }
 
     const invoiceNumber = await generateInvoiceNumber(params.type);
 
