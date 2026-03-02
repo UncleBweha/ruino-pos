@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Supplier, SupplierProduct } from '@/types/database';
-import { cacheSuppliers, getCachedSuppliers } from '@/lib/offlineDb';
+import { cacheSuppliers, getCachedSuppliers, addCachedSupplier, queueOp } from '@/lib/offlineDb';
 
 export function useSuppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -30,7 +30,11 @@ export function useSuppliers() {
       } catch (cacheErr) {
         console.error('Cache access failed:', cacheErr);
       }
-      setError(err instanceof Error ? err.message : 'Failed to fetch suppliers');
+      if (!navigator.onLine) {
+        setError('Working Offline');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch suppliers');
+      }
     } finally {
       setLoading(false);
     }
@@ -38,7 +42,6 @@ export function useSuppliers() {
 
   useEffect(() => {
     async function init() {
-      // 1. Load from cache immediately
       try {
         const cached = await getCachedSuppliers();
         if (cached && cached.length > 0) {
@@ -48,14 +51,40 @@ export function useSuppliers() {
       } catch (err) {
         console.error('Initial suppliers cache load error:', err);
       }
-
-      // 2. Fetch fresh data in background
       await fetchSuppliers();
     }
     init();
   }, [fetchSuppliers]);
 
   async function createSupplier(supplier: { name: string; phone?: string; email?: string; payment_terms?: number; notes?: string }): Promise<Supplier> {
+    if (!navigator.onLine) {
+      const tempId = `offline-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const now = new Date().toISOString();
+      const localSupplier: Supplier = {
+        id: tempId,
+        name: supplier.name,
+        phone: supplier.phone || null,
+        email: supplier.email || null,
+        payment_terms: supplier.payment_terms || 30,
+        notes: supplier.notes || null,
+        status: 'active',
+        created_at: now,
+        updated_at: now,
+        supplier_products: [],
+      };
+
+      setSuppliers(prev => [...prev, localSupplier]);
+      await addCachedSupplier(localSupplier);
+      await queueOp({
+        type: 'create_supplier',
+        payload: supplier,
+        createdAt: now,
+        tempId,
+      });
+
+      return localSupplier;
+    }
+
     const { data, error } = await supabase
       .from('suppliers')
       .insert(supplier)

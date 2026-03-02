@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getPendingSales, removePendingSale, getPendingSalesCount, type PendingSale } from '@/lib/offlineDb';
+import {
+  getPendingSales, removePendingSale, getPendingSalesCount,
+  getPendingOps, removePendingOp, getPendingOpsCount,
+  type PendingSale, type PendingOp,
+} from '@/lib/offlineDb';
 import { useOnlineStatus } from './useOnlineStatus';
 import { useToast } from './use-toast';
 
@@ -13,8 +17,11 @@ export function useOfflineSync() {
 
   const refreshCount = useCallback(async () => {
     try {
-      const count = await getPendingSalesCount();
-      setPendingCount(count);
+      const [salesCount, opsCount] = await Promise.all([
+        getPendingSalesCount(),
+        getPendingOpsCount(),
+      ]);
+      setPendingCount(salesCount + opsCount);
     } catch {
       // IndexedDB may fail silently
     }
@@ -22,11 +29,9 @@ export function useOfflineSync() {
 
   const syncSale = useCallback(async (sale: PendingSale): Promise<boolean> => {
     try {
-      // Get a real receipt number
       const { data: receiptNumber, error: rcError } = await supabase.rpc('generate_receipt_number');
       if (rcError) throw rcError;
 
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
@@ -75,7 +80,6 @@ export function useOfflineSync() {
       const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
       if (itemsError) throw itemsError;
 
-      // Stock updates and cash_box / credits
       const ops: PromiseLike<any>[] = [];
       for (const item of sale.items) {
         ops.push(supabase.rpc('update_product_stock', { p_product_id: item.productId, p_quantity_change: -item.quantity }).then());
@@ -95,27 +99,82 @@ export function useOfflineSync() {
     }
   }, []);
 
+  const syncOp = useCallback(async (op: PendingOp): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      switch (op.type) {
+        case 'create_customer': {
+          const { error } = await supabase.from('customers').insert(op.payload);
+          if (error) throw error;
+          break;
+        }
+        case 'create_supplier': {
+          const { error } = await supabase.from('suppliers').insert(op.payload);
+          if (error) throw error;
+          break;
+        }
+        case 'create_casual': {
+          const { error } = await supabase.from('casuals').insert({
+            ...op.payload,
+            created_by: user.id,
+          });
+          if (error) throw error;
+          break;
+        }
+        case 'add_stock': {
+          const { productId, quantity } = op.payload;
+          const { error } = await supabase.rpc('update_product_stock', {
+            p_product_id: productId,
+            p_quantity_change: quantity,
+          });
+          if (error) throw error;
+          break;
+        }
+        default:
+          console.warn('Unknown pending op type:', op.type);
+          return false;
+      }
+      return true;
+    } catch (err) {
+      console.error(`Sync op (${op.type}) failed:`, err);
+      return false;
+    }
+  }, []);
+
   const syncAll = useCallback(async () => {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setSyncing(true);
 
-    try {
-      const pending = await getPendingSales();
-      let synced = 0;
+    let totalSynced = 0;
 
+    try {
+      // 1. Sync pending operations first (customers/casuals/suppliers might be referenced by sales)
+      const pendingOps = await getPendingOps();
+      for (const op of pendingOps) {
+        const ok = await syncOp(op);
+        if (ok && op.offlineId != null) {
+          await removePendingOp(op.offlineId);
+          totalSynced++;
+        }
+      }
+
+      // 2. Sync pending sales
+      const pending = await getPendingSales();
       for (const sale of pending) {
         const ok = await syncSale(sale);
         if (ok && sale.offlineId != null) {
           await removePendingSale(sale.offlineId);
-          synced++;
+          totalSynced++;
         }
       }
 
-      if (synced > 0) {
+      if (totalSynced > 0) {
         toast({
-          title: 'Sales Synced',
-          description: `${synced} offline sale${synced > 1 ? 's' : ''} synced successfully`,
+          title: 'Offline Data Synced',
+          description: `${totalSynced} offline operation${totalSynced > 1 ? 's' : ''} synced successfully`,
         });
       }
     } catch (err) {
@@ -125,7 +184,7 @@ export function useOfflineSync() {
       setSyncing(false);
       await refreshCount();
     }
-  }, [syncSale, toast, refreshCount]);
+  }, [syncSale, syncOp, toast, refreshCount]);
 
   // Auto-sync when coming back online
   useEffect(() => {
