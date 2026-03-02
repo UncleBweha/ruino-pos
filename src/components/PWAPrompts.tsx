@@ -61,7 +61,7 @@ export function PWAInstallPrompt() {
 export function PWAUpdatePrompt() {
   useEffect(() => {
     registerSW({
-      onRegisteredSW(swUrl, registration) {
+      onRegistered(registration) {
         // Check for updates every 60 seconds
         if (registration) {
           setInterval(() => {
