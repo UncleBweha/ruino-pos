@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'ruinu-pos-offline';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 const STORES = {
   products: 'products',
@@ -18,6 +18,7 @@ const STORES = {
   credits: 'credits',
   profiles: 'profiles',
   pendingSales: 'pending_sales',
+  casuals: 'casuals',
 } as const;
 
 function openDb(): Promise<IDBDatabase> {
@@ -108,6 +109,31 @@ export const getCachedCredits = () => getCachedEntity(STORES.credits);
 
 export const cacheProfiles = (data: any[]) => cacheEntity(STORES.profiles, data);
 export const getCachedProfiles = () => getCachedEntity(STORES.profiles);
+
+export const cacheCasuals = (data: any[]) => cacheEntity(STORES.casuals, data);
+export const getCachedCasuals = () => getCachedEntity(STORES.casuals);
+
+// ── Local stock helpers (for offline stock tracking) ──
+
+export async function decrementCachedStock(productId: string, quantity: number): Promise<void> {
+  const db = await openDb();
+  const tx = db.transaction(STORES.products, 'readwrite');
+  const store = tx.objectStore(STORES.products);
+  const req = store.get(productId);
+
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => {
+      const product = req.result;
+      if (product) {
+        product.quantity = Math.max(0, product.quantity - quantity);
+        store.put(product);
+      }
+      tx.oncomplete = () => resolve();
+    };
+    req.onerror = () => reject(req.error);
+    tx.onerror = () => reject(tx.error);
+  });
+}
 
 // ── Pending sales queue ──
 
