@@ -1,49 +1,61 @@
-import { WifiOff, Wifi, CloudUpload, Loader2 } from 'lucide-react';
+import { WifiOff, Wifi, CloudUpload, Loader2, CheckCircle2 } from 'lucide-react';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export function OfflineIndicator() {
-  const { isOnline, pendingCount, syncing, syncAll } = useOfflineSync();
+  const { isOnline, pendingCount, syncing, syncAll, syncMeta } = useOfflineSync();
 
-  // Don't show anything if online and nothing pending
-  if (isOnline && pendingCount === 0) return null;
+  // Determine state
+  const isSynced = isOnline && pendingCount === 0 && !syncing;
+  const hasPending = pendingCount > 0;
+
+  // Show brief "all synced" confirmation, then hide
+  // Always show when offline or has pending items
+  if (isSynced && !syncMeta.lastSyncTime) return null;
 
   return (
     <div
       className={cn(
-        'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full shadow-lg text-sm font-medium transition-all',
-        isOnline
-          ? 'bg-warning/90 text-warning-foreground'
-          : 'bg-destructive text-destructive-foreground'
+        'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full shadow-lg text-sm font-medium transition-all duration-300',
+        !isOnline && 'bg-destructive text-destructive-foreground',
+        isOnline && syncing && 'bg-warning/90 text-warning-foreground',
+        isOnline && hasPending && !syncing && 'bg-warning/90 text-warning-foreground',
+        isSynced && 'bg-emerald-600 text-white animate-in fade-in duration-300',
       )}
     >
-      {isOnline ? (
-        <Wifi className="w-4 h-4" />
-      ) : (
-        <WifiOff className="w-4 h-4" />
-      )}
+      {/* Status icon */}
+      {!isOnline && <WifiOff className="w-4 h-4" />}
+      {isOnline && syncing && <Loader2 className="w-4 h-4 animate-spin" />}
+      {isOnline && hasPending && !syncing && <CloudUpload className="w-4 h-4" />}
+      {isSynced && <CheckCircle2 className="w-4 h-4" />}
 
+      {/* Status text */}
       <span>
-        {isOnline
-          ? `${pendingCount} item${pendingCount !== 1 ? 's' : ''} pending sync`
-          : 'Offline mode'}
+        {!isOnline && 'Offline mode — changes saved locally'}
+        {isOnline && syncing && `Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}…`}
+        {isOnline && hasPending && !syncing && `${pendingCount} item${pendingCount !== 1 ? 's' : ''} pending sync`}
+        {isSynced && 'All changes synced ✓'}
       </span>
 
-      {pendingCount > 0 && isOnline && (
+      {/* Connection dot */}
+      <span
+        className={cn(
+          'w-2.5 h-2.5 rounded-full ml-1 shrink-0',
+          isOnline ? 'bg-emerald-400' : 'bg-red-400',
+        )}
+      />
+
+      {/* Manual sync button (only when pending + online + not syncing) */}
+      {hasPending && isOnline && !syncing && (
         <Button
           variant="secondary"
           size="sm"
           className="h-7 text-xs ml-1"
           onClick={syncAll}
-          disabled={syncing}
         >
-          {syncing ? (
-            <Loader2 className="w-3 h-3 animate-spin mr-1" />
-          ) : (
-            <CloudUpload className="w-3 h-3 mr-1" />
-          )}
-          Sync
+          <CloudUpload className="w-3 h-3 mr-1" />
+          Sync Now
         </Button>
       )}
     </div>
