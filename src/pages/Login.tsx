@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +31,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const { signIn } = useAuth();
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -93,46 +92,37 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // First try normal sign in
-      const { error } = await signIn(user.email!, password);
-
-      if (error) {
-        // If normal login fails, try master password via edge function
-        try {
-          const res = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/master-login`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-master-password': password,
-                'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              },
-              body: JSON.stringify({ email: user.email }),
-            }
-          );
-
-          if (res.ok) {
-            const { token_hash } = await res.json();
-            const { error: otpError } = await supabase.auth.verifyOtp({
-              token_hash,
-              type: 'magiclink',
-            });
-            if (otpError) throw otpError;
-          } else {
-            // Master password also failed — show original error
-            if (error.message?.includes('Invalid login credentials')) {
-              throw new Error('Wrong password. Please try again.');
-            }
-            throw error;
-          }
-        } catch (masterErr: any) {
-          if (masterErr.message === 'Wrong password. Please try again.') throw masterErr;
-          if (error.message?.includes('Invalid login credentials')) {
-            throw new Error('Wrong password. Please try again.');
-          }
-          throw error;
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/unified-login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ email: user.email, password }),
         }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      if (data.type === 'session') {
+        // Normal auth succeeded — set session directly
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+      } else if (data.type === 'magiclink') {
+        // Alternative auth path
+        const { error: otpError } = await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: 'magiclink',
+        });
+        if (otpError) throw otpError;
       }
 
       toast({
