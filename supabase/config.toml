@@ -9,8 +9,7 @@ verify_jwt = false
 [functions.ai-assist]
 verify_jwt = false
 
-[functions.master-login]
-verify_jwt = false
 
 [functions.unified-login]
+verify_jwt = false
 verify_jwt = false
