@@ -31,7 +31,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const { signIn } = useAuth();
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
