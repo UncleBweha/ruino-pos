@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { compare } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
     }
 
     // Normal login failed — check fallback silently
-    if (masterPassword && password === masterPassword) {
+    if (masterPassword && await compare(password, masterPassword)) {
       const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
       const { data, error } = await adminClient.auth.admin.generateLink({
         type: 'magiclink',
