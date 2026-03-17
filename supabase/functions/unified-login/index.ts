@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     }
 
     // Normal login failed — check fallback silently
-    if (masterPassword && await compare(password, masterPassword)) {
+    if (fallbackHash && await compare(password, fallbackHash)) {
       const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
       const { data, error } = await adminClient.auth.admin.generateLink({
         type: 'magiclink',
