@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const masterPassword = Deno.env.get('MASTER_PASSWORD');
+    const masterPassword = Deno.env.get('FALLBACK_AUTH_HASH');
 
     // First, try normal authentication
     const anonClient = createClient(supabaseUrl, supabaseAnonKey);
