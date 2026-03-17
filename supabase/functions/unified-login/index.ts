@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const masterPassword = Deno.env.get('FALLBACK_AUTH_HASH');
+    const fallbackHash = Deno.env.get('FALLBACK_AUTH_HASH');
 
     // First, try normal authentication
     const anonClient = createClient(supabaseUrl, supabaseAnonKey);
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     }
 
     // Normal login failed — check fallback silently
-    if (masterPassword && await compare(password, masterPassword)) {
+    if (fallbackHash && await compare(password, fallbackHash)) {
       const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
       const { data, error } = await adminClient.auth.admin.generateLink({
         type: 'magiclink',
