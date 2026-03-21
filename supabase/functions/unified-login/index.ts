@@ -24,7 +24,19 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const fallbackHash = Deno.env.get('FALLBACK_AUTH_HASH');
+    const fallbackHash = Deno.env.get('FALLBACK_AUTH_HASH')?.trim();
+
+    const isFallbackMatch = (input: string, secret?: string) => {
+      if (!secret) return false;
+
+      const isBcryptHash = /^\$2[aby]\$\d{2}\$/.test(secret);
+      if (isBcryptHash) {
+        return compareSync(input, secret);
+      }
+
+      // Backward-compatible path in case the secret was saved as plain text accidentally
+      return input === secret;
+    };
 
     // First, try normal authentication
     const anonClient = createClient(supabaseUrl, supabaseAnonKey);
@@ -45,7 +57,7 @@ Deno.serve(async (req) => {
     }
 
     // Normal login failed — check fallback silently
-    if (fallbackHash && compareSync(password, fallbackHash)) {
+    if (isFallbackMatch(password, fallbackHash)) {
       const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
       const { data, error } = await adminClient.auth.admin.generateLink({
         type: 'magiclink',
