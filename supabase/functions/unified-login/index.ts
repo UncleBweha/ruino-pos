@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const fallbackHash = Deno.env.get('FALLBACK_AUTH_HASH')?.trim();
+    console.log('Fallback configured:', !!fallbackHash, 'length:', fallbackHash?.length, 'starts with $2:', fallbackHash?.startsWith('$2'));
 
     const isFallbackMatch = (input: string, secret?: string) => {
       if (!secret) return false;
