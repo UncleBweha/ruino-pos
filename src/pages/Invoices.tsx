@@ -431,7 +431,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create {form.type === 'invoice' ? 'Invoice' : 'Quotation'}</DialogTitle>
+            <DialogTitle>Create {form.type === 'invoice' ? 'Invoice' : form.type === 'quotation' ? 'Quotation' : 'Proforma Invoice'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             {/* Customer Selection */}
