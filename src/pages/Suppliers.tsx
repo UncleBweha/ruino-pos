@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useSuppliers } from '@/hooks/useSuppliers';
+import { useGoodsReceipt } from '@/hooks/useSupplierTracking';
+import { useProducts } from '@/hooks/useProducts';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/constants';
 import { format, differenceInDays, addDays } from 'date-fns';
@@ -14,29 +16,37 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { SupplierPaymentsTab } from '@/components/suppliers/SupplierPaymentsTab';
+import { SupplierReturnsTab } from '@/components/suppliers/SupplierReturnsTab';
+import { SupplierReportsTab } from '@/components/suppliers/SupplierReportsTab';
 import type { Supplier, SupplierProduct } from '@/types/database';
 
 export default function SuppliersPage() {
-  const { suppliers, loading, createSupplier, updateSupplier, deleteSupplier, addSupplyRecord, updateSupplyPayment, deleteSupplyRecord } = useSuppliers();
-  const { isAdmin } = useAuth();
+  const { suppliers, loading, createSupplier, updateSupplier, deleteSupplier, addSupplyRecord, updateSupplyPayment, deleteSupplyRecord, refresh } = useSuppliers();
+  const { createGoodsReceipt } = useGoodsReceipt();
+  const { products } = useProducts();
+  const { isAdmin, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [showSupplyForm, setShowSupplyForm] = useState(false);
+  const [showGRNForm, setShowGRNForm] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
+  const [selectedSupplierId, setSelectedSupplierId] = useState('');
 
   const [form, setForm] = useState({ name: '', phone: '', email: '', payment_terms: '30', notes: '' });
-  const [supplyForm, setSupplyForm] = useState({
-    product_name: '', quantity: '', buying_price: '', payment_status: 'unpaid', notes: '',
+  const [grnForm, setGrnForm] = useState({
+    supplier_id: '', product_name: '', product_id: '', quantity: '', buying_price: '',
+    payment_status: 'unpaid', batch_reference: '', notes: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -56,19 +66,18 @@ export default function SuppliersPage() {
   function openEdit(supplier: Supplier) {
     setEditing(supplier);
     setForm({
-      name: supplier.name,
-      phone: supplier.phone || '',
-      email: supplier.email || '',
-      payment_terms: supplier.payment_terms.toString(),
-      notes: supplier.notes || '',
+      name: supplier.name, phone: supplier.phone || '', email: supplier.email || '',
+      payment_terms: supplier.payment_terms.toString(), notes: supplier.notes || '',
     });
     setShowForm(true);
   }
 
-  function openSupplyForm(supplierId: string) {
-    setSelectedSupplierId(supplierId);
-    setSupplyForm({ product_name: '', quantity: '', buying_price: '', payment_status: 'unpaid', notes: '' });
-    setShowSupplyForm(true);
+  function openGRNForm(supplierId?: string) {
+    setGrnForm({
+      supplier_id: supplierId || '', product_name: '', product_id: '', quantity: '', buying_price: '',
+      payment_status: 'unpaid', batch_reference: '', notes: '',
+    });
+    setShowGRNForm(true);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -91,29 +100,33 @@ export default function SuppliersPage() {
     }
   }
 
-  async function handleAddSupply(e: React.FormEvent) {
+  async function handleGRNSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      const qty = parseInt(supplyForm.quantity) || 0;
-      const price = parseFloat(supplyForm.buying_price) || 0;
-      const supplier = suppliers.find(s => s.id === selectedSupplierId);
-      const dueDate = supplier
-        ? addDays(new Date(), supplier.payment_terms).toISOString()
-        : undefined;
+      const qty = parseInt(grnForm.quantity) || 0;
+      const price = parseFloat(grnForm.buying_price) || 0;
+      const supplier = suppliers.find(s => s.id === grnForm.supplier_id);
+      const dueDate = supplier ? addDays(new Date(), supplier.payment_terms).toISOString() : undefined;
 
-      await addSupplyRecord({
-        supplier_id: selectedSupplierId,
-        product_name: supplyForm.product_name,
+      await createGoodsReceipt({
+        supplier_id: grnForm.supplier_id,
+        product_name: grnForm.product_name,
+        product_id: grnForm.product_id || undefined,
         quantity: qty,
         buying_price: price,
         total_amount: qty * price,
-        payment_status: supplyForm.payment_status,
+        payment_status: grnForm.payment_status,
         due_date: dueDate,
-        notes: supplyForm.notes || undefined,
+        batch_reference: grnForm.batch_reference || undefined,
+        notes: grnForm.notes || undefined,
       });
-      toast({ title: 'Supply Record Added' });
-      setShowSupplyForm(false);
+      toast({
+        title: 'Goods Received',
+        description: grnForm.product_id ? 'Stock updated automatically' : 'GRN recorded (no stock link)',
+      });
+      setShowGRNForm(false);
+      await refresh();
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
     } finally {
@@ -131,9 +144,9 @@ export default function SuppliersPage() {
     }
   }
 
-
   function getPaymentStatus(product: SupplierProduct) {
     if (product.payment_status === 'paid') return { label: 'Paid', color: 'bg-success/10 text-success', icon: CheckCircle };
+    if ((product as any).payment_status === 'partially_paid') return { label: 'Partial', color: 'bg-primary/10 text-primary', icon: DollarSign };
     if (!product.due_date) return { label: 'Unpaid', color: 'bg-warning/10 text-warning', icon: Clock };
     const days = differenceInDays(new Date(product.due_date), new Date());
     if (days < 0) return { label: `${Math.abs(days)}d overdue`, color: 'bg-destructive/10 text-destructive', icon: AlertTriangle };
@@ -145,150 +158,164 @@ export default function SuppliersPage() {
       <div className="p-4 lg:p-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Suppliers</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold">Supplier Tracking</h1>
             <p className="text-muted-foreground">{suppliers.length} suppliers</p>
           </div>
           {isAdmin && (
-            <Button onClick={openAdd}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Supplier
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => openGRNForm()}>
+                <Package className="w-4 h-4 mr-2" /> Receive Goods
+              </Button>
+              <Button onClick={openAdd}>
+                <Plus className="w-4 h-4 mr-2" /> Add Supplier
+              </Button>
+            </div>
           )}
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Search suppliers..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <Tabs defaultValue="suppliers">
+          <TabsList className="w-full grid grid-cols-4">
+            <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="returns">Returns</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+          </TabsList>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>No suppliers found</p>
-              {isAdmin && searchQuery && (
-                <Button className="mt-3" onClick={() => { setForm({ name: searchQuery, phone: '', email: '', payment_terms: '30', notes: '' }); setEditing(null); setShowForm(true); }}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add "{searchQuery}" as supplier
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((supplier) => {
-              const products = supplier.supplier_products || [];
-              const totalUnpaid = products
-                .filter(p => p.payment_status === 'unpaid')
-                .reduce((s, p) => s + p.total_amount, 0);
+          <TabsContent value="suppliers" className="space-y-4 mt-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input placeholder="Search suppliers..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+            </div>
 
-              return (
-                <Card key={supplier.id} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors" onClick={() => navigate(`/suppliers/${supplier.id}`)}>{supplier.name}</h3>
-                          <Badge variant="secondary">{supplier.payment_terms}d terms</Badge>
-                          {totalUnpaid > 0 && (
-                            <Badge variant="destructive" className="text-xs">
-                              {formatCurrency(totalUnpaid)} unpaid
-                            </Badge>
-                          )}
+            {loading ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+            ) : filtered.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>No suppliers found</p>
+                  {isAdmin && searchQuery && (
+                    <Button className="mt-3" onClick={() => { setForm({ name: searchQuery, phone: '', email: '', payment_terms: '30', notes: '' }); setEditing(null); setShowForm(true); }}>
+                      <Plus className="w-4 h-4 mr-2" /> Add "{searchQuery}" as supplier
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((supplier) => {
+                  const products = supplier.supplier_products || [];
+                  const totalUnpaid = products
+                    .filter((p: any) => p.payment_status !== 'paid')
+                    .reduce((s: number, p: any) => s + ((p as any).balance || p.total_amount), 0);
+
+                  return (
+                    <Card key={supplier.id} className="overflow-hidden">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors" onClick={() => navigate(`/suppliers/${supplier.id}`)}>{supplier.name}</h3>
+                              <Badge variant="secondary">{supplier.payment_terms}d terms</Badge>
+                              {totalUnpaid > 0 && (
+                                <Badge variant="destructive" className="text-xs">{formatCurrency(totalUnpaid)} unpaid</Badge>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+                              {supplier.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {supplier.phone}</span>}
+                              {supplier.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> {supplier.email}</span>}
+                              <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {products.length} supplies</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {isAdmin && (
+                              <>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openGRNForm(supplier.id)} title="Receive goods">
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(supplier)}>
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(supplier)}>
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpandedId(expandedId === supplier.id ? null : supplier.id)}>
+                              {expandedId === supplier.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                          {supplier.phone && (
-                            <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {supplier.phone}</span>
-                          )}
-                          {supplier.email && (
-                            <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> {supplier.email}</span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Package className="w-3.5 h-3.5" /> {products.length} supplies
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {isAdmin && (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSupplyForm(supplier.id)} title="Add supply">
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(supplier)}>
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(supplier)}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpandedId(expandedId === supplier.id ? null : supplier.id)}>
-                          {expandedId === supplier.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                    </div>
-                    {/* Supply Records */}
-                    {expandedId === supplier.id && (
-                      <div className="mt-4 border-t pt-4">
-                        <h4 className="font-medium mb-3">Supply Records</h4>
-                        {products.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">No supply records</p>
-                        ) : (
-                          <div className="space-y-2 max-h-72 overflow-y-auto">
-                            {products.map((product) => {
-                              const status = getPaymentStatus(product);
-                              const StatusIcon = status.icon;
-                              return (
-                                <div key={product.id} className="glass-item flex items-center justify-between p-3 text-sm">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium">{product.product_name}</p>
-                                    <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                                      <span>Qty: {product.quantity}</span>
-                                      <span>@ {formatCurrency(product.buying_price)}</span>
-                                      <span className="font-medium">{formatCurrency(product.total_amount)}</span>
+                        {expandedId === supplier.id && (
+                          <div className="mt-4 border-t pt-4">
+                            <h4 className="font-medium mb-3">Supply Records (GRN)</h4>
+                            {products.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">No supply records</p>
+                            ) : (
+                              <div className="space-y-2 max-h-72 overflow-y-auto">
+                                {(products as any[]).map((product: any) => {
+                                  const status = getPaymentStatus(product);
+                                  const StatusIcon = status.icon;
+                                  return (
+                                    <div key={product.id} className="flex items-center justify-between p-3 rounded-lg border text-sm">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <p className="font-medium">{product.product_name}</p>
+                                          {product.grn_number && <Badge variant="outline" className="text-xs">{product.grn_number}</Badge>}
+                                          {product.batch_reference && <Badge variant="outline" className="text-xs">Batch: {product.batch_reference}</Badge>}
+                                        </div>
+                                        <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                                          <span>Qty: {product.quantity}</span>
+                                          <span>@ {formatCurrency(product.buying_price)}</span>
+                                          <span className="font-medium">{formatCurrency(product.total_amount)}</span>
+                                          {product.amount_paid > 0 && product.payment_status !== 'paid' && (
+                                            <span className="text-primary">Paid: {formatCurrency(product.amount_paid)}</span>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">{format(new Date(product.supplied_at), 'dd MMM yyyy')}</p>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className={status.color}>
+                                          <StatusIcon className="w-3 h-3 mr-1" />{status.label}
+                                        </Badge>
+                                        {isAdmin && product.payment_status === 'unpaid' && (
+                                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => updateSupplyPayment(product.id, 'paid')}>
+                                            <DollarSign className="w-3 h-3 mr-1" /> Pay
+                                          </Button>
+                                        )}
+                                        {isAdmin && (
+                                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteSupplyRecord(product.id)}>
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                      </div>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      {format(new Date(product.supplied_at), 'dd MMM yyyy')}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="secondary" className={status.color}>
-                                      <StatusIcon className="w-3 h-3 mr-1" />
-                                      {status.label}
-                                    </Badge>
-                                    {isAdmin && product.payment_status === 'unpaid' && (
-                                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => updateSupplyPayment(product.id, 'paid')}>
-                                        <DollarSign className="w-3 h-3 mr-1" /> Pay
-                                      </Button>
-                                    )}
-                                    {isAdmin && (
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteSupplyRecord(product.id)}>
-                                        <Trash2 className="w-3 h-3" />
-                                      </Button>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-4">
+            <SupplierPaymentsTab suppliers={suppliers} />
+          </TabsContent>
+
+          <TabsContent value="returns" className="mt-4">
+            <SupplierReturnsTab suppliers={suppliers} />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-4">
+            <SupplierReportsTab suppliers={suppliers} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Add/Edit Supplier Dialog */}
@@ -301,23 +328,14 @@ export default function SuppliersPage() {
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              </div>
+              <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
             </div>
             <div className="space-y-2">
               <Label>Payment Terms (days)</Label>
               <Input type="number" value={form.payment_terms} onChange={(e) => setForm({ ...form, payment_terms: e.target.value })} />
             </div>
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} />
-            </div>
+            <div className="space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button type="submit" disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : editing ? 'Update' : 'Add Supplier'}</Button>
@@ -326,35 +344,62 @@ export default function SuppliersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Supply Record Dialog */}
-      <Dialog open={showSupplyForm} onOpenChange={setShowSupplyForm}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Add Supply Record</DialogTitle></DialogHeader>
-          <form onSubmit={handleAddSupply} className="space-y-4">
+      {/* GRN - Goods Receipt Form */}
+      <Dialog open={showGRNForm} onOpenChange={setShowGRNForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Receive Goods (GRN)</DialogTitle></DialogHeader>
+          <form onSubmit={handleGRNSave} className="space-y-4">
             <div className="space-y-2">
-              <Label>Product Name *</Label>
-              <Input value={supplyForm.product_name} onChange={(e) => setSupplyForm({ ...supplyForm, product_name: e.target.value })} required />
+              <Label>Supplier *</Label>
+              <Select value={grnForm.supplier_id} onValueChange={v => setGrnForm({ ...grnForm, supplier_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select supplier" /></SelectTrigger>
+                <SelectContent>
+                  {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Product *</Label>
+              <Select value={grnForm.product_id} onValueChange={v => {
+                const prod = products.find(p => p.id === v);
+                setGrnForm({ ...grnForm, product_id: v, product_name: prod?.name || '', buying_price: prod?.buying_price?.toString() || grnForm.buying_price });
+              }}>
+                <SelectTrigger><SelectValue placeholder="Link to inventory product (for auto stock update)" /></SelectTrigger>
+                <SelectContent>
+                  {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku}) - Stock: {p.quantity}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Input placeholder="Or type product name manually (no stock sync)" value={grnForm.product_name} onChange={e => setGrnForm({ ...grnForm, product_name: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Quantity *</Label><Input type="number" value={grnForm.quantity} onChange={e => setGrnForm({ ...grnForm, quantity: e.target.value })} required /></div>
+              <div className="space-y-2"><Label>Unit Cost (KES) *</Label><Input type="number" step="0.01" value={grnForm.buying_price} onChange={e => setGrnForm({ ...grnForm, buying_price: e.target.value })} required /></div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Total: {formatCurrency((parseInt(grnForm.quantity) || 0) * (parseFloat(grnForm.buying_price) || 0))}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Quantity *</Label>
-                <Input type="number" value={supplyForm.quantity} onChange={(e) => setSupplyForm({ ...supplyForm, quantity: e.target.value })} required />
+                <Label>Payment Status</Label>
+                <Select value={grnForm.payment_status} onValueChange={v => setGrnForm({ ...grnForm, payment_status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unpaid">Unpaid (Credit)</SelectItem>
+                    <SelectItem value="paid">Paid (Cash)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Buying Price (KES) *</Label>
-                <Input type="number" value={supplyForm.buying_price} onChange={(e) => setSupplyForm({ ...supplyForm, buying_price: e.target.value })} required />
-              </div>
+              <div className="space-y-2"><Label>Batch/Ref No.</Label><Input value={grnForm.batch_reference} onChange={e => setGrnForm({ ...grnForm, batch_reference: e.target.value })} placeholder="Optional" /></div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              Total: {formatCurrency((parseInt(supplyForm.quantity) || 0) * (parseFloat(supplyForm.buying_price) || 0))}
-            </div>
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Textarea value={supplyForm.notes} onChange={(e) => setSupplyForm({ ...supplyForm, notes: e.target.value })} rows={2} />
-            </div>
+            <div className="space-y-2"><Label>Notes</Label><Textarea value={grnForm.notes} onChange={e => setGrnForm({ ...grnForm, notes: e.target.value })} rows={2} /></div>
+            {grnForm.product_id && (
+              <p className="text-xs text-muted-foreground">Stock will be automatically increased by {grnForm.quantity || 0} units upon saving.</p>
+            )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowSupplyForm(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add Record'}</Button>
+              <Button type="button" variant="outline" onClick={() => setShowGRNForm(false)}>Cancel</Button>
+              <Button type="submit" disabled={saving || !grnForm.supplier_id || !grnForm.product_name || !grnForm.quantity || !grnForm.buying_price}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Receive Goods'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
