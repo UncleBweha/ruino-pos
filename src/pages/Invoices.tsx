@@ -52,7 +52,7 @@ export default function InvoicesPage() {
   const [logoUploading, setLogoUploading] = useState(false);
 
   const [form, setForm] = useState({
-    type: 'invoice' as 'invoice' | 'quotation',
+    type: 'invoice' as 'invoice' | 'quotation' | 'proforma_invoice',
     customer_name: '',
     customer_phone: '',
     customer_address: '',
@@ -68,6 +68,7 @@ export default function InvoicesPage() {
 
   const invoicesList = invoices.filter(i => i.type === 'invoice');
   const quotationsList = invoices.filter(i => i.type === 'quotation');
+  const proformaList = invoices.filter(i => i.type === 'proforma_invoice');
 
   const filteredInvoices = searchQuery
     ? invoicesList.filter(i => i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || i.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -75,8 +76,11 @@ export default function InvoicesPage() {
   const filteredQuotations = searchQuery
     ? quotationsList.filter(i => i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || i.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
     : quotationsList;
+  const filteredProformas = searchQuery
+    ? proformaList.filter(i => i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || i.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : proformaList;
 
-  function openForm(type: 'invoice' | 'quotation') {
+  function openForm(type: 'invoice' | 'quotation' | 'proforma_invoice') {
     setForm({ type, customer_name: '', customer_phone: '', customer_address: '', customer_id: '', tax_rate: '0', payment_terms: '', notes: '' });
     setItems([{ product_name: '', description: '', quantity: '1', unit_price: '0' }]);
     setLogoFile(null);
@@ -180,7 +184,8 @@ export default function InvoicesPage() {
         notes: form.notes || undefined,
         logo_url: logoUrl || undefined,
       });
-      toast({ title: `${form.type === 'invoice' ? 'Invoice' : 'Quotation'} Created` });
+      const typeLabel = form.type === 'invoice' ? 'Invoice' : form.type === 'quotation' ? 'Quotation' : 'Proforma Invoice';
+      toast({ title: `${typeLabel} Created` });
       setShowForm(false);
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
@@ -192,7 +197,7 @@ export default function InvoicesPage() {
   async function handleConvert(id: string) {
     try {
       await convertToInvoice(id);
-      toast({ title: 'Converted', description: 'Quotation converted to invoice' });
+      toast({ title: 'Converted', description: 'Document converted to invoice' });
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
     }
@@ -208,7 +213,9 @@ export default function InvoicesPage() {
     const logoUrl = invoice.logo_url || receiptSettings?.logo_url || '';
     const items = invoice.invoice_items || [];
 
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${invoice.type === 'quotation' ? 'Quotation' : 'Invoice'} - ${invoice.invoice_number}</title>
+    const docTypeLabel = invoice.type === 'quotation' ? 'Quotation' : invoice.type === 'proforma_invoice' ? 'Proforma Invoice' : 'Invoice';
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${docTypeLabel} - ${invoice.invoice_number}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;max-width:800px;margin:0 auto;padding:40px}
@@ -245,7 +252,7 @@ ${email ? `<p>${email}</p>` : ''}
 ${taxPin ? `<p>PIN: ${taxPin}</p>` : ''}
 </div>
 <div class="doc-type">
-<h2>${invoice.type === 'quotation' ? 'Quotation' : 'Invoice'}</h2>
+<h2>${docTypeLabel}</h2>
 <p><strong>${invoice.invoice_number}</strong></p>
 <p>Date: ${format(new Date(invoice.created_at), 'dd/MM/yyyy')}</p>
 <p>Status: ${invoice.payment_status.toUpperCase()}</p>
@@ -327,7 +334,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => downloadInvoice(invoice)}>
               <Download className="w-3 h-3 mr-1" /> Download
             </Button>
-            {invoice.type === 'quotation' && (
+            {(invoice.type === 'quotation' || invoice.type === 'proforma_invoice') && (
               <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleConvert(invoice.id)}>
                 <ArrowRightLeft className="w-3 h-3 mr-1" /> To Invoice
               </Button>
@@ -357,12 +364,16 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Invoices & Quotations</h1>
-            <p className="text-muted-foreground">{invoicesList.length} invoices, {quotationsList.length} quotations</p>
+            <p className="text-muted-foreground">{invoicesList.length} invoices, {quotationsList.length} quotations, {proformaList.length} proforma</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => openForm('quotation')}>
               <Plus className="w-4 h-4 mr-2" />
               Quotation
+            </Button>
+            <Button variant="outline" onClick={() => openForm('proforma_invoice')}>
+              <Plus className="w-4 h-4 mr-2" />
+              Proforma
             </Button>
             <Button onClick={() => openForm('invoice')}>
               <Plus className="w-4 h-4 mr-2" />
@@ -383,6 +394,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             <TabsList>
               <TabsTrigger value="invoices">Invoices ({filteredInvoices.length})</TabsTrigger>
               <TabsTrigger value="quotations">Quotations ({filteredQuotations.length})</TabsTrigger>
+              <TabsTrigger value="proforma">Proforma ({filteredProformas.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="invoices">
               {filteredInvoices.length === 0 ? (
@@ -402,6 +414,15 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
                 <div className="space-y-3">{filteredQuotations.map(renderInvoiceCard)}</div>
               )}
             </TabsContent>
+            <TabsContent value="proforma">
+              {filteredProformas.length === 0 ? (
+                <Card><CardContent className="py-12 text-center text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>No proforma invoices</p>
+                </CardContent></Card>
+              ) : (
+                <div className="space-y-3">{filteredProformas.map(renderInvoiceCard)}</div>
+              )}
+            </TabsContent>
           </Tabs>
         )}
       </div>
@@ -410,7 +431,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create {form.type === 'invoice' ? 'Invoice' : 'Quotation'}</DialogTitle>
+            <DialogTitle>Create {form.type === 'invoice' ? 'Invoice' : form.type === 'quotation' ? 'Quotation' : 'Proforma Invoice'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             {/* Customer Selection */}
@@ -527,7 +548,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : `Create ${form.type === 'invoice' ? 'Invoice' : 'Quotation'}`}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : `Create ${form.type === 'invoice' ? 'Invoice' : form.type === 'quotation' ? 'Quotation' : 'Proforma Invoice'}`}
               </Button>
             </DialogFooter>
           </form>

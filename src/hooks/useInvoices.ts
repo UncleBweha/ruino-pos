@@ -5,7 +5,7 @@ import type { Invoice, InvoiceItem } from '@/types/database';
 import { cacheInvoices, getCachedInvoices, queueOp } from '@/lib/offlineDb';
 
 interface CreateInvoiceParams {
-  type: 'invoice' | 'quotation';
+  type: 'invoice' | 'quotation' | 'proforma_invoice';
   customer_name: string;
   customer_phone?: string;
   customer_address?: string;
@@ -104,7 +104,7 @@ export function useInvoices() {
       // Offline: create locally and queue for sync
       const tempId = crypto.randomUUID();
       const now = new Date().toISOString();
-      const prefix = params.type === 'quotation' ? 'QT-OFF-' : 'INV-OFF-';
+      const prefix = params.type === 'quotation' ? 'QT-OFF-' : params.type === 'proforma_invoice' ? 'PI-OFF-' : 'INV-OFF-';
       const invoiceNumber = `${prefix}${Date.now()}`;
 
       const localInvoice: any = {
@@ -216,27 +216,27 @@ export function useInvoices() {
     await fetchInvoices();
   }
 
-  async function convertToInvoice(quotationId: string): Promise<Invoice> {
-    const quotation = invoices.find((i) => i.id === quotationId);
-    if (!quotation) throw new Error('Quotation not found');
-    if (quotation.type !== 'quotation') throw new Error('Can only convert quotations');
+  async function convertToInvoice(sourceId: string): Promise<Invoice> {
+    const source = invoices.find((i) => i.id === sourceId);
+    if (!source) throw new Error('Document not found');
+    if (source.type !== 'quotation' && source.type !== 'proforma_invoice') throw new Error('Can only convert quotations or proforma invoices');
 
     return createInvoice({
       type: 'invoice',
-      customer_name: quotation.customer_name,
-      customer_phone: quotation.customer_phone || undefined,
-      customer_address: quotation.customer_address || undefined,
-      customer_id: quotation.customer_id || undefined,
-      items: (quotation.invoice_items || []).map((item) => ({
+      customer_name: source.customer_name,
+      customer_phone: source.customer_phone || undefined,
+      customer_address: source.customer_address || undefined,
+      customer_id: source.customer_id || undefined,
+      items: (source.invoice_items || []).map((item) => ({
         product_name: item.product_name,
         description: item.description || undefined,
         quantity: item.quantity,
         unit_price: item.unit_price,
       })),
-      tax_rate: quotation.tax_rate,
-      payment_terms: quotation.payment_terms || undefined,
-      notes: quotation.notes || undefined,
-      converted_from: quotation.id,
+      tax_rate: source.tax_rate,
+      payment_terms: source.payment_terms || undefined,
+      notes: source.notes || undefined,
+      converted_from: source.id,
     });
   }
 

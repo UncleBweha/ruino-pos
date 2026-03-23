@@ -199,7 +199,7 @@ export interface SupplierProduct {
 export interface Invoice {
   id: string;
   invoice_number: string;
-  type: 'invoice' | 'quotation';
+  type: 'invoice' | 'quotation' | 'proforma_invoice';
   customer_id: string | null;
   customer_name: string;
   customer_phone: string | null;
