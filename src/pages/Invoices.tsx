@@ -68,6 +68,7 @@ export default function InvoicesPage() {
 
   const invoicesList = invoices.filter(i => i.type === 'invoice');
   const quotationsList = invoices.filter(i => i.type === 'quotation');
+  const proformaList = invoices.filter(i => i.type === 'proforma_invoice');
 
   const filteredInvoices = searchQuery
     ? invoicesList.filter(i => i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || i.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -75,6 +76,9 @@ export default function InvoicesPage() {
   const filteredQuotations = searchQuery
     ? quotationsList.filter(i => i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || i.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
     : quotationsList;
+  const filteredProformas = searchQuery
+    ? proformaList.filter(i => i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || i.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : proformaList;
 
   function openForm(type: 'invoice' | 'quotation') {
     setForm({ type, customer_name: '', customer_phone: '', customer_address: '', customer_id: '', tax_rate: '0', payment_terms: '', notes: '' });
