@@ -216,10 +216,10 @@ export function useInvoices() {
     await fetchInvoices();
   }
 
-  async function convertToInvoice(quotationId: string): Promise<Invoice> {
-    const quotation = invoices.find((i) => i.id === quotationId);
-    if (!quotation) throw new Error('Quotation not found');
-    if (quotation.type !== 'quotation') throw new Error('Can only convert quotations');
+  async function convertToInvoice(sourceId: string): Promise<Invoice> {
+    const source = invoices.find((i) => i.id === sourceId);
+    if (!source) throw new Error('Document not found');
+    if (source.type !== 'quotation' && source.type !== 'proforma_invoice') throw new Error('Can only convert quotations or proforma invoices');
 
     return createInvoice({
       type: 'invoice',
