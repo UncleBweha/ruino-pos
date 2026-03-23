@@ -80,7 +80,7 @@ export default function InvoicesPage() {
     ? proformaList.filter(i => i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || i.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
     : proformaList;
 
-  function openForm(type: 'invoice' | 'quotation') {
+  function openForm(type: 'invoice' | 'quotation' | 'proforma_invoice') {
     setForm({ type, customer_name: '', customer_phone: '', customer_address: '', customer_id: '', tax_rate: '0', payment_terms: '', notes: '' });
     setItems([{ product_name: '', description: '', quantity: '1', unit_price: '0' }]);
     setLogoFile(null);
