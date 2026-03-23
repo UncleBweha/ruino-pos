@@ -548,7 +548,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : `Create ${form.type === 'invoice' ? 'Invoice' : 'Quotation'}`}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : `Create ${form.type === 'invoice' ? 'Invoice' : form.type === 'quotation' ? 'Quotation' : 'Proforma Invoice'}`}
               </Button>
             </DialogFooter>
           </form>
