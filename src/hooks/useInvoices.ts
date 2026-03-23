@@ -5,7 +5,7 @@ import type { Invoice, InvoiceItem } from '@/types/database';
 import { cacheInvoices, getCachedInvoices, queueOp } from '@/lib/offlineDb';
 
 interface CreateInvoiceParams {
-  type: 'invoice' | 'quotation';
+  type: 'invoice' | 'quotation' | 'proforma_invoice';
   customer_name: string;
   customer_phone?: string;
   customer_address?: string;
