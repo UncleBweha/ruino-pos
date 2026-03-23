@@ -252,7 +252,7 @@ ${email ? `<p>${email}</p>` : ''}
 ${taxPin ? `<p>PIN: ${taxPin}</p>` : ''}
 </div>
 <div class="doc-type">
-<h2>${invoice.type === 'quotation' ? 'Quotation' : 'Invoice'}</h2>
+<h2>${docTypeLabel}</h2>
 <p><strong>${invoice.invoice_number}</strong></p>
 <p>Date: ${format(new Date(invoice.created_at), 'dd/MM/yyyy')}</p>
 <p>Status: ${invoice.payment_status.toUpperCase()}</p>
