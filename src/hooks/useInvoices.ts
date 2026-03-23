@@ -104,7 +104,7 @@ export function useInvoices() {
       // Offline: create locally and queue for sync
       const tempId = crypto.randomUUID();
       const now = new Date().toISOString();
-      const prefix = params.type === 'quotation' ? 'QT-OFF-' : 'INV-OFF-';
+      const prefix = params.type === 'quotation' ? 'QT-OFF-' : params.type === 'proforma_invoice' ? 'PI-OFF-' : 'INV-OFF-';
       const invoiceNumber = `${prefix}${Date.now()}`;
 
       const localInvoice: any = {
