@@ -213,7 +213,9 @@ export default function InvoicesPage() {
     const logoUrl = invoice.logo_url || receiptSettings?.logo_url || '';
     const items = invoice.invoice_items || [];
 
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${invoice.type === 'quotation' ? 'Quotation' : 'Invoice'} - ${invoice.invoice_number}</title>
+    const docTypeLabel = invoice.type === 'quotation' ? 'Quotation' : invoice.type === 'proforma_invoice' ? 'Proforma Invoice' : 'Invoice';
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${docTypeLabel} - ${invoice.invoice_number}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;max-width:800px;margin:0 auto;padding:40px}
