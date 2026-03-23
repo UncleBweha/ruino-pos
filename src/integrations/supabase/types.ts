@@ -465,6 +465,76 @@ export type Database = {
         }
         Relationships: []
       }
+      returns_damages: {
+        Row: {
+          created_at: string
+          created_by: string
+          date_returned: string
+          id: string
+          notes: string | null
+          product_id: string | null
+          product_name: string
+          quantity: number
+          reason: string | null
+          stock_adjusted: boolean
+          supplier_id: string
+          supply_record_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date_returned?: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          reason?: string | null
+          stock_adjusted?: boolean
+          supplier_id: string
+          supply_record_id?: string | null
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date_returned?: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          reason?: string | null
+          stock_adjusted?: boolean
+          supplier_id?: string
+          supply_record_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "returns_damages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_damages_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_damages_supply_record_id_fkey"
+            columns: ["supply_record_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_items: {
         Row: {
           buying_price: number
@@ -600,15 +670,71 @@ export type Database = {
           },
         ]
       }
+      supplier_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          supplier_id: string
+          supply_record_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          supplier_id: string
+          supply_record_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          supplier_id?: string
+          supply_record_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_payments_supply_record_id_fkey"
+            columns: ["supply_record_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_products: {
         Row: {
+          amount_paid: number
+          balance: number
+          batch_reference: string | null
           buying_price: number
           created_at: string
           due_date: string | null
+          grn_number: string | null
           id: string
           notes: string | null
           paid_at: string | null
           payment_status: string
+          product_id: string | null
           product_name: string
           quantity: number
           supplied_at: string
@@ -616,13 +742,18 @@ export type Database = {
           total_amount: number
         }
         Insert: {
+          amount_paid?: number
+          balance?: number
+          batch_reference?: string | null
           buying_price?: number
           created_at?: string
           due_date?: string | null
+          grn_number?: string | null
           id?: string
           notes?: string | null
           paid_at?: string | null
           payment_status?: string
+          product_id?: string | null
           product_name: string
           quantity?: number
           supplied_at?: string
@@ -630,13 +761,18 @@ export type Database = {
           total_amount?: number
         }
         Update: {
+          amount_paid?: number
+          balance?: number
+          batch_reference?: string | null
           buying_price?: number
           created_at?: string
           due_date?: string | null
+          grn_number?: string | null
           id?: string
           notes?: string | null
           paid_at?: string | null
           payment_status?: string
+          product_id?: string | null
           product_name?: string
           quantity?: number
           supplied_at?: string
@@ -644,6 +780,13 @@ export type Database = {
           total_amount?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "supplier_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "supplier_products_supplier_id_fkey"
             columns: ["supplier_id"]
@@ -715,6 +858,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_grn_number: { Args: never; Returns: string }
       generate_invoice_number: { Args: { doc_type?: string }; Returns: string }
       generate_receipt_number: { Args: never; Returns: string }
       get_login_users: {
