@@ -184,7 +184,8 @@ export default function InvoicesPage() {
         notes: form.notes || undefined,
         logo_url: logoUrl || undefined,
       });
-      toast({ title: `${form.type === 'invoice' ? 'Invoice' : 'Quotation'} Created` });
+      const typeLabel = form.type === 'invoice' ? 'Invoice' : form.type === 'quotation' ? 'Quotation' : 'Proforma Invoice';
+      toast({ title: `${typeLabel} Created` });
       setShowForm(false);
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
