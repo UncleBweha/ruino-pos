@@ -223,20 +223,20 @@ export function useInvoices() {
 
     return createInvoice({
       type: 'invoice',
-      customer_name: quotation.customer_name,
-      customer_phone: quotation.customer_phone || undefined,
-      customer_address: quotation.customer_address || undefined,
-      customer_id: quotation.customer_id || undefined,
-      items: (quotation.invoice_items || []).map((item) => ({
+      customer_name: source.customer_name,
+      customer_phone: source.customer_phone || undefined,
+      customer_address: source.customer_address || undefined,
+      customer_id: source.customer_id || undefined,
+      items: (source.invoice_items || []).map((item) => ({
         product_name: item.product_name,
         description: item.description || undefined,
         quantity: item.quantity,
         unit_price: item.unit_price,
       })),
-      tax_rate: quotation.tax_rate,
-      payment_terms: quotation.payment_terms || undefined,
-      notes: quotation.notes || undefined,
-      converted_from: quotation.id,
+      tax_rate: source.tax_rate,
+      payment_terms: source.payment_terms || undefined,
+      notes: source.notes || undefined,
+      converted_from: source.id,
     });
   }
 
