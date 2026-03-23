@@ -394,6 +394,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             <TabsList>
               <TabsTrigger value="invoices">Invoices ({filteredInvoices.length})</TabsTrigger>
               <TabsTrigger value="quotations">Quotations ({filteredQuotations.length})</TabsTrigger>
+              <TabsTrigger value="proforma">Proforma ({filteredProformas.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="invoices">
               {filteredInvoices.length === 0 ? (
@@ -411,6 +412,15 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
                 </CardContent></Card>
               ) : (
                 <div className="space-y-3">{filteredQuotations.map(renderInvoiceCard)}</div>
+              )}
+            </TabsContent>
+            <TabsContent value="proforma">
+              {filteredProformas.length === 0 ? (
+                <Card><CardContent className="py-12 text-center text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>No proforma invoices</p>
+                </CardContent></Card>
+              ) : (
+                <div className="space-y-3">{filteredProformas.map(renderInvoiceCard)}</div>
               )}
             </TabsContent>
           </Tabs>
