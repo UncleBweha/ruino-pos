@@ -364,12 +364,16 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Invoices & Quotations</h1>
-            <p className="text-muted-foreground">{invoicesList.length} invoices, {quotationsList.length} quotations</p>
+            <p className="text-muted-foreground">{invoicesList.length} invoices, {quotationsList.length} quotations, {proformaList.length} proforma</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => openForm('quotation')}>
               <Plus className="w-4 h-4 mr-2" />
               Quotation
+            </Button>
+            <Button variant="outline" onClick={() => openForm('proforma_invoice')}>
+              <Plus className="w-4 h-4 mr-2" />
+              Proforma
             </Button>
             <Button onClick={() => openForm('invoice')}>
               <Plus className="w-4 h-4 mr-2" />
