@@ -334,7 +334,7 @@ ${invoice.notes ? `<div class="notes"><h3>Notes</h3><p>${invoice.notes}</p></div
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => downloadInvoice(invoice)}>
               <Download className="w-3 h-3 mr-1" /> Download
             </Button>
-            {invoice.type === 'quotation' && (
+            {(invoice.type === 'quotation' || invoice.type === 'proforma_invoice') && (
               <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleConvert(invoice.id)}>
                 <ArrowRightLeft className="w-3 h-3 mr-1" /> To Invoice
               </Button>
