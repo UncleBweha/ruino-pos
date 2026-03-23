@@ -197,7 +197,7 @@ export default function InvoicesPage() {
   async function handleConvert(id: string) {
     try {
       await convertToInvoice(id);
-      toast({ title: 'Converted', description: 'Quotation converted to invoice' });
+      toast({ title: 'Converted', description: 'Document converted to invoice' });
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
     }
