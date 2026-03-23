@@ -52,7 +52,7 @@ export default function InvoicesPage() {
   const [logoUploading, setLogoUploading] = useState(false);
 
   const [form, setForm] = useState({
-    type: 'invoice' as 'invoice' | 'quotation',
+    type: 'invoice' as 'invoice' | 'quotation' | 'proforma_invoice',
     customer_name: '',
     customer_phone: '',
     customer_address: '',
