@@ -55,10 +55,22 @@ export default function SalesPage() {
   const [voidLoading, setVoidLoading] = useState(false);
 
   // Pass date and search to hook — when searching, hook fetches all sales
-  const { sales, loading, voidSale } = useSales(
+  const { sales, loading, voidSale, returnSaleItem } = useSales(
     searchQuery.trim() ? null : selectedDate || null,
     searchQuery
   );
+
+  const [returningItem, setReturningItem] = useState<{
+    saleId: string;
+    item: any;
+  } | null>(null);
+  const [returnForm, setReturnForm] = useState({
+    quantity: 1,
+    reason: 'damaged',
+    resolution: 'refund' as 'refund' | 'replacement',
+    notes: '',
+  });
+  const [returnLoading, setReturnLoading] = useState(false);
 
   // Filter sales client-side for search (data already fetched)
   const filteredSales = sales.filter((sale) => {
@@ -91,6 +103,43 @@ export default function SalesPage() {
       });
     } finally {
       setVoidLoading(false);
+    }
+  }
+
+  async function handleReturnItem() {
+    if (!returningItem) return;
+    setReturnLoading(true);
+
+    try {
+      const { saleId, item } = returningItem;
+      const totalRefund = returnForm.resolution === 'refund' 
+        ? item.unit_price * returnForm.quantity 
+        : 0;
+
+      await returnSaleItem(
+        saleId,
+        item.id,
+        item.product_id,
+        item.product_name,
+        returnForm.quantity,
+        totalRefund,
+        returnForm.reason,
+        returnForm.resolution,
+        returnForm.notes
+      );
+      toast({
+        title: 'Return Processed',
+        description: `${returnForm.quantity} x ${item.product_name} returned`,
+      });
+      setReturningItem(null);
+    } catch (error) {
+      toast({
+        title: 'Return Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setReturnLoading(false);
     }
   }
 
@@ -327,6 +376,7 @@ export default function SalesPage() {
                                     <TableHead className="text-right">Qty</TableHead>
                                     <TableHead className="text-right">Price</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
+                                    <TableHead className="w-20"></TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -341,6 +391,11 @@ export default function SalesPage() {
                                       </TableCell>
                                       <TableCell className="text-right currency font-medium">
                                         {formatCurrency(item.total)}
+                                      </TableCell>
+                                      <TableCell>
+                                        {sale.status !== 'voided' && (
+                                          <Button variant="outline" size="sm" onClick={() => setReturningItem({ saleId: sale.id, item })}>Return</Button>
+                                        )}
                                       </TableCell>
                                     </TableRow>
                                   ))}
@@ -419,6 +474,90 @@ export default function SalesPage() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Return Item Dialog */}
+      <Dialog open={!!returningItem} onOpenChange={(open) => !open && setReturningItem(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Return Item</DialogTitle>
+          </DialogHeader>
+          {returningItem && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Product</Label>
+                <div className="font-medium">{returningItem.item.product_name}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Quantity to Return</Label>
+                  <Input 
+                    type="number" 
+                    min={1} 
+                    max={returningItem.item.quantity}
+                    value={returnForm.quantity}
+                    onChange={(e) => setReturnForm({ ...returnForm, quantity: parseInt(e.target.value) || 1 })}
+                  />
+                  <div className="text-xs text-muted-foreground">Max: {returningItem.item.quantity}</div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Reason</Label>
+                  <select 
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    value={returnForm.reason}
+                    onChange={(e) => setReturnForm({ ...returnForm, reason: e.target.value })}
+                  >
+                    <option value="damaged">Damaged</option>
+                    <option value="faulty">Faulty</option>
+                    <option value="wrong_item">Wrong Item</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Resolution</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input 
+                      type="radio" 
+                      name="resolution" 
+                      value="refund"
+                      checked={returnForm.resolution === 'refund'}
+                      onChange={(e) => setReturnForm({ ...returnForm, resolution: e.target.value as any })}
+                    />
+                    Refund
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input 
+                      type="radio" 
+                      name="resolution" 
+                      value="replacement"
+                      checked={returnForm.resolution === 'replacement'}
+                      onChange={(e) => setReturnForm({ ...returnForm, resolution: e.target.value as any })}
+                    />
+                    Replacement
+                  </label>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes (Optional)</Label>
+                <Input 
+                  value={returnForm.notes}
+                  onChange={(e) => setReturnForm({ ...returnForm, notes: e.target.value })}
+                  placeholder="Additional details..."
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setReturningItem(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleReturnItem} disabled={returnLoading || returnForm.quantity < 1 || returnForm.quantity > returningItem.item.quantity}>
+                  {returnLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Return'}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>

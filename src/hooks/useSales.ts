@@ -286,12 +286,68 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
     }
   }
 
+  async function returnSaleItem(
+    saleId: string,
+    itemId: string,
+    productId: string,
+    productName: string,
+    quantity: number,
+    totalRefund: number,
+    reason: string,
+    resolution: 'refund' | 'replacement',
+    notes: string
+  ) {
+    if (!user) throw new Error('Unauthorized');
+
+    // 1. Record the return
+    const { error: returnError } = await supabase.from('sales_returns').insert({
+      sale_id: saleId,
+      product_id: productId,
+      product_name: productName,
+      quantity,
+      reason,
+      resolution,
+      notes,
+      created_by: user.id
+    });
+    if (returnError) throw returnError;
+
+    // 2. Adjust products inventory
+    const { data: prod } = await supabase.from('products').select('quantity, damaged_quantity').eq('id', productId).single();
+    if (prod) {
+      let newQuantity = prod.quantity;
+      if (resolution === 'replacement') {
+        newQuantity -= quantity; // give out another new one
+      }
+      const newDamaged = (prod.damaged_quantity || 0) + quantity;
+      
+      const { error: updateProdError } = await supabase.from('products').update({
+        quantity: newQuantity,
+        damaged_quantity: newDamaged
+      }).eq('id', productId);
+      
+      if (updateProdError) throw updateProdError;
+    }
+
+    // 3. For refunds, record cash box deduction
+    if (resolution === 'refund' && totalRefund > 0) {
+      await supabase.from('cash_box').insert({
+        sale_id: saleId,
+        amount: -totalRefund,
+        transaction_type: 'refund',
+        description: `Refund for returned ${productName}`,
+        cashier_id: user.id,
+      });
+    }
+  }
+
   return {
     sales,
     loading,
     error,
     createSale,
     voidSale,
+    returnSaleItem,
     refresh: fetchSales,
   };
 }

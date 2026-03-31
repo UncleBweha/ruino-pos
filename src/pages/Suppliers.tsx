@@ -46,7 +46,7 @@ export default function SuppliersPage() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', payment_terms: '30', notes: '' });
   const [grnForm, setGrnForm] = useState({
     supplier_id: '', product_name: '', product_id: '', quantity: '', buying_price: '',
-    payment_status: 'unpaid', batch_reference: '', notes: '',
+    payment_status: 'unpaid', batch_reference: '', notes: '', destination: 'warehouse' as 'warehouse' | 'shop',
   });
   const [saving, setSaving] = useState(false);
 
@@ -75,7 +75,7 @@ export default function SuppliersPage() {
   function openGRNForm(supplierId?: string) {
     setGrnForm({
       supplier_id: supplierId || '', product_name: '', product_id: '', quantity: '', buying_price: '',
-      payment_status: 'unpaid', batch_reference: '', notes: '',
+      payment_status: 'unpaid', batch_reference: '', notes: '', destination: 'warehouse',
     });
     setShowGRNForm(true);
   }
@@ -120,6 +120,7 @@ export default function SuppliersPage() {
         due_date: dueDate,
         batch_reference: grnForm.batch_reference || undefined,
         notes: grnForm.notes || undefined,
+        destination: grnForm.destination,
       });
       toast({
         title: 'Goods Received',
@@ -380,6 +381,16 @@ export default function SuppliersPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label>Destination</Label>
+                <Select value={grnForm.destination} onValueChange={(v: any) => setGrnForm({ ...grnForm, destination: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="warehouse">Warehouse Inventory</SelectItem>
+                    <SelectItem value="shop">Shop Inventory</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Payment Status</Label>
                 <Select value={grnForm.payment_status} onValueChange={v => setGrnForm({ ...grnForm, payment_status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -393,7 +404,7 @@ export default function SuppliersPage() {
             </div>
             <div className="space-y-2"><Label>Notes</Label><Textarea value={grnForm.notes} onChange={e => setGrnForm({ ...grnForm, notes: e.target.value })} rows={2} /></div>
             {grnForm.product_id && (
-              <p className="text-xs text-muted-foreground">Stock will be automatically increased by {grnForm.quantity || 0} units upon saving.</p>
+              <p className="text-xs text-muted-foreground">Stock will be automatically added to {grnForm.destination === 'warehouse' ? 'Warehouse' : 'Shop'} Inventory.</p>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowGRNForm(false)}>Cancel</Button>

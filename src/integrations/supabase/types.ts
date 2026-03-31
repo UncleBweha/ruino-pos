@@ -354,10 +354,12 @@ export type Database = {
           buying_price: number
           category_id: string | null
           created_at: string
+          damaged_quantity: number
           id: string
           low_stock_alert: number
           name: string
           quantity: number
+          warehouse_quantity: number
           selling_price: number
           sku: string
           updated_at: string
@@ -366,10 +368,12 @@ export type Database = {
           buying_price?: number
           category_id?: string | null
           created_at?: string
+          damaged_quantity?: number
           id?: string
           low_stock_alert?: number
           name: string
           quantity?: number
+          warehouse_quantity?: number
           selling_price?: number
           sku: string
           updated_at?: string
@@ -378,10 +382,12 @@ export type Database = {
           buying_price?: number
           category_id?: string | null
           created_at?: string
+          damaged_quantity?: number
           id?: string
           low_stock_alert?: number
           name?: string
           quantity?: number
+          warehouse_quantity?: number
           selling_price?: number
           sku?: string
           updated_at?: string
@@ -476,6 +482,7 @@ export type Database = {
           product_name: string
           quantity: number
           reason: string | null
+          resolution: string | null
           stock_adjusted: boolean
           supplier_id: string
           supply_record_id: string | null
@@ -491,6 +498,7 @@ export type Database = {
           product_name: string
           quantity: number
           reason?: string | null
+          resolution?: string | null
           stock_adjusted?: boolean
           supplier_id: string
           supply_record_id?: string | null
@@ -506,6 +514,7 @@ export type Database = {
           product_name?: string
           quantity?: number
           reason?: string | null
+          resolution?: string | null
           stock_adjusted?: boolean
           supplier_id?: string
           supply_record_id?: string | null
@@ -531,6 +540,47 @@ export type Database = {
             columns: ["supply_record_id"]
             isOneToOne: false
             referencedRelation: "supplier_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          created_at: string
+          created_by: string
+          destination: string
+          id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          destination: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          source: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          destination?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -668,6 +718,60 @@ export type Database = {
             referencedRelation: "casuals"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      sales_returns: {
+        Row: {
+          id: string
+          sale_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          reason: string | null
+          resolution: string | null
+          notes: string | null
+          created_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          sale_id: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          reason?: string | null
+          resolution?: string | null
+          notes?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          sale_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          reason?: string | null
+          resolution?: string | null
+          notes?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
         ]
       }
       supplier_payments: {

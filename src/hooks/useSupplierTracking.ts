@@ -77,6 +77,7 @@ export function useReturnsDamages(supplierId?: string) {
     quantity: number;
     type: 'returned' | 'damaged';
     reason?: string;
+    resolution?: 'refund' | 'replacement';
     notes?: string;
     created_by: string;
   }) {
@@ -88,10 +89,20 @@ export function useReturnsDamages(supplierId?: string) {
 
     // Auto-adjust stock if product_id provided
     if (record.product_id) {
-      await supabase.rpc('update_product_stock', {
-        p_product_id: record.product_id,
-        p_quantity_change: -record.quantity,
-      });
+      const { data: prod } = await supabase.from('products').select('quantity, damaged_quantity').eq('id', record.product_id).single();
+      if (prod) {
+        if (record.resolution === 'replacement') {
+          await supabase.from('products').update({
+            quantity: (prod.quantity || 0) + record.quantity,
+            damaged_quantity: Math.max(0, (prod.damaged_quantity || 0) - record.quantity)
+          }).eq('id', record.product_id);
+        } else {
+          // Refund
+          await supabase.from('products').update({
+            damaged_quantity: Math.max(0, (prod.damaged_quantity || 0) - record.quantity)
+          }).eq('id', record.product_id);
+        }
+      }
     }
 
     await fetch();
@@ -113,6 +124,7 @@ export function useGoodsReceipt() {
     due_date?: string;
     batch_reference?: string;
     notes?: string;
+    destination?: 'warehouse' | 'shop';
   }) {
     // Generate GRN number
     const { data: grnData } = await supabase.rpc('generate_grn_number');
@@ -128,10 +140,19 @@ export function useGoodsReceipt() {
 
     // Auto-update stock if product_id linked
     if (record.product_id) {
-      await supabase.rpc('update_product_stock', {
-        p_product_id: record.product_id,
-        p_quantity_change: record.quantity,
-      });
+      if (record.destination === 'shop') {
+        await supabase.rpc('update_product_stock', {
+          p_product_id: record.product_id,
+          p_quantity_change: record.quantity,
+        });
+      } else {
+        const { data: prod } = await supabase.from('products').select('warehouse_quantity').eq('id', record.product_id).single();
+        if (prod) {
+          await supabase.from('products').update({
+            warehouse_quantity: (prod.warehouse_quantity || 0) + record.quantity
+          }).eq('id', record.product_id);
+        }
+      }
     }
 
     return data as unknown as SupplierProductExtended;

@@ -11,6 +11,7 @@ import LoginPage from "./pages/Login";
 import DashboardPage from "./pages/Dashboard";
 import POSPage from "./pages/POS";
 import InventoryPage from "./pages/Inventory";
+import WarehousePage from "./pages/Warehouse";
 import SalesPage from "./pages/Sales";
 import CreditsPage from "./pages/Credits";
 import CashBoxPage from "./pages/CashBox";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute requireAdmin><DashboardPage /></ProtectedRoute>} />
             <Route path="/pos" element={<ProtectedRoute><POSPage /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
+            <Route path="/warehouse" element={<ProtectedRoute requireAdmin><WarehousePage /></ProtectedRoute>} />
             <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
             <Route path="/credits" element={<ProtectedRoute><CreditsPage /></ProtectedRoute>} />
             <Route path="/cashbox" element={<ProtectedRoute requireAdmin><CashBoxPage /></ProtectedRoute>} />
