@@ -65,10 +65,15 @@ export default function SalesPage() {
     saleId: string;
     item: any;
   } | null>(null);
-  const [returnForm, setReturnForm] = useState({
+  const [returnForm, setReturnForm] = useState<{
+    quantity: number | '';
+    reason: string;
+    resolution: 'refund' | 'replacement';
+    notes: string;
+  }>({
     quantity: 1,
     reason: 'damaged',
-    resolution: 'refund' as 'refund' | 'replacement',
+    resolution: 'refund',
     notes: '',
   });
   const [returnLoading, setReturnLoading] = useState(false);
@@ -122,7 +127,7 @@ export default function SalesPage() {
         item.id,
         item.product_id,
         item.product_name,
-        returnForm.quantity,
+        returnForm.quantity as number,
         totalRefund,
         returnForm.reason,
         returnForm.resolution,
@@ -395,7 +400,10 @@ export default function SalesPage() {
                                       </TableCell>
                                       <TableCell>
                                         {sale.status !== 'voided' && (
-                                          <Button variant="outline" size="sm" onClick={() => setReturningItem({ saleId: sale.id, item })}>Return</Button>
+                                          <Button variant="outline" size="sm" onClick={() => {
+                                            setReturningItem({ saleId: sale.id, item });
+                                            setReturnForm({ quantity: 1, reason: 'damaged', resolution: 'refund', notes: '' });
+                                          }}>Return</Button>
                                         )}
                                       </TableCell>
                                     </TableRow>
@@ -497,8 +505,18 @@ export default function SalesPage() {
                     type="number" 
                     min={1} 
                     max={returningItem.item.quantity}
-                    value={returnForm.quantity}
-                    onChange={(e) => setReturnForm({ ...returnForm, quantity: parseInt(e.target.value) || 1 })}
+                    value={returnForm.quantity === '' ? '' : returnForm.quantity}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setReturnForm({ ...returnForm, quantity: '' });
+                      } else {
+                        const num = parseInt(val);
+                        if (!isNaN(num)) {
+                          setReturnForm({ ...returnForm, quantity: num });
+                        }
+                      }
+                    }}
                   />
                   <div className="text-xs text-muted-foreground">Max: {returningItem.item.quantity}</div>
                 </div>
@@ -553,7 +571,7 @@ export default function SalesPage() {
                 <Button variant="outline" onClick={() => setReturningItem(null)}>
                   Cancel
                 </Button>
-                <Button onClick={handleReturnItem} disabled={returnLoading || returnForm.quantity < 1 || returnForm.quantity > returningItem.item.quantity}>
+                <Button onClick={handleReturnItem} disabled={returnLoading || returnForm.quantity === '' || returnForm.quantity < 1 || returnForm.quantity > returningItem.item.quantity}>
                   {returnLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Return'}
                 </Button>
               </DialogFooter>

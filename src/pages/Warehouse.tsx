@@ -64,7 +64,7 @@ export default function WarehousePage() {
   const [transfer, setTransfer] = useState<TransferState>({ type: 'to_shop', open: false });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
-  const [transferQuantity, setTransferQuantity] = useState<number>(0);
+  const [transferQuantity, setTransferQuantity] = useState<number | ''>('');
   const [transferLoading, setTransferLoading] = useState(false);
 
   // Warehouse view: only products stored in warehouse
@@ -84,14 +84,14 @@ export default function WarehousePage() {
   function openTransferModal(type: TransferType) {
     setTransfer({ type, open: true });
     setSelectedProduct(null);
-    setTransferQuantity(0);
+    setTransferQuantity('');
     setProductSearchOpen(false);
   }
 
   function closeTransferModal() {
     setTransfer(prev => ({ ...prev, open: false }));
     setSelectedProduct(null);
-    setTransferQuantity(0);
+    setTransferQuantity('');
   }
 
   function getAvailableQty(product: Product | null): number {
@@ -103,7 +103,7 @@ export default function WarehousePage() {
 
   async function handleTransfer(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedProduct || transferQuantity <= 0) return;
+    if (!selectedProduct || transferQuantity === '' || transferQuantity <= 0) return;
 
     const available = getAvailableQty(selectedProduct);
     if (transferQuantity > available) {
@@ -141,7 +141,7 @@ export default function WarehousePage() {
           product_name: selectedProduct.name,
           source,
           destination,
-          quantity: transferQuantity,
+          quantity: transferQuantity as number,
           created_by: profile?.full_name || 'Admin',
         });
 
@@ -154,9 +154,10 @@ export default function WarehousePage() {
       closeTransferModal();
       refresh();
     } catch (error) {
+      console.error("Transfer Error Details:", error);
       toast({
         title: 'Transfer Failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: error instanceof Error ? error.message : JSON.stringify(error),
         variant: 'destructive',
       });
     } finally {
@@ -300,7 +301,7 @@ export default function WarehousePage() {
                             value={`${product.name} ${product.sku}`}
                             onSelect={() => {
                               setSelectedProduct(product);
-                              setTransferQuantity(0);
+                              setTransferQuantity('');
                               setProductSearchOpen(false);
                             }}
                           >
@@ -347,13 +348,23 @@ export default function WarehousePage() {
                 type="number"
                 min="1"
                 max={getAvailableQty(selectedProduct)}
-                value={transferQuantity || ''}
-                onChange={(e) => setTransferQuantity(parseInt(e.target.value) || 0)}
+                value={transferQuantity === '' ? '' : transferQuantity}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '') {
+                    setTransferQuantity('');
+                  } else {
+                    const num = parseInt(val);
+                    if (!isNaN(num)) {
+                      setTransferQuantity(num);
+                    }
+                  }
+                }}
                 placeholder="0"
                 required
                 disabled={!selectedProduct}
               />
-              {selectedProduct && transferQuantity > getAvailableQty(selectedProduct) && (
+              {selectedProduct && transferQuantity !== '' && transferQuantity > getAvailableQty(selectedProduct) && (
                 <p className="text-xs text-destructive">
                   Cannot exceed available quantity ({getAvailableQty(selectedProduct)})
                 </p>
@@ -375,6 +386,7 @@ export default function WarehousePage() {
                 disabled={
                   transferLoading ||
                   !selectedProduct ||
+                  transferQuantity === '' ||
                   transferQuantity <= 0 ||
                   transferQuantity > getAvailableQty(selectedProduct)
                 }

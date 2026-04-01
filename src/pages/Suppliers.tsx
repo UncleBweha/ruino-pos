@@ -358,7 +358,8 @@ export default function SuppliersPage() {
       <Dialog open={showGRNForm} onOpenChange={setShowGRNForm}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Receive Goods (GRN)</DialogTitle></DialogHeader>
-          <form onSubmit={handleGRNSave} className="space-y-4">
+          <form onSubmit={handleGRNSave} className="flex flex-col space-y-4">
+            <div className="space-y-4 overflow-y-auto pr-2 max-h-[60vh]">
             <div className="space-y-2">
               <Label>Supplier *</Label>
               <Select value={grnForm.supplier_id} onValueChange={v => setGrnForm({ ...grnForm, supplier_id: v })}>
@@ -393,7 +394,7 @@ export default function SuppliersPage() {
                       value={grnProductQuery}
                       onValueChange={setGrnProductQuery}
                     />
-                    <CommandList>
+                    <CommandList className="max-h-[250px] overflow-y-auto">
                       <CommandEmpty>No product found.</CommandEmpty>
                       <CommandGroup>
                         {products
@@ -477,7 +478,8 @@ export default function SuppliersPage() {
             {grnForm.product_id && (
               <p className="text-xs text-muted-foreground">Stock will be automatically added to {grnForm.destination === 'warehouse' ? 'Warehouse' : 'Shop'} Inventory.</p>
             )}
-            <DialogFooter>
+            </div>
+            <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => setShowGRNForm(false)}>Cancel</Button>
               <Button type="submit" disabled={saving || !grnForm.supplier_id || !grnForm.product_name || !grnForm.quantity || !grnForm.buying_price}>
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Receive Goods'}
