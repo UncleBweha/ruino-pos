@@ -13,11 +13,11 @@ import {
   X,
   User,
   FileBarChart,
-  
   Search,
   Users,
   Truck,
   FileText,
+  Warehouse,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,10 +26,12 @@ import { useState } from 'react';
 const adminNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/inventory', label: 'Inventory', icon: Package },
+  { path: '/inventory', label: 'Shop Inventory', icon: Package },
+  { path: '/warehouse', label: 'Warehouse', icon: Warehouse },
   { path: '/sales', label: 'Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
   { path: '/cashbox', label: 'Cash Box', icon: Wallet },
+
   { path: '/customers', label: 'Customers', icon: Users },
   { path: '/suppliers', label: 'Suppliers', icon: Truck },
   { path: '/invoices', label: 'Invoices', icon: FileText },
@@ -39,7 +41,7 @@ const adminNavItems = [
 
 const cashierNavItems = [
   { path: '/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/inventory', label: 'Inventory', icon: Package },
+  { path: '/inventory', label: 'Shop Inventory', icon: Package },
   { path: '/sales', label: 'My Sales', icon: Receipt },
   { path: '/credits', label: 'Credits', icon: CreditCard },
   { path: '/customers', label: 'Customers', icon: Users },

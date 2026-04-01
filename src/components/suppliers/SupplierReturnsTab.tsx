@@ -29,7 +29,7 @@ export function SupplierReturnsTab({ suppliers }: Props) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     supplier_id: '', product_name: '', product_id: '', quantity: '',
-    type: 'returned' as 'returned' | 'damaged', reason: '', notes: '',
+    type: 'returned' as 'returned' | 'damaged', reason: '', notes: '', resolution: 'refund' as 'refund' | 'replacement',
   });
 
   async function handleSave(e: React.FormEvent) {
@@ -44,6 +44,7 @@ export function SupplierReturnsTab({ suppliers }: Props) {
         type: form.type,
         reason: form.reason || undefined,
         notes: form.notes || undefined,
+        resolution: form.resolution,
         created_by: user!.id,
       });
       toast({ title: 'Return/Damage Recorded', description: form.product_id ? 'Stock adjusted automatically' : undefined });
@@ -59,7 +60,7 @@ export function SupplierReturnsTab({ suppliers }: Props) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Returns & Damages</h2>
-        <Button onClick={() => { setForm({ supplier_id: '', product_name: '', product_id: '', quantity: '', type: 'returned', reason: '', notes: '' }); setShowForm(true); }}>
+        <Button onClick={() => { setForm({ supplier_id: '', product_name: '', product_id: '', quantity: '', type: 'returned', reason: '', notes: '', resolution: 'refund' }); setShowForm(true); }}>
           <Plus className="w-4 h-4 mr-2" /> Record Return
         </Button>
       </div>
@@ -88,6 +89,7 @@ export function SupplierReturnsTab({ suppliers }: Props) {
                       <span>{format(new Date(r.date_returned), 'dd MMM yyyy')}</span>
                       <span>Qty: {r.quantity}</span>
                       {r.reason && <span>{r.reason}</span>}
+                      {r.resolution && <span className="font-semibold text-primary capitalize">{r.resolution}</span>}
                       {r.stock_adjusted && <Badge variant="outline" className="text-xs">Stock adjusted</Badge>}
                     </div>
                   </div>
@@ -154,11 +156,24 @@ export function SupplierReturnsTab({ suppliers }: Props) {
               </Select>
             </div>
             <div className="space-y-2">
+              <Label>Resolution</Label>
+              <Select value={form.resolution} onValueChange={v => setForm({ ...form, resolution: v as any })}>
+                <SelectTrigger><SelectValue placeholder="Select resolution" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="refund">Refunded</SelectItem>
+                  <SelectItem value="replacement">Replaced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} />
             </div>
-            {form.product_id && (
+            {form.product_id && form.resolution !== 'replacement' && (
               <p className="text-xs text-muted-foreground">Stock will be automatically reduced by {form.quantity || 0} units.</p>
+            )}
+            {form.product_id && form.resolution === 'replacement' && (
+              <p className="text-xs text-muted-foreground">Quantity will be added back to Shop Inventory.</p>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>

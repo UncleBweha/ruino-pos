@@ -27,6 +27,8 @@ export interface Product {
   name: string;
   category_id: string | null;
   quantity: number;
+  warehouse_quantity: number;
+  damaged_quantity: number;
   buying_price: number;
   selling_price: number;
   low_stock_alert: number;
@@ -83,6 +85,19 @@ export interface SaleItem {
   profit: number;
   created_at: string;
   product?: Product;
+}
+
+export interface SalesReturn {
+  id: string;
+  sale_id: string | null;
+  product_id: string | null;
+  product_name: string;
+  quantity: number;
+  reason: string | null;
+  resolution: 'refund' | 'replacement' | null;
+  notes: string | null;
+  created_at: string;
+  created_by: string | null;
 }
 
 export interface Credit {

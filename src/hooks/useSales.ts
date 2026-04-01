@@ -286,12 +286,85 @@ export function useSales(filterDate?: Date | null, searchQuery?: string) {
     }
   }
 
+  async function returnSaleItem(
+    saleId: string,
+    itemId: string,
+    productId: string,
+    productName: string,
+    quantity: number,
+    totalRefund: number,
+    reason: string,
+    resolution: 'refund' | 'replacement',
+    notes: string
+  ) {
+    if (!user) throw new Error('Unauthorized');
+
+    // 1. Record the return in sales_returns
+    const { error: returnError } = await supabase.from('sales_returns').insert({
+      sale_id: saleId,
+      product_id: productId,
+      product_name: productName,
+      quantity,
+      reason,
+      resolution,
+      notes,
+      created_by: user.id
+    });
+    if (returnError) throw returnError;
+
+    // 2. Adjust inventory:
+    // - Refund: customer returns item (item is now damaged). Move from sellable → damaged.
+    //   quantity += 0 net (deduct from sellable, add to damaged)
+    //   Actually: the item was deducted at sale. Now it comes back damaged.
+    //   So we do NOT restore sellable qty. We DO add to damaged_quantity.
+    // - Replacement: customer gets a new one. Deduct one more from sellable. Add original to damaged.
+    const { data: prod } = await supabase
+      .from('products')
+      .select('quantity, damaged_quantity')
+      .eq('id', productId)
+      .single();
+
+    if (prod) {
+      const currentQty = prod.quantity ?? 0;
+      const currentDamaged = prod.damaged_quantity ?? 0;
+
+      let newQuantity = currentQty;
+      const newDamaged = currentDamaged + quantity;
+
+      if (resolution === 'replacement') {
+        // Give out another replacement item from stock
+        newQuantity = Math.max(0, currentQty - quantity);
+      }
+      // For refund: returned item came back but is damaged — sellable qty stays the same
+      // (it was already deducted at sale time; the returned damaged item goes to damaged_quantity)
+
+      const { error: updateProdError } = await supabase.from('products').update({
+        quantity: newQuantity,
+        damaged_quantity: newDamaged,
+      }).eq('id', productId);
+
+      if (updateProdError) throw updateProdError;
+    }
+
+    // 3. For refunds, record cash box deduction
+    if (resolution === 'refund' && totalRefund > 0) {
+      await supabase.from('cash_box').insert({
+        sale_id: saleId,
+        amount: -totalRefund,
+        transaction_type: 'refund',
+        description: `Refund for returned ${productName}`,
+        cashier_id: user.id,
+      });
+    }
+  }
+
   return {
     sales,
     loading,
     error,
     createSale,
     voidSale,
+    returnSaleItem,
     refresh: fetchSales,
   };
 }

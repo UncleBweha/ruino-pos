@@ -9,7 +9,7 @@ import { formatCurrency } from '@/lib/constants';
 import { format, differenceInDays, addDays } from 'date-fns';
 import {
   Search, Plus, Edit2, Trash2, Loader2, Phone, Mail, Package, Clock,
-  ChevronDown, ChevronUp, AlertTriangle, CheckCircle, DollarSign,
+  ChevronDown, ChevronUp, AlertTriangle, CheckCircle, DollarSign, Check, ChevronsUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,12 +21,19 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from '@/components/ui/command';
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { SupplierPaymentsTab } from '@/components/suppliers/SupplierPaymentsTab';
 import { SupplierReturnsTab } from '@/components/suppliers/SupplierReturnsTab';
 import { SupplierReportsTab } from '@/components/suppliers/SupplierReportsTab';
 import type { Supplier, SupplierProduct } from '@/types/database';
+import { cn } from '@/lib/utils';
 
 export default function SuppliersPage() {
   const { suppliers, loading, createSupplier, updateSupplier, deleteSupplier, addSupplyRecord, updateSupplyPayment, deleteSupplyRecord, refresh } = useSuppliers();
@@ -46,9 +53,11 @@ export default function SuppliersPage() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', payment_terms: '30', notes: '' });
   const [grnForm, setGrnForm] = useState({
     supplier_id: '', product_name: '', product_id: '', quantity: '', buying_price: '',
-    payment_status: 'unpaid', batch_reference: '', notes: '',
+    payment_status: 'unpaid', batch_reference: '', notes: '', destination: 'warehouse' as 'warehouse' | 'shop',
   });
   const [saving, setSaving] = useState(false);
+  const [grnProductSearchOpen, setGrnProductSearchOpen] = useState(false);
+  const [grnProductQuery, setGrnProductQuery] = useState('');
 
   const filtered = searchQuery
     ? suppliers.filter(s =>
@@ -75,7 +84,7 @@ export default function SuppliersPage() {
   function openGRNForm(supplierId?: string) {
     setGrnForm({
       supplier_id: supplierId || '', product_name: '', product_id: '', quantity: '', buying_price: '',
-      payment_status: 'unpaid', batch_reference: '', notes: '',
+      payment_status: 'unpaid', batch_reference: '', notes: '', destination: 'warehouse',
     });
     setShowGRNForm(true);
   }
@@ -120,6 +129,7 @@ export default function SuppliersPage() {
         due_date: dueDate,
         batch_reference: grnForm.batch_reference || undefined,
         notes: grnForm.notes || undefined,
+        destination: grnForm.destination,
       });
       toast({
         title: 'Goods Received',
@@ -359,17 +369,79 @@ export default function SuppliersPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Product *</Label>
-              <Select value={grnForm.product_id} onValueChange={v => {
-                const prod = products.find(p => p.id === v);
-                setGrnForm({ ...grnForm, product_id: v, product_name: prod?.name || '', buying_price: prod?.buying_price?.toString() || grnForm.buying_price });
-              }}>
-                <SelectTrigger><SelectValue placeholder="Link to inventory product (for auto stock update)" /></SelectTrigger>
-                <SelectContent>
-                  {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku}) - Stock: {p.quantity}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Input placeholder="Or type product name manually (no stock sync)" value={grnForm.product_name} onChange={e => setGrnForm({ ...grnForm, product_name: e.target.value })} />
+              <Label>Product</Label>
+              {/* Searchable product combobox */}
+              <Popover open={grnProductSearchOpen} onOpenChange={setGrnProductSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={grnProductSearchOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {grnForm.product_id
+                      ? products.find(p => p.id === grnForm.product_id)?.name
+                      : grnForm.product_name || 'Search inventory product...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[480px] p-0" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search by name or SKU..."
+                      value={grnProductQuery}
+                      onValueChange={setGrnProductQuery}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No product found.</CommandEmpty>
+                      <CommandGroup>
+                        {products
+                          .filter(p =>
+                            !grnProductQuery ||
+                            p.name.toLowerCase().includes(grnProductQuery.toLowerCase()) ||
+                            p.sku.toLowerCase().includes(grnProductQuery.toLowerCase())
+                          )
+                          .map(p => (
+                          <CommandItem
+                            key={p.id}
+                            value={`${p.name} ${p.sku}`}
+                            onSelect={() => {
+                              setGrnForm({
+                                ...grnForm,
+                                product_id: p.id,
+                                product_name: p.name,
+                                buying_price: p.buying_price?.toString() || grnForm.buying_price,
+                              });
+                              setGrnProductQuery('');
+                              setGrnProductSearchOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                grnForm.product_id === p.id ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span>{p.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                SKU: {p.sku} · Shop: {p.quantity} · WH: {p.warehouse_quantity ?? 0}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {/* Manual name input for products not in system */}
+              <Input
+                placeholder="Or type product name manually (no stock sync)"
+                value={grnForm.product_name}
+                onChange={e => setGrnForm({ ...grnForm, product_name: e.target.value, product_id: '' })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Quantity *</Label><Input type="number" value={grnForm.quantity} onChange={e => setGrnForm({ ...grnForm, quantity: e.target.value })} required /></div>
@@ -379,6 +451,16 @@ export default function SuppliersPage() {
               Total: {formatCurrency((parseInt(grnForm.quantity) || 0) * (parseFloat(grnForm.buying_price) || 0))}
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Destination</Label>
+                <Select value={grnForm.destination} onValueChange={(v: any) => setGrnForm({ ...grnForm, destination: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="warehouse">Warehouse Inventory</SelectItem>
+                    <SelectItem value="shop">Shop Inventory</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Payment Status</Label>
                 <Select value={grnForm.payment_status} onValueChange={v => setGrnForm({ ...grnForm, payment_status: v })}>
@@ -393,7 +475,7 @@ export default function SuppliersPage() {
             </div>
             <div className="space-y-2"><Label>Notes</Label><Textarea value={grnForm.notes} onChange={e => setGrnForm({ ...grnForm, notes: e.target.value })} rows={2} /></div>
             {grnForm.product_id && (
-              <p className="text-xs text-muted-foreground">Stock will be automatically increased by {grnForm.quantity || 0} units upon saving.</p>
+              <p className="text-xs text-muted-foreground">Stock will be automatically added to {grnForm.destination === 'warehouse' ? 'Warehouse' : 'Shop'} Inventory.</p>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowGRNForm(false)}>Cancel</Button>
