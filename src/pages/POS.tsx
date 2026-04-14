@@ -11,7 +11,7 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { queueSale, decrementCachedStock } from '@/lib/offlineDb';
 import { formatCurrency, PAYMENT_METHODS } from '@/lib/constants';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText, Calendar as CalendarIcon } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Loader2, Banknote, Smartphone, CreditCard, CheckCircle, Printer, Download, Edit2, UserCheck, Users, WifiOff, FileText, Calendar as CalendarIcon, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -65,7 +65,7 @@ export default function POSPage() {
   const { refreshCount } = useOfflineSync();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState<'cash' | 'mpesa' | 'till' | 'cheque' | 'credit'>('cash');
+  const [selectedPayment, setSelectedPayment] = useState<'cash' | 'mpesa' | 'till' | 'send_money' | 'cheque' | 'credit'>('cash');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
@@ -86,6 +86,7 @@ export default function POSPage() {
     cash: Banknote,
     mpesa: Smartphone,
     till: Smartphone,
+    send_money: Send,
     cheque: FileText,
     credit: CreditCard,
   };

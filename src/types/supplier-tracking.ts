@@ -21,6 +21,7 @@ export interface ReturnDamage {
   quantity: number;
   type: 'returned' | 'damaged';
   reason: string | null;
+  resolution: string | null;
   date_returned: string;
   stock_adjusted: boolean;
   notes: string | null;

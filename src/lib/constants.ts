@@ -21,6 +21,7 @@ export const PAYMENT_METHODS = [
   { id: 'cash', label: 'Cash', icon: 'Banknote' },
   { id: 'mpesa', label: 'Mpesa Paybill', icon: 'Smartphone' },
   { id: 'till', label: 'Till', icon: 'Smartphone' },
+  { id: 'send_money', label: 'Send Money', icon: 'Send' },
   { id: 'cheque', label: 'Cheque', icon: 'FileText' },
   { id: 'credit', label: 'Credit', icon: 'CreditCard' },
 ] as const;
