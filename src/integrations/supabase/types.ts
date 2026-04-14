@@ -359,10 +359,10 @@ export type Database = {
           low_stock_alert: number
           name: string
           quantity: number
-          warehouse_quantity: number
           selling_price: number
           sku: string
           updated_at: string
+          warehouse_quantity: number
         }
         Insert: {
           buying_price?: number
@@ -373,10 +373,10 @@ export type Database = {
           low_stock_alert?: number
           name: string
           quantity?: number
-          warehouse_quantity?: number
           selling_price?: number
           sku: string
           updated_at?: string
+          warehouse_quantity?: number
         }
         Update: {
           buying_price?: number
@@ -387,10 +387,10 @@ export type Database = {
           low_stock_alert?: number
           name?: string
           quantity?: number
-          warehouse_quantity?: number
           selling_price?: number
           sku?: string
           updated_at?: string
+          warehouse_quantity?: number
         }
         Relationships: [
           {
@@ -544,47 +544,6 @@ export type Database = {
           },
         ]
       }
-      stock_transfers: {
-        Row: {
-          created_at: string
-          created_by: string
-          destination: string
-          id: string
-          product_id: string | null
-          product_name: string
-          quantity: number
-          source: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          destination: string
-          id?: string
-          product_id?: string | null
-          product_name: string
-          quantity: number
-          source: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          destination?: string
-          id?: string
-          product_id?: string | null
-          product_name?: string
-          quantity?: number
-          source?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stock_transfers_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sale_items: {
         Row: {
           buying_price: number
@@ -722,42 +681,49 @@ export type Database = {
       }
       sales_returns: {
         Row: {
+          created_at: string
+          created_by: string | null
           id: string
-          sale_id: string
+          notes: string | null
           product_id: string | null
           product_name: string
           quantity: number
           reason: string | null
           resolution: string | null
-          notes: string | null
-          created_at: string
-          created_by: string | null
+          sale_id: string | null
         }
         Insert: {
+          created_at?: string
+          created_by?: string | null
           id?: string
-          sale_id: string
+          notes?: string | null
           product_id?: string | null
           product_name: string
           quantity: number
           reason?: string | null
           resolution?: string | null
-          notes?: string | null
-          created_at?: string
-          created_by?: string | null
+          sale_id?: string | null
         }
         Update: {
+          created_at?: string
+          created_by?: string | null
           id?: string
-          sale_id?: string
+          notes?: string | null
           product_id?: string | null
           product_name?: string
           quantity?: number
           reason?: string | null
           resolution?: string | null
-          notes?: string | null
-          created_at?: string
-          created_by?: string | null
+          sale_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_returns_sale_id_fkey"
             columns: ["sale_id"]
@@ -765,13 +731,47 @@ export type Database = {
             referencedRelation: "sales"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          created_at: string
+          created_by: string
+          destination: string
+          id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          destination: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          source: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          destination?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          source?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "sales_returns_product_id_fkey"
+            foreignKeyName: "stock_transfers_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       supplier_payments: {
@@ -832,6 +832,7 @@ export type Database = {
           batch_reference: string | null
           buying_price: number
           created_at: string
+          destination: string | null
           due_date: string | null
           grn_number: string | null
           id: string
@@ -851,6 +852,7 @@ export type Database = {
           batch_reference?: string | null
           buying_price?: number
           created_at?: string
+          destination?: string | null
           due_date?: string | null
           grn_number?: string | null
           id?: string
@@ -870,6 +872,7 @@ export type Database = {
           batch_reference?: string | null
           buying_price?: number
           created_at?: string
+          destination?: string | null
           due_date?: string | null
           grn_number?: string | null
           id?: string
