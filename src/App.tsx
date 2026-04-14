@@ -25,6 +25,7 @@ import SupplierProfilePage from "./pages/SupplierProfile";
 import DailyReportFullPage from "./pages/DailyReportFull";
 import MonthlyReportPage from "./pages/MonthlyReport";
 import InvoicesPage from "./pages/Invoices";
+import ExpendituresPage from "./pages/Expenditures";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/suppliers" element={<ProtectedRoute requireAdmin><SuppliersPage /></ProtectedRoute>} />
             <Route path="/suppliers/:id" element={<ProtectedRoute requireAdmin><SupplierProfilePage /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute requireAdmin><InvoicesPage /></ProtectedRoute>} />
+            <Route path="/expenditures" element={<ProtectedRoute requireAdmin><ExpendituresPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireAdmin><SettingsPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute requireAdmin><ReportsPage /></ProtectedRoute>} />
             <Route path="/reports/full" element={<ProtectedRoute requireAdmin><DailyReportFullPage /></ProtectedRoute>} />

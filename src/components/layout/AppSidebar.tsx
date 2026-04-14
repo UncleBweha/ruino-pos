@@ -18,6 +18,7 @@ import {
   Truck,
   FileText,
   Warehouse,
+  TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -35,6 +36,7 @@ const adminNavItems = [
   { path: '/customers', label: 'Customers', icon: Users },
   { path: '/suppliers', label: 'Suppliers', icon: Truck },
   { path: '/invoices', label: 'Invoices', icon: FileText },
+  { path: '/expenditures', label: 'Expenditures', icon: TrendingDown },
   { path: '/reports', label: 'Reports', icon: FileBarChart },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
