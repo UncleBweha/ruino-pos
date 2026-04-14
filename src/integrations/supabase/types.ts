@@ -52,6 +52,48 @@ export type Database = {
           },
         ]
       }
+      casual_wage_entries: {
+        Row: {
+          amount: number
+          casual_id: string
+          casual_name: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          payment_method: string
+          status: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          amount?: number
+          casual_id: string
+          casual_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Update: {
+          amount?: number
+          casual_id?: string
+          casual_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
       casuals: {
         Row: {
           commission_rate: number
@@ -223,6 +265,48 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenditures: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          expense_date: string
+          id: string
+          notes: string | null
+          payment_method: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -543,6 +627,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      salary_records: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          full_name: string
+          id: string
+          month: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by: string
+          full_name: string
+          id?: string
+          month: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          full_name?: string
+          id?: string
+          month?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       sale_items: {
         Row: {
