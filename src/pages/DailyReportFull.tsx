@@ -256,27 +256,31 @@ export default function DailyReportFullPage() {
 
     return `<html><head><title>Daily Report - ${dateStr}</title>
     <style>
-      body{font-family:Arial,sans-serif;padding:24px;color:#333;max-width:900px;margin:0 auto}
-      h1{margin:0;font-size:22px} h2{font-size:16px;margin:24px 0 8px;border-bottom:2px solid #333;padding-bottom:4px}
-      table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
-      th{background:#f5f5f5;padding:8px;text-align:left;border-bottom:2px solid #ddd;font-size:12px}
-      .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
-      .stat{background:#f9f9f9;padding:12px;border-radius:8px;text-align:center}
-      .stat-label{font-size:11px;color:#666;text-transform:uppercase}
-      .stat-value{font-size:20px;font-weight:bold;margin-top:4px}
+      body{font-family:Arial,sans-serif;padding:20px 24px;color:#333;max-width:900px;margin:0 auto;font-size:12px}
+      h1{margin:0;font-size:20px} h2{font-size:14px;margin:20px 0 6px;border-bottom:2px solid #333;padding-bottom:3px;page-break-after:avoid}
+      table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px;page-break-inside:auto}
+      tr{page-break-inside:avoid;page-break-after:auto}
+      th{background:#f5f5f5;padding:6px;text-align:left;border-bottom:2px solid #ddd;font-size:10px}
+      td{padding:5px 6px;border-bottom:1px solid #eee}
+      .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+      .stat{background:#f9f9f9;padding:10px;border-radius:6px;text-align:center;page-break-inside:avoid}
+      .stat-label{font-size:9px;color:#666;text-transform:uppercase}
+      .stat-value{font-size:16px;font-weight:bold;margin-top:3px}
       .green{color:#16a34a} .red{color:#dc2626} .blue{color:#2563eb}
-      .report-logo{max-height:120px;max-width:300px;margin-bottom:8px}
-      @media print{body{padding:0}.no-print{display:none}}
+      .report-logo{max-height:80px;max-width:250px;margin-bottom:6px}
+      .section{page-break-inside:avoid}
+      @media print{body{padding:12px}@page{margin:15mm 12mm}.no-print{display:none}}
     </style></head><body>
-      <div style="border-bottom:3px solid #333;padding-bottom:12px;margin-bottom:16px">
+      <div style="border-bottom:3px solid #333;padding-bottom:10px;margin-bottom:12px">
         ${companyInfo.logo_url ? `<img src="${companyInfo.logo_url}" class="report-logo" alt="Logo" />` : ''}
         <h1>${companyInfo.company_name} — Daily Report</h1>
-        <p style="margin:4px 0;color:#666">${dateStr}</p>
-        ${companyInfo.address ? `<p style="margin:2px 0;font-size:12px;color:#666">${companyInfo.address}</p>` : ''}
-        ${companyInfo.phone ? `<p style="margin:2px 0;font-size:12px;color:#666">Tel: ${companyInfo.phone}</p>` : ''}
-        <p style="margin:2px 0;font-size:12px;color:#999">Generated: ${format(new Date(), 'dd MMM yyyy, hh:mm a')}</p>
+        <p style="margin:3px 0;color:#666;font-size:12px">${dateStr}</p>
+        ${companyInfo.address ? `<p style="margin:2px 0;font-size:10px;color:#666">${companyInfo.address}</p>` : ''}
+        ${companyInfo.phone ? `<p style="margin:2px 0;font-size:10px;color:#666">Tel: ${companyInfo.phone}</p>` : ''}
+        <p style="margin:2px 0;font-size:10px;color:#999">Generated: ${format(new Date(), 'dd MMM yyyy, hh:mm a')}</p>
       </div>
 
+      <div class="section">
       <h2>Sales Summary</h2>
       <div class="grid">
         <div class="stat"><div class="stat-label">Total Sales</div><div class="stat-value">${formatCurrency(r.totalSales)}</div></div>
@@ -284,46 +288,59 @@ export default function DailyReportFullPage() {
         <div class="stat"><div class="stat-label">Transactions</div><div class="stat-value">${r.totalTransactions}</div></div>
         <div class="stat"><div class="stat-label">Items Sold</div><div class="stat-value">${r.totalItemsSold}</div></div>
       </div>
+      </div>
 
+      <div class="section">
       <h2>Payment Breakdown</h2>
       <div class="grid">
         ${Object.entries(r.paymentBreakdown || {}).map(([method, info]) => {
           const label = PAYMENT_METHODS.find(m => m.id === method)?.label || method.charAt(0).toUpperCase() + method.slice(1);
-          return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${formatCurrency(info.sales)}</div><div style="font-size:11px;color:#666">${info.count} transactions</div></div>`;
+          return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${formatCurrency(info.sales)}</div><div style="font-size:9px;color:#666">${info.count} txns</div></div>`;
         }).join('')}
         <div class="stat"><div class="stat-label">Avg Transaction</div><div class="stat-value">${formatCurrency(r.avgTransactionValue)}</div></div>
       </div>
+      </div>
 
+      <div class="section">
       <h2>Credit Activity</h2>
       <div class="grid">
-        <div class="stat"><div class="stat-label">Credit Given Today</div><div class="stat-value red">${formatCurrency(r.creditGiven)}</div><div style="font-size:11px;color:#666">${r.creditGivenCount} records</div></div>
-        <div class="stat"><div class="stat-label">Credit Paid Today</div><div class="stat-value green">${formatCurrency(r.creditPaid)}</div><div style="font-size:11px;color:#666">${r.creditPaidCount} payments</div></div>
+        <div class="stat"><div class="stat-label">Credit Given Today</div><div class="stat-value red">${formatCurrency(r.creditGiven)}</div><div style="font-size:9px;color:#666">${r.creditGivenCount} records</div></div>
+        <div class="stat"><div class="stat-label">Credit Paid Today</div><div class="stat-value green">${formatCurrency(r.creditPaid)}</div><div style="font-size:9px;color:#666">${r.creditPaidCount} payments</div></div>
         <div class="stat"><div class="stat-label">Total Pending</div><div class="stat-value red">${formatCurrency(r.pendingCredits)}</div></div>
         <div class="stat"><div class="stat-label">Voided Sales</div><div class="stat-value">${r.voidedCount} (${formatCurrency(r.voidedAmount)})</div></div>
       </div>
+      </div>
 
-      ${r.bestCustomer ? `<h2>Best Customer</h2><div class="stat" style="display:inline-block;padding:12px 24px"><div class="stat-label">Top Buyer</div><div class="stat-value">${r.bestCustomer.name}</div><div style="font-size:12px;color:#666">${formatCurrency(r.bestCustomer.spent)} across ${r.bestCustomer.transactions} transactions</div></div>` : ''}
+      ${r.bestCustomer ? `<div class="section"><h2>Best Customer</h2><div class="stat" style="display:inline-block;padding:10px 20px"><div class="stat-label">Top Buyer</div><div class="stat-value">${r.bestCustomer.name}</div><div style="font-size:11px;color:#666">${formatCurrency(r.bestCustomer.spent)} across ${r.bestCustomer.transactions} transactions</div></div></div>` : ''}
 
+      <div class="section">
       <h2>Employee Performance</h2>
-      <table><thead><tr><th>Name</th><th style="text-align:center">Role</th><th style="text-align:center">Transactions</th><th style="text-align:right">Sales</th><th style="text-align:right">Profit</th></tr></thead>
-      <tbody>${empRows || '<tr><td colspan="5" style="padding:12px;text-align:center;color:#999">No sales recorded</td></tr>'}</tbody></table>
+      <table><thead><tr><th>Name</th><th style="text-align:center">Role</th><th style="text-align:center">Txns</th><th style="text-align:right">Sales</th><th style="text-align:right">Profit</th></tr></thead>
+      <tbody>${empRows || '<tr><td colspan="5" style="padding:8px;text-align:center;color:#999">No sales recorded</td></tr>'}</tbody></table>
+      </div>
 
+      <div class="section">
       <h2>Top Products</h2>
-      <table><thead><tr><th>Product</th><th style="text-align:center">Qty Sold</th><th style="text-align:right">Revenue</th><th style="text-align:right">Profit</th></tr></thead>
-      <tbody>${productRows || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#999">No products sold</td></tr>'}</tbody></table>
+      <table><thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Revenue</th><th style="text-align:right">Profit</th></tr></thead>
+      <tbody>${productRows || '<tr><td colspan="4" style="padding:8px;text-align:center;color:#999">No products sold</td></tr>'}</tbody></table>
+      </div>
 
       ${r.suppliedProducts.length > 0 ? `
+      <div class="section">
       <h2>Supplier Deliveries</h2>
       <div class="grid" style="grid-template-columns:repeat(2,1fr)">
         <div class="stat"><div class="stat-label">Supplied Today</div><div class="stat-value">${formatCurrency(r.totalSuppliedAmount)}</div></div>
         <div class="stat"><div class="stat-label">Owed to Suppliers</div><div class="stat-value red">${formatCurrency(r.totalOwedToSuppliers)}</div></div>
       </div>
       <table><thead><tr><th>Supplier</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody>${supplyRows}</tbody></table>` : ''}
+      <tbody>${supplyRows}</tbody></table>
+      </div>` : ''}
 
+      <div class="section">
       <h2>Hourly Breakdown</h2>
-      <table><thead><tr><th>Hour</th><th style="text-align:center">Transactions</th><th style="text-align:right">Sales</th></tr></thead>
-      <tbody>${hourlyRows || '<tr><td colspan="3" style="padding:12px;text-align:center;color:#999">No data</td></tr>'}</tbody></table>
+      <table><thead><tr><th>Hour</th><th style="text-align:center">Txns</th><th style="text-align:right">Sales</th></tr></thead>
+      <tbody>${hourlyRows || '<tr><td colspan="3" style="padding:8px;text-align:center;color:#999">No data</td></tr>'}</tbody></table>
+      </div>
     </body></html>`;
   }
 
