@@ -52,6 +52,48 @@ export type Database = {
           },
         ]
       }
+      casual_wage_entries: {
+        Row: {
+          amount: number
+          casual_id: string
+          casual_name: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          payment_method: string
+          status: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          amount?: number
+          casual_id: string
+          casual_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Update: {
+          amount?: number
+          casual_id?: string
+          casual_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
       casuals: {
         Row: {
           commission_rate: number
@@ -227,6 +269,48 @@ export type Database = {
         }
         Relationships: []
       }
+      expenditures: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          expense_date: string
+          id: string
+          notes: string | null
+          payment_method: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           created_at: string
@@ -359,10 +443,10 @@ export type Database = {
           low_stock_alert: number
           name: string
           quantity: number
-          warehouse_quantity: number
           selling_price: number
           sku: string
           updated_at: string
+          warehouse_quantity: number
         }
         Insert: {
           buying_price?: number
@@ -373,10 +457,10 @@ export type Database = {
           low_stock_alert?: number
           name: string
           quantity?: number
-          warehouse_quantity?: number
           selling_price?: number
           sku: string
           updated_at?: string
+          warehouse_quantity?: number
         }
         Update: {
           buying_price?: number
@@ -387,10 +471,10 @@ export type Database = {
           low_stock_alert?: number
           name?: string
           quantity?: number
-          warehouse_quantity?: number
           selling_price?: number
           sku?: string
           updated_at?: string
+          warehouse_quantity?: number
         }
         Relationships: [
           {
@@ -544,46 +628,50 @@ export type Database = {
           },
         ]
       }
-      stock_transfers: {
+      salary_records: {
         Row: {
+          amount: number
           created_at: string
           created_by: string
-          destination: string
+          full_name: string
           id: string
-          product_id: string | null
-          product_name: string
-          quantity: number
-          source: string
+          month: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string
+          status: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
+          amount?: number
           created_at?: string
           created_by: string
-          destination: string
+          full_name: string
           id?: string
-          product_id?: string | null
-          product_name: string
-          quantity: number
-          source: string
+          month: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          user_id: string
         }
         Update: {
+          amount?: number
           created_at?: string
           created_by?: string
-          destination?: string
+          full_name?: string
           id?: string
-          product_id?: string | null
-          product_name?: string
-          quantity?: number
-          source?: string
+          month?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "stock_transfers_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       sale_items: {
         Row: {
@@ -722,42 +810,49 @@ export type Database = {
       }
       sales_returns: {
         Row: {
+          created_at: string
+          created_by: string | null
           id: string
-          sale_id: string
+          notes: string | null
           product_id: string | null
           product_name: string
           quantity: number
           reason: string | null
           resolution: string | null
-          notes: string | null
-          created_at: string
-          created_by: string | null
+          sale_id: string | null
         }
         Insert: {
+          created_at?: string
+          created_by?: string | null
           id?: string
-          sale_id: string
+          notes?: string | null
           product_id?: string | null
           product_name: string
           quantity: number
           reason?: string | null
           resolution?: string | null
-          notes?: string | null
-          created_at?: string
-          created_by?: string | null
+          sale_id?: string | null
         }
         Update: {
+          created_at?: string
+          created_by?: string | null
           id?: string
-          sale_id?: string
+          notes?: string | null
           product_id?: string | null
           product_name?: string
           quantity?: number
           reason?: string | null
           resolution?: string | null
-          notes?: string | null
-          created_at?: string
-          created_by?: string | null
+          sale_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_returns_sale_id_fkey"
             columns: ["sale_id"]
@@ -765,13 +860,47 @@ export type Database = {
             referencedRelation: "sales"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          created_at: string
+          created_by: string
+          destination: string
+          id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          destination: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          source: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          destination?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          source?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "sales_returns_product_id_fkey"
+            foreignKeyName: "stock_transfers_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       supplier_payments: {
@@ -832,6 +961,7 @@ export type Database = {
           batch_reference: string | null
           buying_price: number
           created_at: string
+          destination: string | null
           due_date: string | null
           grn_number: string | null
           id: string
@@ -851,6 +981,7 @@ export type Database = {
           batch_reference?: string | null
           buying_price?: number
           created_at?: string
+          destination?: string | null
           due_date?: string | null
           grn_number?: string | null
           id?: string
@@ -870,6 +1001,7 @@ export type Database = {
           batch_reference?: string | null
           buying_price?: number
           created_at?: string
+          destination?: string | null
           due_date?: string | null
           grn_number?: string | null
           id?: string

@@ -10,7 +10,7 @@ interface CreateSaleParams {
   customerId?: string;
   taxRate: number;
   discount: number;
-  paymentMethod: 'cash' | 'mpesa' | 'till' | 'cheque' | 'credit';
+  paymentMethod: 'cash' | 'mpesa' | 'till' | 'send_money' | 'cheque' | 'credit';
   soldOnBehalfOf?: string | null;
   soldOnBehalfName?: string | null;
   commissionAmount?: number;

@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useProducts } from '@/hooks/useProducts';
+import { useExpenditures } from '@/hooks/useExpenditures';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatCurrency } from '@/lib/constants';
+import { format } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { SalesOverviewCards } from '@/components/dashboard/SalesOverviewCards';
 import { SalesChart } from '@/components/dashboard/SalesChart';
 import { PaymentMethodChart } from '@/components/dashboard/PaymentMethodChart';
@@ -19,9 +23,13 @@ export default function DashboardPage() {
   const { profile } = useAuth();
   const { stats, topProducts, monthlySalesData, salesByPayment, bestEmployee, loading, refresh } = useDashboard();
   const { lowStockProducts } = useProducts();
+  const { getMonthlyExpenditure } = useExpenditures();
   const [showMonthlySales, setShowMonthlySales] = useState(false);
 
   const firstName = profile?.full_name?.split(' ')[0] || 'Admin';
+  const currentMonth = format(new Date(), 'yyyy-MM');
+  const monthlyExpenditure = getMonthlyExpenditure(currentMonth);
+  const netProfit = stats.monthProfit - monthlyExpenditure;
 
   return (
     <AppLayout>
@@ -52,6 +60,30 @@ export default function DashboardPage() {
           bestEmployee={bestEmployee}
           onMonthSalesClick={() => setShowMonthlySales(true)}
         />
+
+        {/* Profit Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Monthly Revenue</p>
+              <p className="text-xl font-bold mt-1">{formatCurrency(stats.monthSales)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Monthly Expenditure</p>
+              <p className="text-xl font-bold mt-1 text-destructive">{formatCurrency(monthlyExpenditure)}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-primary/30">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Net Profit</p>
+              <p className={`text-xl font-bold mt-1 ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                {formatCurrency(netProfit)}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Charts Row - Bento Layout */}
         <div className="grid lg:grid-cols-3 gap-5">
