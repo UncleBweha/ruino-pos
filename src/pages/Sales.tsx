@@ -119,7 +119,7 @@ export default function SalesPage() {
     try {
       const { saleId, item } = returningItem;
       const totalRefund = returnForm.resolution === 'refund' 
-        ? item.unit_price * returnForm.quantity 
+        ? item.unit_price * (returnForm.quantity as number)
         : 0;
 
       await returnSaleItem(
