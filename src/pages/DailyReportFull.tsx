@@ -271,7 +271,7 @@ export default function DailyReportFullPage() {
       .section{page-break-inside:avoid}
       @media print{body{padding:12px}@page{margin:15mm 12mm}.no-print{display:none}}
     </style></head><body>
-      <div style="border-bottom:3px solid #333;padding-bottom:10px;margin-bottom:12px">
+      <div data-pdf-section style="border-bottom:3px solid #333;padding-bottom:10px;margin-bottom:12px">
         ${companyInfo.logo_url ? `<img src="${companyInfo.logo_url}" class="report-logo" alt="Logo" />` : ''}
         <h1>${companyInfo.company_name} — Daily Report</h1>
         <p style="margin:3px 0;color:#666;font-size:12px">${dateStr}</p>
