@@ -663,7 +663,7 @@ export default function POSPage() {
           </div>
 
           {/* Payment Method */}
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
             {PAYMENT_METHODS.map((method) => {
               const Icon = paymentIcons[method.id] || Banknote;
               return (
