@@ -105,12 +105,12 @@ export function useDashboard() {
         // Credit payments made today — attribute to today's revenue
         supabase
           .from('credit_payments')
-          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit))')
+          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit, status))')
           .gte('created_at', startOfDay.toISOString()),
         // Credit payments made this month — attribute to month revenue
         supabase
           .from('credit_payments')
-          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit))')
+          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit, status))')
           .gte('created_at', startOfMonth.toISOString()),
       ]);
 
