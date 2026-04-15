@@ -105,12 +105,12 @@ export function useDashboard() {
         // Credit payments made today — attribute to today's revenue
         supabase
           .from('credit_payments')
-          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit))')
+          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit, status))')
           .gte('created_at', startOfDay.toISOString()),
         // Credit payments made this month — attribute to month revenue
         supabase
           .from('credit_payments')
-          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit))')
+          .select('amount, credit_id, credit:credits(total_owed, sale:sales(total, profit, status))')
           .gte('created_at', startOfMonth.toISOString()),
       ]);
 
@@ -211,26 +211,37 @@ export function useDashboard() {
       }
 
       // Sum credit payment revenue for today (proportional profit)
-      const todayCreditRevenue = todayPaidCredits?.reduce((sum, cp) => {
+      // Filter out credit payments where the parent sale has been voided
+      const validTodayCredits = todayPaidCredits?.filter(cp => {
+        const credit = cp.credit as any;
+        const saleStatus = credit?.sale?.status;
+        return saleStatus !== 'voided';
+      }) || [];
+      const todayCreditRevenue = validTodayCredits.reduce((sum, cp) => {
         return sum + Number(cp.amount);
-      }, 0) || 0;
-      const todayCreditProfit = todayPaidCredits?.reduce((sum, cp) => {
+      }, 0);
+      const todayCreditProfit = validTodayCredits.reduce((sum, cp) => {
         const credit = cp.credit as any;
         const saleProfit = credit?.sale ? Number(credit.sale.profit) : 0;
         const totalOwed = credit ? Number(credit.total_owed) : 1;
         return sum + (saleProfit * Number(cp.amount) / totalOwed);
-      }, 0) || 0;
+      }, 0);
 
       // Sum credit payment revenue for this month (proportional profit)
-      const monthCreditRevenue = monthPaidCredits?.reduce((sum, cp) => {
+      const validMonthCredits = monthPaidCredits?.filter(cp => {
+        const credit = cp.credit as any;
+        const saleStatus = credit?.sale?.status;
+        return saleStatus !== 'voided';
+      }) || [];
+      const monthCreditRevenue = validMonthCredits.reduce((sum, cp) => {
         return sum + Number(cp.amount);
-      }, 0) || 0;
-      const monthCreditProfit = monthPaidCredits?.reduce((sum, cp) => {
+      }, 0);
+      const monthCreditProfit = validMonthCredits.reduce((sum, cp) => {
         const credit = cp.credit as any;
         const saleProfit = credit?.sale ? Number(credit.sale.profit) : 0;
         const totalOwed = credit ? Number(credit.total_owed) : 1;
         return sum + (saleProfit * Number(cp.amount) / totalOwed);
-      }, 0) || 0;
+      }, 0);
 
       setStats({
         todaySales: (todaySales?.reduce((sum, s) => sum + Number(s.total), 0) || 0) + todayCreditRevenue,

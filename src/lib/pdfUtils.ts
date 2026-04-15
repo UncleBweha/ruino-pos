@@ -1,9 +1,15 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+const A4_WIDTH_MM = 210;
+const A4_HEIGHT_MM = 297;
+const MARGIN_MM = 15;
+const CONTENT_WIDTH_MM = A4_WIDTH_MM - MARGIN_MM * 2;
+const SECTION_GAP_MM = 4;
+
 /**
- * Generates a PDF from an HTML string by rendering it in a hidden iframe,
- * capturing it with html2canvas, and saving via jsPDF.
+ * Generates a PDF from an HTML string using section-based capture
+ * to prevent content from being cut off at page boundaries.
  */
 export async function generatePDFFromHTML(html: string, filename: string) {
   // Create a hidden container
@@ -21,34 +27,85 @@ export async function generatePDFFromHTML(html: string, filename: string) {
   await new Promise(r => setTimeout(r, 300));
 
   try {
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      width: 800,
-      windowWidth: 800,
-    });
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-    const imgWidth = pageWidth - margin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    // Find sections marked with data-pdf-section, or fall back to direct children
+    let sections = Array.from(
+      container.querySelectorAll('[data-pdf-section]')
+    ) as HTMLElement[];
 
-    // Handle multi-page
-    let heightLeft = imgHeight;
-    let position = margin;
+    if (sections.length === 0) {
+      // Fall back to top-level children as sections
+      sections = Array.from(container.children) as HTMLElement[];
+    }
 
-    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-    heightLeft -= (pageHeight - margin * 2);
+    if (sections.length === 0) {
+      // Ultimate fallback: capture entire container
+      sections = [container];
+    }
 
-    while (heightLeft > 0) {
-      position = -(pageHeight - margin * 2) * (Math.ceil((imgHeight - heightLeft) / (pageHeight - margin * 2))) + margin;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-      heightLeft -= (pageHeight - margin * 2);
+    let currentY = MARGIN_MM;
+    let isFirstPage = true;
+
+    for (const section of sections) {
+      const canvas = await html2canvas(section, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const scaleFactor = CONTENT_WIDTH_MM / (canvas.width / 2);
+      const heightMM = (canvas.height / 2) * scaleFactor;
+      const remainingSpace = A4_HEIGHT_MM - MARGIN_MM - currentY;
+
+      // If section doesn't fit and we're not at the top of a page, add a new page
+      if (heightMM > remainingSpace && currentY > MARGIN_MM) {
+        pdf.addPage();
+        currentY = MARGIN_MM;
+        isFirstPage = false;
+      }
+
+      // If a single section is taller than a page, split it into strips
+      if (heightMM > A4_HEIGHT_MM - MARGIN_MM * 2) {
+        const usableHeight = A4_HEIGHT_MM - MARGIN_MM * 2;
+        const stripHeightPx = (usableHeight / scaleFactor) * 2; // in canvas pixels
+        let canvasOffset = 0;
+        let remainingCanvasHeight = canvas.height;
+
+        while (remainingCanvasHeight > 0) {
+          const thisStripHeight = Math.min(stripHeightPx, remainingCanvasHeight);
+          const thisStripMM = (thisStripHeight / 2) * scaleFactor;
+
+          // Create a sub-canvas for this strip
+          const stripCanvas = document.createElement('canvas');
+          stripCanvas.width = canvas.width;
+          stripCanvas.height = thisStripHeight;
+          const ctx = stripCanvas.getContext('2d')!;
+          ctx.drawImage(canvas, 0, canvasOffset, canvas.width, thisStripHeight, 0, 0, canvas.width, thisStripHeight);
+
+          if (currentY > MARGIN_MM && thisStripMM > A4_HEIGHT_MM - MARGIN_MM - currentY) {
+            pdf.addPage();
+            currentY = MARGIN_MM;
+          }
+
+          const imgData = stripCanvas.toDataURL('image/png');
+          pdf.addImage(imgData, 'PNG', MARGIN_MM, currentY, CONTENT_WIDTH_MM, thisStripMM);
+          currentY += thisStripMM;
+
+          canvasOffset += thisStripHeight;
+          remainingCanvasHeight -= thisStripHeight;
+
+          if (remainingCanvasHeight > 0) {
+            pdf.addPage();
+            currentY = MARGIN_MM;
+          }
+        }
+      } else {
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', MARGIN_MM, currentY, CONTENT_WIDTH_MM, heightMM);
+        currentY += heightMM + SECTION_GAP_MM;
+      }
     }
 
     pdf.save(filename);

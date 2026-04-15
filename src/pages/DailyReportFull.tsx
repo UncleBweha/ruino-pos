@@ -271,7 +271,7 @@ export default function DailyReportFullPage() {
       .section{page-break-inside:avoid}
       @media print{body{padding:12px}@page{margin:15mm 12mm}.no-print{display:none}}
     </style></head><body>
-      <div style="border-bottom:3px solid #333;padding-bottom:10px;margin-bottom:12px">
+      <div data-pdf-section style="border-bottom:3px solid #333;padding-bottom:10px;margin-bottom:12px">
         ${companyInfo.logo_url ? `<img src="${companyInfo.logo_url}" class="report-logo" alt="Logo" />` : ''}
         <h1>${companyInfo.company_name} — Daily Report</h1>
         <p style="margin:3px 0;color:#666;font-size:12px">${dateStr}</p>
@@ -280,7 +280,7 @@ export default function DailyReportFullPage() {
         <p style="margin:2px 0;font-size:10px;color:#999">Generated: ${format(new Date(), 'dd MMM yyyy, hh:mm a')}</p>
       </div>
 
-      <div class="section">
+      <div class="section" data-pdf-section>
       <h2>Sales Summary</h2>
       <div class="grid">
         <div class="stat"><div class="stat-label">Total Sales</div><div class="stat-value">${formatCurrency(r.totalSales)}</div></div>
@@ -290,7 +290,7 @@ export default function DailyReportFullPage() {
       </div>
       </div>
 
-      <div class="section">
+      <div class="section" data-pdf-section>
       <h2>Payment Breakdown</h2>
       <div class="grid">
         ${Object.entries(r.paymentBreakdown || {}).map(([method, info]) => {
@@ -301,7 +301,7 @@ export default function DailyReportFullPage() {
       </div>
       </div>
 
-      <div class="section">
+      <div class="section" data-pdf-section>
       <h2>Credit Activity</h2>
       <div class="grid">
         <div class="stat"><div class="stat-label">Credit Given Today</div><div class="stat-value red">${formatCurrency(r.creditGiven)}</div><div style="font-size:9px;color:#666">${r.creditGivenCount} records</div></div>
@@ -311,22 +311,22 @@ export default function DailyReportFullPage() {
       </div>
       </div>
 
-      ${r.bestCustomer ? `<div class="section"><h2>Best Customer</h2><div class="stat" style="display:inline-block;padding:10px 20px"><div class="stat-label">Top Buyer</div><div class="stat-value">${r.bestCustomer.name}</div><div style="font-size:11px;color:#666">${formatCurrency(r.bestCustomer.spent)} across ${r.bestCustomer.transactions} transactions</div></div></div>` : ''}
+      ${r.bestCustomer ? `<div class="section" data-pdf-section><h2>Best Customer</h2><div class="stat" style="display:inline-block;padding:10px 20px"><div class="stat-label">Top Buyer</div><div class="stat-value">${r.bestCustomer.name}</div><div style="font-size:11px;color:#666">${formatCurrency(r.bestCustomer.spent)} across ${r.bestCustomer.transactions} transactions</div></div></div>` : ''}
 
-      <div class="section">
+      <div class="section" data-pdf-section>
       <h2>Employee Performance</h2>
       <table><thead><tr><th>Name</th><th style="text-align:center">Role</th><th style="text-align:center">Txns</th><th style="text-align:right">Sales</th><th style="text-align:right">Profit</th></tr></thead>
       <tbody>${empRows || '<tr><td colspan="5" style="padding:8px;text-align:center;color:#999">No sales recorded</td></tr>'}</tbody></table>
       </div>
 
-      <div class="section">
+      <div class="section" data-pdf-section>
       <h2>Top Products</h2>
       <table><thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Revenue</th><th style="text-align:right">Profit</th></tr></thead>
       <tbody>${productRows || '<tr><td colspan="4" style="padding:8px;text-align:center;color:#999">No products sold</td></tr>'}</tbody></table>
       </div>
 
       ${r.suppliedProducts.length > 0 ? `
-      <div class="section">
+      <div class="section" data-pdf-section>
       <h2>Supplier Deliveries</h2>
       <div class="grid" style="grid-template-columns:repeat(2,1fr)">
         <div class="stat"><div class="stat-label">Supplied Today</div><div class="stat-value">${formatCurrency(r.totalSuppliedAmount)}</div></div>
@@ -336,7 +336,7 @@ export default function DailyReportFullPage() {
       <tbody>${supplyRows}</tbody></table>
       </div>` : ''}
 
-      <div class="section">
+      <div class="section" data-pdf-section>
       <h2>Hourly Breakdown</h2>
       <table><thead><tr><th>Hour</th><th style="text-align:center">Txns</th><th style="text-align:right">Sales</th></tr></thead>
       <tbody>${hourlyRows || '<tr><td colspan="3" style="padding:8px;text-align:center;color:#999">No data</td></tr>'}</tbody></table>
